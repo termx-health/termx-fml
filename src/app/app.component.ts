@@ -7,6 +7,7 @@ import {forkJoin} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
+import {getCanvasFont, getTextWidth} from './fml/fml.utils';
 
 interface RuleDescription {
   code: string,
@@ -104,8 +105,14 @@ export class AppComponent implements OnInit {
     // objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
+
+      const isSource = obj.mode === 'source';
+      const font = getCanvasFont()
+      const maxWidth = Math.max(...obj.fields.map(f => getTextWidth(f, font)))
+
       editor._createObjectNode(obj, {
-        viewportWidth
+        x: isSource ? 80 : viewportWidth - maxWidth - 100,
+        y: 40
       })
     })
 
@@ -117,7 +124,7 @@ export class AppComponent implements OnInit {
 
       editor._createRuleNode(rule, {
         y: 25 + prevRuleBounds?.top + prevRuleBounds?.height,
-        x: viewportWidth / 2 - 100,
+        x: viewportWidth / 2 ,
       });
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
@@ -148,4 +155,7 @@ export class AppComponent implements OnInit {
   /* Utils */
 
   protected encodeURIComponent = encodeURIComponent;
+
+
+
 }

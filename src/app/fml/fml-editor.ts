@@ -1,5 +1,6 @@
 import Drawflow from 'drawflow';
 import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {getCanvasFont, getTextWidth} from './fml.utils';
 
 export class FMLEditor extends Drawflow {
   constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
@@ -35,14 +36,18 @@ export class FMLEditor extends Drawflow {
 
         undo()
 
-        this._createRuleNode(rule, {x: midX, y: midY})
+        const font = getCanvasFont()
+        const width = getTextWidth(rule.name, font)
+
+
+        this._createRuleNode(rule, {x: midX - width / 2, y: midY})
         this._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
         this._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
       }
     })
   }
 
-  public _createObjectNode(obj: FMLStructureObject, options?: {viewportWidth?: number}): number {
+  public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number}): number {
     const resourceName = obj.resource
     const isSource = obj.mode === 'source';
 
@@ -53,15 +58,15 @@ export class FMLEditor extends Drawflow {
     const getResourceHTML = (obj: FMLStructureObject) => `
       <div>
          <h5 class="node-title">${obj.resource}</div>
-        ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f}</div>`).join('')}
+         ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f}</div>`).join('')}
       </div>
     `
 
     return this.addNode(
       resourceName,
       inputs, outputs,
-      isSource ? 100 : options?.viewportWidth ? options.viewportWidth - 500 : 800, // x
-      50, // y
+      options?.x && !isNaN(options.x) ? options.x : 50, // x
+      options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--with-title', {obj},
       getResourceHTML(obj),
       false
