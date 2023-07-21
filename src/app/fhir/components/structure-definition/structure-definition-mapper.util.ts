@@ -1,16 +1,16 @@
 import {isDefined} from '@kodality-web/core-util';
-import {FHIRElementDefinition, FHIRStructureDefinition} from '../../models/fhir';
+import {ElementDefinition, StructureDefinition} from 'fhir/r5';
 
 
 export class StructureDefinitionFhirMapperUtil {
-  public static mapToKeyValue(fhirObj: FHIRStructureDefinition): {[key: string]: any} {
+  public static mapToKeyValue(fhirObj: StructureDefinition): {[key: string]: any} {
     if (isDefined(fhirObj) && fhirObj.resourceType === 'StructureDefinition') {
       return StructureDefinitionFhirMapperUtil.mapFromStructureDefinition(fhirObj);
     }
     return {};
   }
 
-  private static mapFromStructureDefinition(structureDefinition: FHIRStructureDefinition): {[key: string]: any} {
+  private static mapFromStructureDefinition(structureDefinition: StructureDefinition): {[key: string]: any} {
     const res: {[key: string]: any} = {};
     if (structureDefinition.snapshot) {
       res[structureDefinition!.name!] = StructureDefinitionFhirMapperUtil.mapSnapshot(structureDefinition.snapshot.element);
@@ -22,7 +22,7 @@ export class StructureDefinitionFhirMapperUtil {
     return res;
   }
 
-  private static mapSnapshot(element: FHIRElementDefinition[]): {[key: string]: any} {
+  private static mapSnapshot(element: ElementDefinition[]): {[key: string]: any} {
     let res: {[key: string]: any} = {};
     element?.forEach(el => {
       const ids = el.id!.split(/\.|:/);
@@ -32,7 +32,7 @@ export class StructureDefinitionFhirMapperUtil {
     return res;
   }
 
-  private static mapDifferential(element: FHIRElementDefinition[], res: {[key: string]: any}): {[key: string]: any} {
+  private static mapDifferential(element: ElementDefinition[], res: {[key: string]: any}): {[key: string]: any} {
     res = res || {};
     element?.forEach(el => {
       const ids = el.id!.split(/\.|:/);

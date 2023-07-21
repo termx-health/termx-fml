@@ -2,11 +2,43 @@ import Drawflow from 'drawflow';
 import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 
 export class FMLEditor extends Drawflow {
-  constructor(private _fml: FMLStructure, element: HTMLElement, options?: {
+  constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
     render?: object,
     parent?: object
   }) {
     super(element, options?.render, options?.parent);
+
+    this.on('connectionCreated', e => {
+      const source = this.getNodeFromId(e.output_id)
+      const target = this.getNodeFromId(e.input_id)
+      const undo = () => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
+
+
+      if ('obj' in source.data && 'obj' in target.data) {
+        const sourceFieldIdx = Number(e.output_class.split("_")[1]);
+        const targetFieldIdx = Number(e.input_class.split("_")[1]);
+
+        const sourceNode = this.element.querySelector<HTMLElement>(`#node-${e.output_id} .output_${sourceFieldIdx}`)
+        const targetNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`)
+
+        const rule = new FMLStructureRule();
+        rule.name = 'copy_' + this.getUuid();
+        rule.sourceObject = source.data.obj.resource;
+        rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1];
+        rule.targetObject = target.data.obj.resource;
+        rule.targetField = target.data.obj.fields[targetFieldIdx - 1];
+
+
+        const midX = (sourceNode.getBoundingClientRect().left + targetNode.getBoundingClientRect().left) / 2;
+        const midY = (sourceNode.getBoundingClientRect().top + targetNode.getBoundingClientRect().top) / 2;
+
+        undo()
+
+        this._createRuleNode(rule, {x: midX, y: midY})
+        this._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
+        this._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
+      }
+    })
   }
 
   public _createObjectNode(obj: FMLStructureObject, options?: {viewportWidth?: number}): number {
@@ -35,13 +67,13 @@ export class FMLEditor extends Drawflow {
     );
   }
 
-  public _createRuleNode(rule: FMLStructureRule, options?: {viewportWidth?: number, top?: number}): number {
-    console.log(options?.top)
+  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, noInputs?: boolean}): number {
+    console.log(options?.y)
     return this.addNode(
       rule.name,
-      1, 1,
-      (options?.viewportWidth ? options.viewportWidth - 200 : 800) / 2, // x
-      25 + (options?.top && !isNaN(options.top) ? options.top : 50), // y
+      options?.noInputs ? 0 : 1, 1,
+      options?.x && !isNaN(options.x) ? options.x : 50, // x
+      options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
       rule.name,
       false

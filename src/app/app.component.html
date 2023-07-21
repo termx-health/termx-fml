@@ -1,11 +1,34 @@
 <div style="display: grid; grid-template-columns: 9fr 2fr">
 
 
-  <div id="drawflow" style="height: 100vh"></div>
+  <div id="drawflow" style="height: 100vh" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
 
   <div style="border-left: 1px solid var(--color-borders); padding: 1rem;  height: 100dvh; overflow: auto; background: var(--color-background-component)">
-    <ng-container *ngIf="nodeSelected as node">
+    <m-list mSeparated>
+      <m-list-item mClickable draggable="true" >
+        <div>Create</div>
+        <div class="description">
+          Use the standard API to create a new instance of data. Where structure definitions have been provided, the type parameter must be a string which is a
+          known type of a root element. Where they haven't, the application must know the name somehow
+        </div>
+      </m-list-item>
+      <m-list-item mClickable draggable="true">
+        <div>Copy</div>
+        <div class="description">
+          Simply copy the source to the target as is (only allowed when the types in source and target match- typically for primitive types). In the concrete
+          syntax, this is simply represented as the source variable, e.g. src.a = tgt.b
+        </div>
+      </m-list-item>
+      <m-list-item mClickable draggable="true">
+        <div>uuid</div>
+        <div class="description">
+          Generate a random UUID (in lowercase). No Parameters
+        </div>
+      </m-list-item>
+    </m-list>
 
+
+    <ng-container *ngIf="nodeSelected as node">
       <app-structure-definition-tree
         *ngIf="node.data.obj"
         [fhir]="node.data.obj?._fhir | json | apply: encodeURIComponent"
