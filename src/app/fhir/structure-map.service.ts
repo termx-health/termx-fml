@@ -9,14 +9,11 @@ export class StructureMapService {
   private http = inject(HttpClient)
 
 
-  public getStructureDefinition(url: string): Observable<FHIRStructureDefinition> {
-    if (url.startsWith("http://hl7.org/fhir/StructureDefinition")) {
-      return this.http.get<FHIRStructureDefinition>(`https://hl7.org/fhir/${url.split("http://hl7.org/fhir/StructureDefinition")[1].toLowerCase()}.profile.json`)
-    }
-    throw Error("FHIR Resource Provider not supported")
+  public getStructureDefinition(resource: string): Observable<FHIRStructureDefinition> {
+    return this.http.get<FHIRStructureDefinition>(`https://hl7.org/fhir/${resource.toLowerCase()}.profile.json`)
   }
 
-  public getStructureMap(url: string): Observable<FHIRStructureMap> {
-    return this.http.get<FHIRStructureMap>(url)
+  public getStructureMap(name: string): Observable<FHIRStructureMap> {
+    return this.http.get<FHIRStructureMap>(`https://www.hl7.org/fhir/${name}.json`)
   }
 }

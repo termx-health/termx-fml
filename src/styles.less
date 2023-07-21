@@ -15,3 +15,58 @@ body {
   margin: 0;
   padding: 0
 }
+
+
+.drawflow {
+  .drawflow-node {
+    align-items: flex-start;
+    width: initial;
+    border: @mui-border;
+    box-shadow: @mui-shadow-large;
+    background: white;
+
+    .input,
+    .output {
+      width: 1.2rem;
+      height: 1.2rem;
+      border: @mui-border;
+      margin-bottom: 0.3rem;
+    }
+
+    .input {
+      left: -1.7rem;
+      background: #bcdffb;
+      border-color: #4682b4;
+    }
+
+    .output {
+      right: -0.5rem;
+    }
+
+    &.selected {
+      background: white;
+      box-shadow: #4682b482 0 0 12px;
+      border-color: #4682b4;
+
+      .input, .output {
+        border-color: #4682b4;
+      }
+    }
+  }
+
+  .connection .main-path {
+    stroke-width: 2px;
+  }
+}
+
+.node--with-title {
+  .node-title {
+    height: 2rem
+  }
+
+  .inputs, .outputs {
+    display: block;
+    margin-top: 2rem;
+  }
+}
+

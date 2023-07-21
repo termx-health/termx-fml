@@ -27,6 +27,9 @@ function group(
 
 const primitives = ['any', 'base64Binary', 'boolean', 'canonical', 'code', 'date', 'dateTime', 'decimal', 'id', 'instant', 'integer', 'integer64', 'markdown', 'oid', 'string', 'positiveInt', 'time', 'unsignedInt', 'uri', 'url', 'uuid']
 
+const elements = ['BackboneElement', 'Element']
+const isBackbone = (el) => el.type?.some(t => elements.includes(t.code))
+const getFieldName = (id) => id.substring(id.lastIndexOf(".") + 1)
 
 const visited = {}
 const models = {}
@@ -39,29 +42,30 @@ async function run() {
     visited[url] = '-'
 
 
-    const definition = await fetch(url).then(r => r.json()).catch(e => console.error(url, e))
-    if (!definition?.differential) {
+    const _def = await fetch(url).then(r => r.json()).catch(e => console.error(url, e))
+    if (!_def?.differential) {
       return
     }
 
-    const className = definition.differential.element[0].id;
-    const fields = definition.differential.element;
-    fields[0].path = fields[0].path + '._self'
+    const resourceName = _def.differential.element[0].id;
+    const resourceFields = _def.differential.element;
 
 
-    const groupElements = ['BackboneElement', 'Element']
-    const grouped = group(
-      fields,
-      el => el.type?.some(t => groupElements.includes(t.code)) ? el.path + '._self' : el.path,
+    resourceFields[0].path = resourceFields[0].path + '._self'
+
+    const flatStruc = group(
+      resourceFields,
+      el => isBackbone(el) ? el.path + '._self' : el.path,
       el => {
-        let fieldName = el.id.substring(el.id.lastIndexOf(".") + 1)
-        if (fieldName.endsWith("[x]")) {
-          fieldName = fieldName.split("[x]")[0]
-        }
+        let fieldName = getFieldName(el.id);
         const fieldTypes = el.type?.map(t => t.code) || [];
         const isRequired = el.min === 1;
         const isArray = el.max !== '1';
+        const isPlaceholder = el.id.endsWith('[x]');
 
+        if (isPlaceholder) {
+          fieldName = fieldName.split("[x]")[0]
+        }
 
         return ({
           _definition: true,
@@ -69,11 +73,11 @@ async function run() {
           types: fieldTypes,
           required: isRequired,
           array: isArray,
-          placeholder: el.id.endsWith('[x]')
+          placeholder: isPlaceholder
         });
       });
 
-    const struc = unflattenObject(grouped);
+    const struc = unflattenObject(flatStruc);
     const res = []
 
     const compose = async (obj, level) => {
@@ -120,11 +124,13 @@ async function run() {
       res.push(`${'  '.repeat(level)}}${array ? '[]' : ''};`);
     }
 
-    await compose(struc[className], 0)
-    models[className] = res.join("\n");
+    await compose(struc[resourceName], 0)
+    models[resourceName] = res.join("\n");
   }
 
 
+  // await getClassDefinition("http://build.fhir.org/practitioner.profile.json")
+  // await getClassDefinition("http://build.fhir.org/organization.profile.json")
   await getClassDefinition("http://build.fhir.org/structuremap.profile.json")
   await getClassDefinition("http://build.fhir.org/structuredefinition.profile.json")
 

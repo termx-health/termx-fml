@@ -61,11 +61,6 @@ export class StructureDefinitionTreeComponent implements OnChanges {
   protected loader = new LoadingManager();
 
 
-  public change = function (value) {
-    this.data = value;
-    this.element.value = value;
-  };
-
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['fhir'] && this.fhir) {
       this.fhir = decodeURIComponent(this.fhir);
@@ -100,10 +95,9 @@ export class StructureDefinitionTreeComponent implements OnChanges {
       const correspondsToType = this.type === 'hybrid' || isDefined(object[key][this.type!]) || !isDefined(object[key][this.type === 'diff' ? 'snap' : 'diff']);
       return notElement && correspondsToType;
     }).map(key => {
-      const data = this.transformer({
-        mappings: object[key]['el']?.mapping,
+      const data = this.diffTransformer({
         diff: object[key]['diff'],
-        snap: object[key]['snap'],
+        mappings: object[key]['el']?.mapping,
       });
       return ({
         key: key,
@@ -115,30 +109,6 @@ export class StructureDefinitionTreeComponent implements OnChanges {
     });
   }
 
-
-  private transformer = (node: {snap: Element, diff: Element, mappings: ElementMapping}): StructureDefinitionData => {
-    switch (this.type) {
-      case 'snap':
-        return this.snapTransformer(node);
-      case 'diff':
-        return this.diffTransformer(node);
-      case 'hybrid':
-        return this.hybridTransformer(node);
-    }
-  };
-
-  private snapTransformer = ({snap, mappings}: {snap: Element, mappings: ElementMapping}): StructureDefinitionData => ({
-    element: snap,
-    type: snap?.type?.[0]?.code,
-    targetProfile: snap?.type?.[0]?.targetProfile,
-    fixedUri: snap?.fixedUri,
-    fixedCoding: snap?.fixedCoding ? snap.fixedCoding : undefined,
-    cardinality: isDefined(snap?.min) || isDefined(snap?.max) ? (isDefined(snap?.min) ? snap?.min : '*') + '..' + (isDefined(snap?.max) ? snap?.max : '*') : '',
-    short: snap?.short,
-    definition: isDefined(snap?.definition) && snap?.definition !== snap?.short ? snap?.definition : undefined,
-    binding: snap?.binding,
-    mappings: snap?.mapping || mappings,
-  });
 
   private diffTransformer = ({diff, mappings}: {diff: Element, mappings: ElementMapping}): StructureDefinitionData => ({
     element: diff,
@@ -152,24 +122,6 @@ export class StructureDefinitionTreeComponent implements OnChanges {
     binding: diff?.binding,
     mappings: diff?.mapping || mappings,
   });
-
-  private hybridTransformer = ({diff, snap, mappings}: {snap: Element, diff: Element, mappings: ElementMapping}): StructureDefinitionData => ({
-    element: diff || snap,
-    type: diff?.type?.[0]?.code,
-    targetProfile: diff?.type?.[0]?.targetProfile,
-    fixedUri: diff?.fixedUri,
-    fixedCoding: diff?.fixedCoding ? diff.fixedCoding : undefined,
-    cardinality: isDefined(diff?.min) || isDefined(diff?.max) ? (isDefined(diff?.min) ? diff?.min : '*') + '..' + (isDefined(diff?.max) ? diff?.max : '*') : '',
-    short: diff?.short,
-    definition: isDefined(diff?.definition) && diff?.definition !== diff?.short ? diff?.definition : undefined,
-    binding: diff?.binding,
-    mappings: diff?.mapping || mappings,
-  });
-
-
-  protected lastWordFromUrl = (url: string): string | undefined => {
-    return url.split('/').pop();
-  };
 }
 
 interface StructureDefinitionData {
