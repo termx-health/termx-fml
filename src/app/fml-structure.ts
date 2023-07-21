@@ -1,4 +1,4 @@
-import {collect, group} from '@kodality-web/core-util';
+import {group} from '@kodality-web/core-util';
 import {FHIRStructureMap} from './fhir/models/fhir';
 
 export class StructureRule {
@@ -46,6 +46,8 @@ export class FMLStructureObject {
 export class FMLStructureRule {
   name: string;
   action: string;
+  parameters?: any[];
+
   sourceObject: string;
   sourceField: string;
   targetObject: string;
@@ -53,22 +55,13 @@ export class FMLStructureRule {
 }
 
 export class FMLStructure {
-  objects: {
-    [name: string]: FMLStructureObject
-  } = {};
-
-
+  objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = []
 
 
-  sources: string[];
-  targets: string[];
-  groups: StructureRuleGroup[]
-
   public static map(fhir: FHIRStructureMap): FMLStructure {
-    console.log(fhir)
     const struc = new FMLStructure();
-    struc.objects = group(fhir.structure, s => s.url.substring(s.url.lastIndexOf('/') + 1), s => {
+    struc.objects = group(fhir.structure ?? [], s => s.url.substring(s.url.lastIndexOf('/') + 1), s => {
       const obj = new FMLStructureObject()
       obj.resource = s.url.substring(s.url.lastIndexOf('/') + 1)
       obj.path = s.url.substring(s.url.lastIndexOf('/') + 1)
@@ -93,48 +86,7 @@ export class FMLStructure {
           const rule = new FMLStructureRule()
           rule.name = fhirRule.name
           rule.action = fhirRuleTarget.transform;
-          rule.sourceObject = inputs[fhirRuleSource.context].type;
-          rule.sourceField = fhirRuleSource.element
-          rule.targetObject = inputs[fhirRuleTarget.context].type;
-          rule.targetField = fhirRuleTarget.element
-          struc.rules.push(rule)
-        })
-      })
-    })
-
-
-    const refs = collect(fhir.structure ?? [], s => s.mode, s => s.url);
-    struc.sources = refs['source']
-    struc.targets = refs['target']
-
-
-    // groups
-    struc.groups = fhir.group.map(g => {
-      const _group = new StructureRuleGroup()
-      _group.name = g.name;
-
-      // sources & targets
-      const inputs = collect(g.input, s => s.mode);
-      _group.inputs = {
-        source: group(inputs['source'], i => i.name, i => i.type),
-        target: group(inputs['target'], i => i.name, i => i.type)
-      };
-
-      // rules
-      _group.rules = g.rule.map(r => {
-        const _rule = new StructureRule()
-        _rule.name = r.name;
-        _rule.sources = r.source.map(rs => ({
-          name: rs.context,
-          element: rs.element,
-          variable: rs.variable
-        }))
-        _rule.target = r.target.map(rt => ({
-          name: rt.context,
-          element: rt.element,
-          variable: rt.variable,
-          action: rt.transform,
-          parameter: rt.parameter?.map(p =>
+          rule.parameters = fhirRuleTarget.parameter?.map(p =>
             p.valueId ??
             p.valueString ??
             p.valueBoolean ??
@@ -144,11 +96,14 @@ export class FMLStructure {
             p.valueTime ??
             p.valueDateTime
           )
-        }));
 
-        return _rule
+          rule.sourceObject = inputs[fhirRuleSource.context].type;
+          rule.sourceField = fhirRuleSource.element
+          rule.targetObject = inputs[fhirRuleTarget.context].type;
+          rule.targetField = fhirRuleTarget.element
+          struc.rules.push(rule)
+        })
       })
-      return _group;
     })
 
 
