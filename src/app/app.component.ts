@@ -3,7 +3,7 @@ import {StructureMapService} from './fhir/structure-map.service';
 import {FHIRStructureDefinition} from './fhir/models/fhir';
 import {createCustomElement} from '@angular/elements';
 import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
-import {FMLStructure, FMLStructureObject} from './fml/fml-structure';
+import {FMLStructure} from './fml/fml-structure';
 import {forkJoin, map} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
@@ -36,11 +36,12 @@ export class AppComponent implements OnInit {
         this.initEditor(fml);
       })
     })
+
   }
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
-    const viewPortWidth = element.offsetWidth;
+    const viewportWidth = element.offsetWidth;
     const editor = new FMLEditor(fml, element);
     editor.start();
 
@@ -51,50 +52,25 @@ export class AppComponent implements OnInit {
 
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
-
-      const resourceName = obj.resource
-      const isSource = obj.mode === 'source';
-
-      const fieldCount = obj.fields.length;
-      const inputs = isSource ? 0 : fieldCount;
-      const outputs = isSource ? fieldCount : 0;
-
-
-      editor.addNode(
-        resourceName,
-        inputs, outputs,
-        isSource ? 100 : viewPortWidth - 500, 50,
-        'node--with-title', {obj},
-        this.getResourceHTML(obj),
-        false
-      );
+      editor._createObjectNode(obj, {
+        viewportWidth
+      })
     })
 
 
     fml.rules.forEach((rule, rIdx) => {
-      editor.addNode(
-        rule.name,
-        1, 1,
-        (viewPortWidth - 500) / 2, 100 + 110 * rIdx,
-        'node--rule', {rule},
-        rule.name,
-        false
-      )
+      const prevRule = Array.from(document.getElementsByClassName('node--rule')).at(-1);
+      const prevRuleBounds = prevRule?.getBoundingClientRect();
 
-
+      editor._createRuleNode(rule, {
+        viewportWidth,
+        top: prevRuleBounds?.top + prevRuleBounds?.height
+      });
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
   }
 
-  private getResourceHTML(obj: FMLStructureObject) {
-    return `
-      <div>
-         <div class="node-title">${obj.resource}</div>
-        ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f}</div>`).join('')}
-      </div>
-    `
-  }
 
   private initObjects(resps: [string, FHIRStructureDefinition][], mapped: FMLStructure): void {
     resps.forEach(([key, resp]) => {
