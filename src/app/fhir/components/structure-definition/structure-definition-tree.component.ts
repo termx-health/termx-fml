@@ -50,7 +50,6 @@ import {StructureDefinitionFhirMapperUtil} from './structure-definition-mapper.u
 })
 export class StructureDefinitionTreeComponent implements OnChanges {
   @Input() public fhir?: string;
-  @Input() public value?: string;
 
   protected type?: 'diff' | 'snap' | 'hybrid' = 'diff';
   protected structureDefinitionValue?: any;
@@ -71,19 +70,18 @@ export class StructureDefinitionTreeComponent implements OnChanges {
 
   private processJson(json: string): void {
     try {
-      this.structureDefinitionValue = StructureDefinitionFhirMapperUtil.mapToKeyValue(JSON.parse(json));
-      console.log(this.structureDefinitionValue)
-      this.initTree(this.structureDefinitionValue);
+      this.structureDefinitionValue = undefined;
+      this.treeOptions = undefined;
+
+      if (json) {
+        this.structureDefinitionValue = StructureDefinitionFhirMapperUtil.mapToKeyValue(JSON.parse(json));
+        setTimeout(() => this.treeOptions = this.mapDefToNode(this.structureDefinitionValue));
+      }
     } catch (e) {
       console.error("Failed to init structure definition from JSON", e);
     }
   }
 
-
-  private initTree(val: any): void {
-    this.treeOptions = undefined;
-    setTimeout(() => this.treeOptions = this.mapDefToNode(val));
-  }
 
   private mapDefToNode(object: any): MuiTreeNodeOptions[] | undefined {
     if (!(object instanceof Object)) {

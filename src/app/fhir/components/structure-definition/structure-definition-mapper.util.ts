@@ -4,7 +4,7 @@ import {FHIRElementDefinition, FHIRStructureDefinition} from '../../models/fhir'
 
 export class StructureDefinitionFhirMapperUtil {
   public static mapToKeyValue(fhirObj: FHIRStructureDefinition): {[key: string]: any} {
-    if (fhirObj.resourceType === 'StructureDefinition' && isDefined(fhirObj)) {
+    if (isDefined(fhirObj) && fhirObj.resourceType === 'StructureDefinition') {
       return StructureDefinitionFhirMapperUtil.mapFromStructureDefinition(fhirObj);
     }
     return {};

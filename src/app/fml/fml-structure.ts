@@ -1,5 +1,5 @@
 import {group} from '@kodality-web/core-util';
-import {FHIRStructureMap} from './fhir/models/fhir';
+import {FHIRStructureDefinition, FHIRStructureMap} from '../fhir/models/fhir';
 
 export class StructureRule {
   name: string;
@@ -33,10 +33,12 @@ export class StructureRuleGroup {
 
 
 export class FMLStructureObject {
+  _fhir?: FHIRStructureDefinition;
   resource: string;
   path: string;
   fields: string[] = [];
   mode: 'source' | 'target' | string;
+
 
   public getFieldIndex(field: string): number {
     return this.fields.indexOf(field);

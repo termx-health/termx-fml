@@ -1,11 +1,12 @@
-import {Component, EnvironmentInjector, inject, OnInit} from '@angular/core';
+import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import Drawflow from 'drawflow'
 import {FHIRStructureDefinition} from './fhir/models/fhir';
 import {createCustomElement} from '@angular/elements';
 import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
-import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureObject} from './fml/fml-structure';
 import {forkJoin, map} from 'rxjs';
+import {FMLEditor} from './fml/fml-editor';
+import {DrawflowNode} from 'drawflow';
 
 
 @Component({
@@ -13,10 +14,10 @@ import {forkJoin, map} from 'rxjs';
   templateUrl: 'app.component.html',
 })
 export class AppComponent implements OnInit {
-  private structureMapService = inject(StructureMapService);
-
+  protected nodeSelected: DrawflowNode;
 
   constructor(
+    private structureMapService: StructureMapService,
     injector: EnvironmentInjector
   ) {
     if (!customElements.get('ce-structure-definition')) {
@@ -38,28 +39,15 @@ export class AppComponent implements OnInit {
   }
 
   private initEditor(fml: FMLStructure): void {
-    const viewPortWidth = window.innerWidth;
-    const id = document.getElementById("drawflow");
-
-    const editor = new Drawflow(id);
+    const element = document.getElementById("drawflow");
+    const viewPortWidth = element.offsetWidth;
+    const editor = new FMLEditor(fml, element);
     editor.start();
 
-    const getNodeId = (name) => editor.getNodesFromName(name)[0]
-    const createConnection = (source: string, sField: string | number, target: string, tField: string | number) => {
-      const oIdx = typeof sField === 'string' ? fml.objects[source].getFieldIndex(sField) + 1 : sField
-      const iIdx = typeof tField === 'string' ? fml.objects[target].getFieldIndex(tField) + 1 : tField
+    editor.on('nodeSelected', id => {
+      this.nodeSelected = editor.getNodeFromId(id)
+    })
 
-      try {
-        editor.addConnection(
-          getNodeId(source), getNodeId(target),
-          `output_${oIdx}`,
-          `input_${iIdx}`,
-        );
-      } catch (e) {
-        console.error(`Connection failed "${source}.${sField}" -> "${target}.${tField}"`)
-        throw e;
-      }
-    }
 
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
@@ -67,7 +55,7 @@ export class AppComponent implements OnInit {
       const resourceName = obj.resource
       const isSource = obj.mode === 'source';
 
-      const fieldCount = obj.fields.length; // obj.fields.length;
+      const fieldCount = obj.fields.length;
       const inputs = isSource ? 0 : fieldCount;
       const outputs = isSource ? fieldCount : 0;
 
@@ -76,27 +64,26 @@ export class AppComponent implements OnInit {
         resourceName,
         inputs, outputs,
         isSource ? 100 : viewPortWidth - 500, 50,
-        'node--with-title',
-        {}, this.getResourceHTML(obj),
+        'node--with-title', {obj},
+        this.getResourceHTML(obj),
         false
       );
     })
 
 
     fml.rules.forEach((rule, rIdx) => {
-      const nodeId = editor.addNode(
+      editor.addNode(
         rule.name,
         1, 1,
         (viewPortWidth - 500) / 2, 100 + 110 * rIdx,
-        'node--rule',
-        {}, rule.name,
+        'node--rule', {rule},
+        rule.name,
         false
       )
 
 
-      createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
-      createConnection(rule.name, 1, rule.targetObject, rule.targetField);
-
+      editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
+      editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
   }
 
@@ -113,6 +100,10 @@ export class AppComponent implements OnInit {
     resps.forEach(([key, resp]) => {
       mapped.objects[key].fields = resp.differential.element.slice(1).map(e => e.path.substring(key.length + 1))
       mapped.objects[key].fields.unshift('id')
+      mapped.objects[key]._fhir = resp;
     })
   }
+
+
+  protected encodeURIComponent = encodeURIComponent;
 }
