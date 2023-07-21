@@ -29,11 +29,18 @@
     >
       <h5>{{node.data.obj ? 'Resource' : 'Rule'}}</h5>
 
-      <app-structure-definition-tree
-        *ngIf="node.data.obj"
-        [fhir]="node.data.obj?._fhir | json | apply: encodeURIComponent"
-      ></app-structure-definition-tree>
-
+      <!--      <app-structure-definition-tree-->
+      <!--        *ngIf="node.data.obj"-->
+      <!--        [fhir]="node.data.obj?._fhir | json | apply: encodeURIComponent"-->
+      <!--        (selected)="onStructureItemSelect($event)"-->
+      <!--      ></app-structure-definition-tree>-->
+      <div *ngIf="node.data.obj as obj">
+        <m-table mSize="small">
+          <tr *ngFor="let f of obj.fields">
+            <td><a (mClick)="onStructureItemSelect(obj, f)">{{f}}</a></td>
+          </tr>
+        </m-table>
+      </div>
 
       <div *ngIf="node.data.rule as rule">
         <pre>{{rule | json}}</pre>

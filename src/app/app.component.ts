@@ -1,13 +1,14 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {createCustomElement} from '@angular/elements';
-import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
-import {FMLStructure, FMLStructureRule} from './fml/fml-structure';
+import {Element, StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
+import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
-import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
+import {Bundle, ElementDefinition, StructureDefinition, StructureMap} from 'fhir/r5';
 import {getCanvasFont, getTextWidth} from './fml/fml.utils';
+import {isNil} from '@kodality-web/core-util';
 
 interface RuleDescription {
   code: string,
@@ -46,6 +47,7 @@ export class AppComponent implements OnInit {
 
 
   // FML editor
+  private fml: FMLStructure;
   private editor: FMLEditor;
   protected nodeSelected: DrawflowNode;
 
@@ -74,23 +76,28 @@ export class AppComponent implements OnInit {
     }
 
     _structureMap().subscribe(resp => {
+      this.structureMap = resp;
       _resourceBundle(resp).subscribe(definitions => {
-        const fml = FMLStructure.map(resp)
-        this.initObjects(definitions, fml);
+        this.resourceBundle = {
+          resourceType: 'Bundle',
+          type: 'collection',
+          entry: definitions.map(def => ({resource: def}))
+        }
+
+        const fml = this.fml = FMLStructure.map(resp)
+        this.initObjects(fml);
         this.initEditor(fml);
       })
     })
   }
 
-  private initObjects(definitions: StructureDefinition[], mapped: FMLStructure): void {
-    definitions.forEach(def => {
-      const key = def.id;
-      mapped.objects[key].fields = def.differential.element.slice(1).map(e => e.path.substring(key.length + 1))
-      mapped.objects[key].fields.unshift('id')
-      mapped.objects[key]._fhir = def;
+
+  private initObjects(fml: FMLStructure): void {
+    Object.keys(fml.objects).forEach(key => {
+      const strucDef = this.getStructureDefinition(key);
+      fml.objects[key] = this.getFMLStructureObject(strucDef, key, fml.objects[key].mode)
     })
   }
-
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
@@ -118,17 +125,65 @@ export class AppComponent implements OnInit {
 
 
     // rules
-    fml.rules.forEach((rule, rIdx) => {
+    fml.rules.forEach(rule => {
       const prevRule = Array.from(document.getElementsByClassName('node--rule')).at(-1);
       const prevRuleBounds = prevRule?.getBoundingClientRect();
 
       editor._createRuleNode(rule, {
         y: 25 + prevRuleBounds?.top + prevRuleBounds?.height,
-        x: viewportWidth / 2 ,
+        x: viewportWidth / 2,
       });
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
+  }
+
+  /* FML */
+
+  private getStructureDefinition(anyPath: string): StructureDefinition {
+    const base = anyPath.includes('.')
+      ? anyPath.slice(0, anyPath.indexOf('.'))
+      : anyPath;
+
+    return this.resourceBundle.entry
+      .map(e => e.resource)
+      .find(e => e.id === base)
+  }
+
+  private getFMLStructureObject(def: StructureDefinition, path: string, mode: string): FMLStructureObject {
+    const pathElements = def.differential.element.filter(el => el.path.startsWith(path));
+    const selfDefinition: ElementDefinition = pathElements[0];
+
+    const o = new FMLStructureObject()
+    o.resource = path;
+    o.fields = pathElements.slice(1).map(e => e.path.substring(path.length + 1))
+    o.fields.unshift('id')
+    o.mode = mode;
+
+    o._fhirDefinition = selfDefinition;
+    return o;
+  }
+
+  /* Structure tree */
+
+  public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
+    const strucDef = this.getStructureDefinition(parentObj.resource);
+    const path = `${parentObj.resource}.${field}`;
+    const obj = this.fml.objects[path] = this.getFMLStructureObject(
+      strucDef,
+      path,
+      parentObj.mode
+    );
+
+    console.log(obj._fhirDefinition)
+    if (isNil(obj._fhirDefinition)) {
+      // wtf? id field?
+      return;
+    }
+
+    if (obj._fhirDefinition.type.some(c => ['BackboneElement', 'Element'].includes(c.code))) {
+      this.editor._createObjectNode(obj)
+    }
   }
 
 
@@ -142,6 +197,7 @@ export class AppComponent implements OnInit {
     ev.preventDefault();
   }
 
+
   public onDrop(ev: DragEvent): void {
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
@@ -151,11 +207,8 @@ export class AppComponent implements OnInit {
     this.editor._createRuleNode(rule, {y: ev.y, x: ev.x, constant: data.constant})
   }
 
-
   /* Utils */
 
+
   protected encodeURIComponent = encodeURIComponent;
-
-
-
 }

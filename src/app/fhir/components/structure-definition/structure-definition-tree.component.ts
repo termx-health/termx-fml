@@ -1,6 +1,6 @@
-import {Component, Input, OnChanges, SimpleChanges, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild} from '@angular/core';
 import {isDefined, LoadingManager} from '@kodality-web/core-util';
-import {MuiTreeComponent, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
+import {MuiTreeComponent, MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 import {StructureDefinitionFhirMapperUtil} from './structure-definition-mapper.util';
 
 @Component({
@@ -12,6 +12,7 @@ import {StructureDefinitionFhirMapperUtil} from './structure-definition-mapper.u
       [mData]="treeOptions"
       [mOption]="option"
       [mExpandIcon]="expandIcon"
+      (mSelect)="selectElement($event)"
       mSelectMode
       mExpandAll
     >
@@ -50,20 +51,28 @@ import {StructureDefinitionFhirMapperUtil} from './structure-definition-mapper.u
 })
 export class StructureDefinitionTreeComponent implements OnChanges {
   @Input() public fhir?: string;
+  @Output() public selected = new EventEmitter<Element>();
 
   protected type?: 'diff' | 'snap' | 'hybrid' = 'diff';
   protected structureDefinitionValue?: any;
+  protected loader = new LoadingManager();
 
   @ViewChild(MuiTreeComponent) private tree: MuiTreeComponent;
-  protected treeOptions: MuiTreeNodeOptions[];
-
-  protected loader = new LoadingManager();
+  protected treeOptions: MuiTreeNodeOptions<StructureDefinitionData>[];
 
 
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['fhir'] && this.fhir) {
       this.fhir = decodeURIComponent(this.fhir);
       this.processJson(this.fhir);
+    }
+  }
+
+
+  protected selectElement(node: MuiTreeNode<StructureDefinitionData>): void {
+    const element = node.data.element;
+    if (element) {
+      this.selected.emit(element);
     }
   }
 
@@ -82,8 +91,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
     }
   }
 
-
-  private mapDefToNode(object: any): MuiTreeNodeOptions[] | undefined {
+  private mapDefToNode(object: any): MuiTreeNodeOptions<StructureDefinitionData>[] {
     if (!(object instanceof Object)) {
       return undefined;
     }

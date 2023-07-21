@@ -1,44 +1,16 @@
 import {group} from '@kodality-web/core-util';
-import {StructureDefinition, StructureMap} from 'fhir/r5';
-
-export class StructureRule {
-  name: string;
-  sources: {
-    name: string;
-    element?: string;
-    variable?: string;
-  }[];
-  target: {
-    name: string;
-    element?: string;
-    variable?: string;
-    action?: string;
-    parameters?: any[];
-  }[];
-}
-
-export class StructureRuleGroup {
-  name: string;
-  inputs: { [type in ('source' | 'target')]: {[varName: string]: string} }
-  rules: StructureRule[]
-
-  public get sources(): {[varName: string]: string} {
-    return this.inputs.source
-  }
-
-  public get targets(): {[varName: string]: string} {
-    return this.inputs.target
-  }
-}
+import {ElementDefinition, StructureMap} from 'fhir/r5';
 
 
+/**
+ * Represents the ElementDefinition with the fields.
+ */
 export class FMLStructureObject {
-  _fhir?: StructureDefinition;
-  resource: string;
-  path: string;
+  resource: string; // aka. path
   fields: string[] = [];
   mode: 'source' | 'target' | string;
 
+  _fhirDefinition?: ElementDefinition;
 
   public getFieldIndex(field: string): number {
     return this.fields.indexOf(field);
@@ -66,7 +38,6 @@ export class FMLStructure {
     struc.objects = group(fhir.structure ?? [], s => s.url.substring(s.url.lastIndexOf('/') + 1), s => {
       const obj = new FMLStructureObject()
       obj.resource = s.url.substring(s.url.lastIndexOf('/') + 1)
-      obj.path = s.url.substring(s.url.lastIndexOf('/') + 1)
       obj.mode = s.mode
       return obj
     })
