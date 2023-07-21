@@ -23,6 +23,7 @@ export class FMLEditor extends Drawflow {
 
         const rule = new FMLStructureRule();
         rule.name = 'copy_' + this.getUuid();
+        rule.action = 'copy';
         rule.sourceObject = source.data.obj.resource;
         rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1];
         rule.targetObject = target.data.obj.resource;
@@ -51,7 +52,7 @@ export class FMLEditor extends Drawflow {
 
     const getResourceHTML = (obj: FMLStructureObject) => `
       <div>
-         <div class="node-title">${obj.resource}</div>
+         <h5 class="node-title">${obj.resource}</div>
         ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f}</div>`).join('')}
       </div>
     `
@@ -67,11 +68,10 @@ export class FMLEditor extends Drawflow {
     );
   }
 
-  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, noInputs?: boolean}): number {
-    console.log(options?.y)
+  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, constant?: boolean}): number {
     return this.addNode(
       rule.name,
-      options?.noInputs ? 0 : 1, 1,
+      options?.constant ? 0 : 1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
