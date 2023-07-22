@@ -72,6 +72,7 @@ export class AppComponent implements OnInit {
     const _resourceBundle = (sm: StructureMap) => {
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
       const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
+      reqs$.push(this.structureMapService.getStructureDefinition('codeablereference'))
       return forkJoin(reqs$)
     }
 
@@ -94,8 +95,11 @@ export class AppComponent implements OnInit {
 
   private initObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
-      const strucDef = this.getStructureDefinition(key);
-      fml.objects[key] = this.getFMLStructureObject(strucDef, key, fml.objects[key].mode)
+      fml.objects[key] = this.getFMLStructureObject(
+        this.getStructureDefinition(key),
+        key, // aka. path
+        fml.objects[key].mode
+      )
     })
   }
 
@@ -164,25 +168,26 @@ export class AppComponent implements OnInit {
     return o;
   }
 
+
   /* Structure tree */
 
   public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    const strucDef = this.getStructureDefinition(parentObj.resource);
     const path = `${parentObj.resource}.${field}`;
+
     const obj = this.fml.objects[path] = this.getFMLStructureObject(
-      strucDef,
+      this.getStructureDefinition(parentObj.resource),
       path,
       parentObj.mode
     );
 
-    console.log(obj._fhirDefinition)
     if (isNil(obj._fhirDefinition)) {
       // wtf? id field?
       return;
     }
 
     if (obj._fhirDefinition.type.some(c => ['BackboneElement', 'Element'].includes(c.code))) {
-      this.editor._createObjectNode(obj)
+      this.editor._createObjectNode(obj, {outputs: 1});
+      this.editor._createConnection(obj.resource, 1, parentObj.resource, field);
     }
   }
 

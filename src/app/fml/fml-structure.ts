@@ -3,7 +3,7 @@ import {ElementDefinition, StructureMap} from 'fhir/r5';
 
 
 /**
- * Represents the ElementDefinition with the fields.
+ * Represents the ElementDefinition with the externally set fields.
  */
 export class FMLStructureObject {
   resource: string; // aka. path

@@ -28,12 +28,12 @@
       style="padding: 1rem; border-bottom: var(--border-table);"
     >
       <h5>{{node.data.obj ? 'Resource' : 'Rule'}}</h5>
-
       <!--      <app-structure-definition-tree-->
       <!--        *ngIf="node.data.obj"-->
       <!--        [fhir]="node.data.obj?._fhir | json | apply: encodeURIComponent"-->
       <!--        (selected)="onStructureItemSelect($event)"-->
       <!--      ></app-structure-definition-tree>-->
+
       <div *ngIf="node.data.obj as obj">
         <m-table mSize="small">
           <tr *ngFor="let f of obj.fields">

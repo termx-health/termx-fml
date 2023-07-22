@@ -8,6 +8,7 @@ export class FMLEditor extends Drawflow {
     parent?: object
   }) {
     super(element, options?.render, options?.parent);
+    this.curvature = 0.4
 
     this.on('connectionCreated', e => {
       const source = this.getNodeFromId(e.output_id)
@@ -47,13 +48,13 @@ export class FMLEditor extends Drawflow {
     })
   }
 
-  public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number}): number {
+  public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number, outputs?: number}): number {
     const resourceName = obj.resource
     const isSource = obj.mode === 'source';
 
     const fieldCount = obj.fields.length;
     const inputs = isSource ? 0 : fieldCount;
-    const outputs = isSource ? fieldCount : 0;
+    const outputs = isSource ? fieldCount : options?.outputs ?? 0;
 
     const getResourceHTML = (obj: FMLStructureObject) => `
       <div>
