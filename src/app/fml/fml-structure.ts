@@ -6,7 +6,6 @@ export interface FMLStructureObjectField {
   types: string[];
 }
 
-let ID = 42
 
 /**
  * Represents the ElementDefinition with the externally set fields.
@@ -19,9 +18,6 @@ export class FMLStructureObject {
 
   _fhirDefinition?: ElementDefinition;
 
-  constructor() {
-    // this.id = ID++;
-  }
 
   public getFieldIndex(field: string): number {
     return this.fields.findIndex(f => f.name === field);
@@ -96,7 +92,6 @@ export class FMLStructure {
           rule.sourceField = fhirRuleSource.element
           rule.targetObject = variables[fhirRuleTarget.context];
           rule.targetField = fhirRuleTarget.element
-          rule['_variables'] = variables;
           struc.rules.push(rule)
 
 
@@ -105,7 +100,7 @@ export class FMLStructure {
             obj.resource = variables[fhirRuleTarget.variable]
             obj.name = variables[fhirRuleTarget.variable]
             obj.mode = 'target'
-            struc.objects[obj.resource] = obj;
+            struc.objects[obj.name] = obj;
 
             rule.sourceObject = obj.name;
             rule.sourceField = 'id'

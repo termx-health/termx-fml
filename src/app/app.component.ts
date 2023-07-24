@@ -185,7 +185,7 @@ export class AppComponent implements OnInit {
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
       const isSource = obj.mode === 'source';
-      const isCustomObj = !this.structureMap.structure.every(s => s.url.endsWith(obj.resource));
+      const isCustomObj = !this.structureMap.structure.some(s => s.url.endsWith(obj.resource));
 
       const font = getCanvasFont()
       const maxWidth = Math.max(...obj.fields.map(f => getTextWidth(f, font)))
@@ -207,6 +207,7 @@ export class AppComponent implements OnInit {
         y: 25 + prevRuleBounds?.top + prevRuleBounds?.height,
         x: viewportWidth / 2,
       });
+
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
@@ -231,7 +232,7 @@ export class AppComponent implements OnInit {
     }
 
     this.editor._createObjectNode(obj, {outputs: 1});
-    this.editor._createConnection(obj.resource, 1, parentObj.resource, field);
+    this.editor._createConnection(obj.name, 1, parentObj.name, field);
   }
 
 

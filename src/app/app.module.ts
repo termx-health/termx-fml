@@ -8,6 +8,7 @@ import {MarinaUiModule} from '@kodality-web/marina-ui';
 import {CoreUtilModule} from '@kodality-web/core-util';
 import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {FormsModule} from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
     AppRoutingModule,
     HttpClientModule,
     CoreUtilModule,
-    MarinaUiModule
+    MarinaUiModule,
+    FormsModule
   ],
 
   providers: [],

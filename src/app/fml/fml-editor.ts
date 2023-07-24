@@ -16,7 +16,6 @@ export class FMLEditor extends Drawflow {
       const target = this.getNodeFromId(e.input_id)
       const undo = () => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
 
-
       if ('obj' in source.data && 'obj' in target.data) {
         const srcObj = source.data.obj as FMLStructureObject;
         const trgObj = target.data.obj as FMLStructureObject;
@@ -30,9 +29,9 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         rule.name = 'copy_' + this.getUuid();
         rule.action = 'copy';
-        rule.sourceObject = srcObj.resource;
+        rule.sourceObject = srcObj.name;
         rule.sourceField = srcObj.fields[sourceFieldIdx - 1]?.name;
-        rule.targetObject = trgObj.resource;
+        rule.targetObject = trgObj.name;
         rule.targetField = trgObj.fields[targetFieldIdx - 1]?.name;
         this._fml.rules.push(rule)
 
