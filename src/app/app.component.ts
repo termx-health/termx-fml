@@ -93,7 +93,7 @@ export class AppComponent implements OnInit {
         }
 
         const fml = this.fml = FMLStructure.map(resp)
-        this.initObjects(fml);
+        this.prepareObjects(fml);
         this.initEditor(fml);
         console.log(fml)
       })
@@ -101,7 +101,7 @@ export class AppComponent implements OnInit {
   }
 
 
-  private initObjects(fml: FMLStructure): void {
+  private prepareObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       fml.objects[key] = this.getFMLStructureObject(
         this.getStructureDefinition(key),
@@ -181,16 +181,14 @@ export class AppComponent implements OnInit {
     editor.on('nodeUnselected', () => this.nodeSelected = undefined)
 
 
-    // objects
+    // render objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
+      const isSource = obj.mode === 'source';
       const isCustomObj = !this.structureMap.structure.every(s => s.url.endsWith(obj.resource));
 
-      const isSource = obj.mode === 'source';
       const font = getCanvasFont()
       const maxWidth = Math.max(...obj.fields.map(f => getTextWidth(f, font)))
-
-
 
       editor._createObjectNode(obj, {
         x: isSource ? 80 : viewportWidth - maxWidth - 100,
@@ -200,7 +198,7 @@ export class AppComponent implements OnInit {
     })
 
 
-    // rules
+    // render rules
     fml.rules.forEach(rule => {
       const prevRule = Array.from(document.getElementsByClassName('node--rule')).at(-1);
       const prevRuleBounds = prevRule?.getBoundingClientRect();
@@ -254,6 +252,7 @@ export class AppComponent implements OnInit {
     rule.name = data.code;
     rule.action = data.code;
 
+    this.fml.rules.push(rule)
     this.editor._createRuleNode(rule, {y: ev.y, x: ev.x, constant: data.constant})
   }
 
@@ -273,4 +272,8 @@ export class AppComponent implements OnInit {
   }
 
   protected encodeURIComponent = encodeURIComponent;
+
+  protected get simpleFML(): FMLStructure {
+    return structuredClone(this.fml)
+  }
 }

@@ -18,6 +18,9 @@ export class FMLEditor extends Drawflow {
 
 
       if ('obj' in source.data && 'obj' in target.data) {
+        const srcObj = source.data.obj as FMLStructureObject;
+        const trgObj = target.data.obj as FMLStructureObject;
+
         const sourceFieldIdx = Number(e.output_class.split("_")[1]);
         const targetFieldIdx = Number(e.input_class.split("_")[1]);
 
@@ -27,15 +30,11 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         rule.name = 'copy_' + this.getUuid();
         rule.action = 'copy';
-
-        const srcObj = source.data.obj as FMLStructureObject;
         rule.sourceObject = srcObj.resource;
         rule.sourceField = srcObj.fields[sourceFieldIdx - 1]?.name;
-
-        const trgObj = target.data.obj as FMLStructureObject;
         rule.targetObject = trgObj.resource;
         rule.targetField = trgObj.fields[targetFieldIdx - 1]?.name;
-
+        this._fml.rules.push(rule)
 
         const midX = (sourceNode.getBoundingClientRect().left + targetNode.getBoundingClientRect().left) / 2;
         const midY = (sourceNode.getBoundingClientRect().top + targetNode.getBoundingClientRect().top) / 2;
@@ -43,10 +42,9 @@ export class FMLEditor extends Drawflow {
         undo()
 
         const font = getCanvasFont()
-        const width = getTextWidth(rule.name, font)
+        const maxWidth = getTextWidth(rule.name, font)
 
-
-        this._createRuleNode(rule, {x: midX - width / 2, y: midY})
+        this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY})
         this._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
         this._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
       }
@@ -106,7 +104,6 @@ export class FMLEditor extends Drawflow {
     source: string, sField: string | number,
     target: string, tField: string | number
   ) {
-    console.log(sField)
     const oIdx = typeof sField === 'string' ? this._fml.objects[source].getFieldIndex(sField) + 1 : sField
     const iIdx = typeof tField === 'string' ? this._fml.objects[target].getFieldIndex(tField) + 1 : tField
 
@@ -117,7 +114,7 @@ export class FMLEditor extends Drawflow {
         `input_${iIdx}`,
       );
     } catch (e) {
-      console.error(`Connection failed "${source}.${sField}" -> "${target}.${tField}"`)
+      console.error(`Connection failed "${source}:${sField}" -> "${target}:${tField}"`)
       throw e;
     }
   };

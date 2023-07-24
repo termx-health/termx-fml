@@ -107,7 +107,6 @@ export class FMLStructure {
             obj.mode = 'target'
             struc.objects[obj.resource] = obj;
 
-
             rule.sourceObject = obj.name;
             rule.sourceField = 'id'
           }
