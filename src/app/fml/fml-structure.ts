@@ -64,7 +64,6 @@ export class FMLStructure {
           variables[fhirRuleSource.variable] = `${inputs[fhirRuleSource.context].type}.${fhirRuleSource.element}`;
         })
         fhirRule.target.filter(frt => isDefined(frt.variable)).forEach(fhirRuleTarget => {
-          console.log(fhirRuleTarget)
           variables[fhirRuleTarget.variable] = `${variables[fhirRuleTarget.context]}.${fhirRuleTarget.element}`;
         })
 
@@ -110,7 +109,6 @@ export class FMLStructure {
     })
 
 
-    console.log(struc);
     return struc
   }
 }

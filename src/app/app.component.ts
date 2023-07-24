@@ -53,6 +53,7 @@ export class AppComponent implements OnInit {
 
   // component
   protected ruleDescriptions = RULES;
+  protected isExpanded = true;
 
 
   constructor(
@@ -63,6 +64,7 @@ export class AppComponent implements OnInit {
       customElements.define('ce-structure-definition', createCustomElement(StructureDefinitionTreeComponent, {injector}));
     }
   }
+
 
   public ngOnInit(): void {
     const _structureMap = () => {
@@ -214,6 +216,40 @@ export class AppComponent implements OnInit {
   }
 
 
+  protected setExpand(isExpanded: boolean): void {
+    this.isExpanded = isExpanded;
+
+    Object.keys(this.fml.objects).forEach(k => {
+      const node = this.editor.getNodeFromId(this.editor._getNodeId(k));
+      const max = Math.max(Object.keys(node.inputs).length, Object.keys(node.outputs).length)
+
+      const nodeEl = document.getElementById(`node-${node.id}`);
+      const inputEls = nodeEl.getElementsByClassName('inputs').item(0).children
+      const outputEls = nodeEl.getElementsByClassName('outputs').item(0).children
+      const contentEls = nodeEl.getElementsByClassName('drawflow_content_node').item(0).children
+
+      for (let i = 0; i < max; i++) {
+        inputEls.item(i)?.classList.remove('hidden')
+        outputEls.item(i)?.classList.remove('hidden');
+        contentEls.item(i + 1).classList.remove('hidden')
+
+
+        if (
+          !node.inputs[`input_${i + 1}`]?.connections?.length &&
+          !node.outputs[`output_${i + 1}`]?.connections?.length &&
+          !this.isExpanded
+        ) {
+          inputEls.item(i)?.classList.add('hidden')
+          outputEls.item(i)?.classList.add('hidden');
+          contentEls.item(i + 1).classList.add('hidden')
+        }
+      }
+
+      this.editor.updateConnectionNodes(`node-${node.id}`)
+    })
+  }
+
+
   /* Structure tree */
 
   public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
@@ -246,7 +282,6 @@ export class AppComponent implements OnInit {
     ev.preventDefault();
   }
 
-
   public onDrop(ev: DragEvent): void {
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
@@ -256,6 +291,7 @@ export class AppComponent implements OnInit {
     this.fml.rules.push(rule)
     this.editor._createRuleNode(rule, {y: ev.y, x: ev.x, constant: data.constant})
   }
+
 
   /* Utils */
 
@@ -271,8 +307,6 @@ export class AppComponent implements OnInit {
     return f.types.some(t => ['BackboneElement', 'Element'].includes(t)) ||
       this.resourceBundle.entry.some(e => f.types.includes(e.resource.type));
   }
-
-  protected encodeURIComponent = encodeURIComponent;
 
   protected get simpleFML(): FMLStructure {
     return structuredClone(this.fml)

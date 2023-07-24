@@ -29,6 +29,13 @@
   <div id="drawflow" style="height: 100vh" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
 
   <div style="border-left: var(--border-table);  height: 100dvh; overflow: auto; background: var(--color-background-component)">
+    <div style="border-bottom: var(--border-table); padding: 1rem" class="m-justify-center">
+      <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)">
+        <label m-radio-button [mValue]="true">Expanded</label>
+        <label m-radio-button [mValue]="false">Collapsed</label>
+      </m-radio-group>
+    </div>
+
     <div
       *ngIf="!nodeSelected"
       style="padding: 1rem; border-bottom: var(--border-table)"
@@ -79,13 +86,15 @@
           <m-input [(ngModel)]="rule.name"></m-input>
         </m-form-item>
 
-        <div style="border-bottom: var(--border-table); margin-inline: -1rem; padding-top: 0.3rem; margin-bottom: 1rem"></div>
 
-        <div class="form-view">
-          <m-form-item mLabel="Source">
+        <div class="form-view"
+          style="border-top: var(--border-table); margin-inline: -1rem; padding: 1rem 1rem 0;"
+          *ngIf="rule.sourceObject || rule.targetObject"
+        >
+          <m-form-item mLabel="Source" *ngIf="rule.sourceObject">
             {{rule.sourceObject}}:<b>{{rule.sourceField}}</b>
           </m-form-item>
-          <m-form-item mLabel="Target">
+          <m-form-item mLabel="Target" *ngIf="rule.targetObject">
             {{rule.targetObject}}:<b>{{rule.targetField}}</b>
           </m-form-item>
         </div>
