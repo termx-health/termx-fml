@@ -95,6 +95,7 @@ export class AppComponent implements OnInit {
         const fml = this.fml = FMLStructure.map(resp)
         this.initObjects(fml);
         this.initEditor(fml);
+        console.log(fml)
       })
     })
   }
@@ -183,14 +184,18 @@ export class AppComponent implements OnInit {
     // objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
+      const isCustomObj = !this.structureMap.structure.every(s => s.url.endsWith(obj.resource));
 
       const isSource = obj.mode === 'source';
       const font = getCanvasFont()
       const maxWidth = Math.max(...obj.fields.map(f => getTextWidth(f, font)))
 
+
+
       editor._createObjectNode(obj, {
         x: isSource ? 80 : viewportWidth - maxWidth - 100,
-        y: 40
+        y: 40,
+        outputs: isCustomObj ? 1 : 0
       })
     })
 

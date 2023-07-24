@@ -83,6 +83,10 @@ export class FMLEditor extends Drawflow {
   }
 
   public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, constant?: boolean}): number {
+    if (isDefined(this._getNodeId(rule.name))) {
+      throw Error(`Rule node with name "${rule.name}" is already created`)
+    }
+
     return this.addNode(
       rule.name,
       options?.constant ? 0 : 1, 1,

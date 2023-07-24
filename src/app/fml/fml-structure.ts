@@ -106,6 +106,10 @@ export class FMLStructure {
             obj.name = variables[fhirRuleTarget.variable]
             obj.mode = 'target'
             struc.objects[obj.resource] = obj;
+
+
+            rule.sourceObject = obj.name;
+            rule.sourceField = 'id'
           }
         })
       })
