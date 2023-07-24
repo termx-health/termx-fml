@@ -1,14 +1,14 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {createCustomElement} from '@angular/elements';
-import {Element, StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
-import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
+import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
+import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
-import {Bundle, ElementDefinition, StructureDefinition, StructureMap} from 'fhir/r5';
+import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {getCanvasFont, getTextWidth} from './fml/fml.utils';
-import {isNil} from '@kodality-web/core-util';
+import {isDefined, isNil} from '@kodality-web/core-util';
 
 interface RuleDescription {
   code: string,
@@ -67,12 +67,19 @@ export class AppComponent implements OnInit {
   public ngOnInit(): void {
     const _structureMap = () => {
       const name = "structuremap-supplyrequest-transform";
-      return this.structureMapService.getStructureMap(name);
+      const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
+      return this.structureMapService.getStructureMap(url);
     }
     const _resourceBundle = (sm: StructureMap) => {
+      const resources = [
+        'CodeableReference',
+        'CodeableConcept',
+        'Reference',
+      ]
+
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
       const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
-      reqs$.push(this.structureMapService.getStructureDefinition('codeablereference'))
+      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
       return forkJoin(reqs$)
     }
 
@@ -102,6 +109,66 @@ export class AppComponent implements OnInit {
       )
     })
   }
+
+
+  /* FML */
+
+  private getStructureDefinition(anyPath: string): StructureDefinition {
+    const base = anyPath.includes('.')
+      ? anyPath.slice(0, anyPath.indexOf('.'))
+      : anyPath;
+
+    return this.resourceBundle.entry
+      .map(e => e.resource)
+      .find(e => e.id === base)
+  }
+
+  /**
+   * Parent definition elements example:
+   *
+   * id
+   * type
+   * type.code
+   * type.status
+   *
+   * $path - element field name ('type', 'type.code' etc.)
+   */
+  private getFMLStructureObject(parentDef: StructureDefinition, path: string, mode: string): FMLStructureObject {
+    // find matching element
+    const pathElement = parentDef.snapshot.element.find(el => el.path === path);
+    const pathElementType = pathElement.type?.[0].code; // fixme: the first type is used!
+
+    let structureDefinition = parentDef;
+    let elements = parentDef.snapshot.element.filter(el => el.path.startsWith(path));
+
+    if (this._isComplexResource(pathElementType) && !['BackboneElement', 'Element'].includes(pathElementType)) {
+      // external definition (provided in Bundle)
+      structureDefinition = this.getStructureDefinition(pathElementType);
+      if (isNil(structureDefinition)) {
+        throw Error(`ElementDefinition for "${path}" not found`);
+      }
+      elements = structureDefinition.snapshot.element;
+    }
+
+
+    const pathElementDefinition = elements[0];
+    const pathElementFields = elements;
+
+    const o = new FMLStructureObject()
+    o.resource = pathElementDefinition.id;
+    o.name = path
+    o.mode = mode;
+    o.fields = pathElementFields.slice(1).map(e => ({
+      name: e.path.substring(pathElementDefinition.id.length + 1),
+      types: e.type?.map(t => t.code)
+    }))
+
+    o._fhirDefinition = pathElementDefinition;
+    return o;
+  }
+
+
+  /* Editor */
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
@@ -142,32 +209,6 @@ export class AppComponent implements OnInit {
     })
   }
 
-  /* FML */
-
-  private getStructureDefinition(anyPath: string): StructureDefinition {
-    const base = anyPath.includes('.')
-      ? anyPath.slice(0, anyPath.indexOf('.'))
-      : anyPath;
-
-    return this.resourceBundle.entry
-      .map(e => e.resource)
-      .find(e => e.id === base)
-  }
-
-  private getFMLStructureObject(def: StructureDefinition, path: string, mode: string): FMLStructureObject {
-    const pathElements = def.differential.element.filter(el => el.path.startsWith(path));
-    const selfDefinition: ElementDefinition = pathElements[0];
-
-    const o = new FMLStructureObject()
-    o.resource = path;
-    o.fields = pathElements.slice(1).map(e => e.path.substring(path.length + 1))
-    o.fields.unshift('id')
-    o.mode = mode;
-
-    o._fhirDefinition = selfDefinition;
-    return o;
-  }
-
 
   /* Structure tree */
 
@@ -181,14 +222,13 @@ export class AppComponent implements OnInit {
     );
 
     if (isNil(obj._fhirDefinition)) {
+      console.warn(`FHIR Element Definition is missing, ${obj.resource}`)
       // wtf? id field?
       return;
     }
 
-    if (obj._fhirDefinition.type.some(c => ['BackboneElement', 'Element'].includes(c.code))) {
-      this.editor._createObjectNode(obj, {outputs: 1});
-      this.editor._createConnection(obj.resource, 1, parentObj.resource, field);
-    }
+    this.editor._createObjectNode(obj, {outputs: 1});
+    this.editor._createConnection(obj.resource, 1, parentObj.resource, field);
   }
 
 
@@ -214,6 +254,18 @@ export class AppComponent implements OnInit {
 
   /* Utils */
 
+  protected isComplexResource = (f: FMLStructureObjectField): boolean => {
+    return f.types.some(t => this._isComplexResource(t))
+  }
+
+  private _isComplexResource(type: string): boolean {
+    return isDefined(type) && type.charAt(0).toUpperCase() === type.charAt(0);
+  }
+
+  protected isResourceSelectable = (f: FMLStructureObjectField) => {
+    return f.types.some(t => ['BackboneElement', 'Element'].includes(t)) ||
+      this.resourceBundle.entry.some(e => f.types.includes(e.resource.type));
+  }
 
   protected encodeURIComponent = encodeURIComponent;
 }

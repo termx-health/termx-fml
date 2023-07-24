@@ -10,10 +10,10 @@ export class StructureMapService {
 
 
   public getStructureDefinition(resource: string): Observable<StructureDefinition> {
-    return this.http.get<StructureDefinition>(`https://hl7.org/fhir/${resource.toLowerCase()}.profile.json`)
+    return this.http.get<StructureDefinition>(`assets/StructureDefinition/${resource}.json`)
   }
 
-  public getStructureMap(name: string): Observable<StructureMap> {
-    return this.http.get<StructureMap>(`https://www.hl7.org/fhir/${name}.json`)
+  public getStructureMap(url: string): Observable<StructureMap> {
+    return this.http.get<StructureMap>(url)
   }
 }

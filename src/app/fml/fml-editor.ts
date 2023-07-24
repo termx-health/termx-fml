@@ -1,6 +1,7 @@
 import Drawflow from 'drawflow';
 import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getCanvasFont, getTextWidth} from './fml.utils';
+import {isDefined} from '@kodality-web/core-util';
 
 export class FMLEditor extends Drawflow {
   constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
@@ -26,10 +27,14 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         rule.name = 'copy_' + this.getUuid();
         rule.action = 'copy';
-        rule.sourceObject = source.data.obj.resource;
-        rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1];
-        rule.targetObject = target.data.obj.resource;
-        rule.targetField = target.data.obj.fields[targetFieldIdx - 1];
+
+        const srcObj = source.data.obj as FMLStructureObject;
+        rule.sourceObject = srcObj.resource;
+        rule.sourceField = srcObj.fields[sourceFieldIdx - 1]?.name;
+
+        const trgObj = target.data.obj as FMLStructureObject;
+        rule.targetObject = trgObj.resource;
+        rule.targetField = trgObj.fields[targetFieldIdx - 1]?.name;
 
 
         const midX = (sourceNode.getBoundingClientRect().left + targetNode.getBoundingClientRect().left) / 2;
@@ -49,7 +54,10 @@ export class FMLEditor extends Drawflow {
   }
 
   public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number, outputs?: number}): number {
-    const resourceName = obj.resource
+    if (isDefined(this._getNodeId(obj.name))) {
+      throw Error(`Object node with name "${obj.name}" is already created`)
+    }
+
     const isSource = obj.mode === 'source';
 
     const fieldCount = obj.fields.length;
@@ -58,13 +66,13 @@ export class FMLEditor extends Drawflow {
 
     const getResourceHTML = (obj: FMLStructureObject) => `
       <div>
-         <h5 class="node-title">${obj.resource}</div>
-         ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f}</div>`).join('')}
+         <h5 class="node-title">${obj.name !== obj.resource ? `<b>${obj.name}</b> | ` : ''} ${obj.resource}</div>
+         ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
       </div>
     `
 
     return this.addNode(
-      resourceName,
+      obj.name,
       inputs, outputs,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
@@ -94,6 +102,7 @@ export class FMLEditor extends Drawflow {
     source: string, sField: string | number,
     target: string, tField: string | number
   ) {
+    console.log(sField)
     const oIdx = typeof sField === 'string' ? this._fml.objects[source].getFieldIndex(sField) + 1 : sField
     const iIdx = typeof tField === 'string' ? this._fml.objects[target].getFieldIndex(tField) + 1 : tField
 

@@ -37,7 +37,13 @@
       <div *ngIf="node.data.obj as obj">
         <m-table mSize="small">
           <tr *ngFor="let f of obj.fields">
-            <td><a (mClick)="onStructureItemSelect(obj, f)">{{f}}</a></td>
+            <td>
+              <ng-container *ngIf="f | apply: isComplexResource; else name">
+                <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onStructureItemSelect(obj, f.name)">{{f.name}}</a>
+                <div class="description">{{f.types | join: ', '}}</div>
+              </ng-container>
+              <ng-template #name>{{f.name}}</ng-template>
+            </td>
           </tr>
         </m-table>
       </div>
