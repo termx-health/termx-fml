@@ -104,14 +104,13 @@ export class AppComponent implements OnInit {
   private prepareObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
-
         fml.objects[key] = this.getFMLStructureObject(
           this.getStructureDefinition(key),
           key, // aka. path
           fml.objects[key].mode
         )
       } catch (e) {
-        console.log(e)
+        console.error(e)
       }
     })
   }
@@ -142,16 +141,16 @@ export class AppComponent implements OnInit {
   private getFMLStructureObject(parentDef: StructureDefinition, path: string, mode: string): FMLStructureObject {
     // find matching element
     const pathElement = parentDef.snapshot.element.find(el => el.path === path);
+    const pathElementType = pathElement.type?.[0].code; // fixme: the first type is used!
     if (isNil(pathElement)) {
       throw Error(`Element on path "${path}" does not exist`)
     }
-    const pathElementType = pathElement.type?.[0].code; // fixme: the first type is used!
 
     let structureDefinition = parentDef;
     let elements = parentDef.snapshot.element.filter(el => el.path.startsWith(path));
 
+    // external definition (provided in Bundle)
     if (this._isComplexResource(pathElementType) && !['BackboneElement', 'Element'].includes(pathElementType)) {
-      // external definition (provided in Bundle)
       structureDefinition = this.getStructureDefinition(pathElementType);
       if (isNil(structureDefinition)) {
         throw Error(`ElementDefinition for "${path}" not found`);
@@ -201,7 +200,7 @@ export class AppComponent implements OnInit {
       editor._createObjectNode(obj, {
         x: isSource ? 80 : viewportWidth - maxWidth - 100,
         y: 40,
-        outputs: isCustomObj ? 1 : 0
+        outputs: isCustomObj ? 1 : undefined
       })
     })
 
@@ -218,40 +217,6 @@ export class AppComponent implements OnInit {
 
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
-    })
-  }
-
-
-  protected setExpand(isExpanded: boolean): void {
-    this.isExpanded = isExpanded;
-
-    Object.keys(this.fml.objects).forEach(k => {
-      const node = this.editor.getNodeFromId(this.editor._getNodeId(k));
-      const max = Math.max(Object.keys(node.inputs).length, Object.keys(node.outputs).length)
-
-      const nodeEl = document.getElementById(`node-${node.id}`);
-      const inputEls = nodeEl.getElementsByClassName('inputs').item(0).children
-      const outputEls = nodeEl.getElementsByClassName('outputs').item(0).children
-      const contentEls = nodeEl.getElementsByClassName('drawflow_content_node').item(0).children
-
-      for (let i = 0; i < max; i++) {
-        inputEls.item(i)?.classList.remove('hidden')
-        outputEls.item(i)?.classList.remove('hidden');
-        contentEls.item(i + 1).classList.remove('hidden')
-
-
-        if (
-          !node.inputs[`input_${i + 1}`]?.connections?.length &&
-          !node.outputs[`output_${i + 1}`]?.connections?.length &&
-          !this.isExpanded
-        ) {
-          inputEls.item(i)?.classList.add('hidden')
-          outputEls.item(i)?.classList.add('hidden');
-          contentEls.item(i + 1).classList.add('hidden')
-        }
-      }
-
-      this.editor.updateConnectionNodes(`node-${node.id}`)
     })
   }
 
@@ -296,6 +261,42 @@ export class AppComponent implements OnInit {
 
     this.fml.rules.push(rule)
     this.editor._createRuleNode(rule, {y: ev.y, x: ev.x})
+  }
+
+
+  /* Expand */
+
+  protected setExpand(isExpanded: boolean): void {
+    this.isExpanded = isExpanded;
+
+    Object.keys(this.fml.objects).forEach(k => {
+      const node = this.editor.getNodeFromId(this.editor._getNodeId(k));
+      const max = Math.max(Object.keys(node.inputs).length, Object.keys(node.outputs).length)
+
+      const nodeEl = document.getElementById(`node-${node.id}`);
+      const inputEls = nodeEl.getElementsByClassName('inputs').item(0).children
+      const outputEls = nodeEl.getElementsByClassName('outputs').item(0).children
+      const contentEls = nodeEl.getElementsByClassName('drawflow_content_node').item(0).children
+
+      for (let i = 0; i < max; i++) {
+        inputEls.item(i)?.classList.remove('hidden')
+        outputEls.item(i)?.classList.remove('hidden');
+        contentEls.item(i + 1).classList.remove('hidden')
+
+
+        if (
+          !node.inputs[`input_${i + 1}`]?.connections?.length &&
+          !node.outputs[`output_${i + 1}`]?.connections?.length &&
+          !this.isExpanded
+        ) {
+          inputEls.item(i)?.classList.add('hidden')
+          outputEls.item(i)?.classList.add('hidden');
+          contentEls.item(i + 1).classList.add('hidden')
+        }
+      }
+
+      this.editor.updateConnectionNodes(`node-${node.id}`)
+    })
   }
 
 

@@ -82,18 +82,19 @@ export class FMLEditor extends Drawflow {
       throw Error(`Object node with name "${obj.name}" is already created`)
     }
 
-    const isSource = obj.mode === 'source';
 
     const fieldCount = obj.fields.length;
-    const inputs = isSource ? 0 : fieldCount;
-    const outputs = isSource ? fieldCount : options?.outputs ?? 0;
+    const inputs = {
+      source: 0,
+      target: fieldCount,
+      object: fieldCount
+    }[obj.mode];
+    const outputs = options?.outputs ?? {
+      source: fieldCount,
+      target: 0,
+      object: 1
+    }[obj.mode];
 
-    const getResourceHTML = (obj: FMLStructureObject) => `
-      <div>
-         <h5 class="node-title">${obj.name !== obj.resource ? `<b>${obj.name}</b> | ` : ''} ${obj.resource}</div>
-         ${obj.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
-      </div>
-    `
 
     return this.addNode(
       obj.name,
@@ -101,7 +102,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--with-title', {obj},
-      getResourceHTML(obj),
+      obj.html(),
       false
     );
   }
@@ -119,7 +120,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
-      rule.name,
+      rule.html(),
       false
     )
   }

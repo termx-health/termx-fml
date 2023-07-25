@@ -6,16 +6,25 @@ export interface FMLRuleParserResult {
   object?: FMLStructureObject
 }
 
+export type FMLRuleParserVariables = {[name: string]: string}
+
 export abstract class FMLRuleParser {
   abstract action: string;
 
-  public parse(
+  public abstract parse(
+    ruleName: string,
     fhirRuleSource: StructureMapGroupRuleSource,
     fhirRuleTarget: StructureMapGroupRuleTarget,
-    variables: {[name: string]: string} // variable name -> variable path
-  ): FMLRuleParserResult {
+    variables: FMLRuleParserVariables // variable name -> variable path
+  ): FMLRuleParserResult
+
+  public create(
+    ruleName: string,
+    fhirRuleSource: StructureMapGroupRuleSource,
+    fhirRuleTarget: StructureMapGroupRuleTarget,
+  ): FMLStructureRule {
     const rule = new FMLStructureRule()
-    rule.name = `_${fhirRuleTarget.transform}`;
+    rule.name = `${ruleName}.${fhirRuleTarget.transform}`;
     rule.alias = fhirRuleTarget.variable
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
@@ -28,20 +37,26 @@ export abstract class FMLRuleParser {
       p.valueTime ??
       p.valueDateTime
     )
-    return {rule}
+
+    rule.html = () => `
+      <div>
+         ${rule.name}
+      </div>
+    `
+    return rule
   }
 
   public connect(
     rule: FMLStructureRule,
     fhirRuleSource: StructureMapGroupRuleSource,
     fhirRuleTarget: StructureMapGroupRuleTarget,
-    variables: {[p: string]: string}
+    variables: FMLRuleParserVariables
   ): void {
-    if (variables[fhirRuleSource.context]) {
+    if (variables[fhirRuleSource.context] && fhirRuleSource.element) {
       rule.sourceObject = variables[fhirRuleSource.context];
       rule.sourceField = fhirRuleSource.element
     }
-    if (variables[fhirRuleTarget.context]) {
+    if (variables[fhirRuleTarget.context] && fhirRuleTarget.element) {
       rule.targetObject = variables[fhirRuleTarget.context];
       rule.targetField = fhirRuleTarget.element
     }

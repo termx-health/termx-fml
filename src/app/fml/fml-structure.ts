@@ -1,9 +1,10 @@
 import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {ElementDefinition, StructureMap} from 'fhir/r5';
-import {FMLRuleParser} from './rule-parsers/parser';
+import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyParser} from './rule-parsers/copy.parser';
 import {FMLCreateParser} from './rule-parsers/create.parser';
 import {FMLUuidParser} from './rule-parsers/uuid.parser';
+import {FMLAppendParser} from './rule-parsers/append.parser';
 
 export interface FMLStructureObjectField {
   name: string;
@@ -19,11 +20,18 @@ export class FMLStructureObject {
   name: string;
   fields: FMLStructureObjectField[] = [];
   mode: 'source' | 'target' | 'object' | string;
-
   _fhirDefinition?: ElementDefinition;
 
+  html(): string {
+    return `
+      <div>
+         <h5 class="node-title">${this.mode} | ${this.name !== this.resource ? `<b>${this.name}</b> | ` : ''} ${this.resource}</div>
+         ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
+      </div>
+    `
+  };
 
-  public getFieldIndex(field: string): number {
+  getFieldIndex(field: string): number {
     return this.fields.findIndex(f => f.name === field);
   }
 }
@@ -38,6 +46,8 @@ export class FMLStructureRule {
   sourceField: string;
   targetObject: string;
   targetField: string;
+
+  html: () => string
 }
 
 export class FMLStructure {
@@ -49,7 +59,8 @@ export class FMLStructure {
     const ruleParsers: FMLRuleParser[] = [
       new FMLCopyParser(),
       new FMLCreateParser(),
-      new FMLUuidParser()
+      new FMLUuidParser(),
+      new FMLAppendParser(),
     ]
 
 
@@ -66,13 +77,9 @@ export class FMLStructure {
 
     // group
     fhir.group.forEach(fhirGroup => {
-      const inputs = group(fhirGroup.input, i => i.name);
-
-      fhirGroup.rule.forEach(fhirRule => {
-        // init variables
-        const variables = group(fhirGroup.input, i => i.name, i => i.type);
-        fhirRule.source.forEach(fhirRuleSource => {
-          variables[fhirRuleSource.variable] = `${inputs[fhirRuleSource.context].type}.${fhirRuleSource.element}`;
+      const _parseRule = (fhirRule, variables: FMLRuleParserVariables) => {
+        fhirRule.source.filter(frt => isDefined(frt.variable)).forEach(fhirRuleSource => {
+          variables[fhirRuleSource.variable] = `${variables[fhirRuleSource.context]}.${fhirRuleSource.element}`;
         })
         fhirRule.target.filter(frt => isDefined(frt.variable)).forEach(fhirRuleTarget => {
           variables[fhirRuleTarget.variable] = `${variables[fhirRuleTarget.context]}.${fhirRuleTarget.element}`;
@@ -84,12 +91,12 @@ export class FMLStructure {
 
         fhirRule.target.forEach(fhirRuleTarget => {
           const parser = ruleParsers.find(p => p.action === fhirRuleTarget.transform)
-          if (isNil(parser)){
+          if (isNil(parser)) {
             console.warn(`Parser for the "${fhirRuleTarget.transform}" transformation not found!`)
             return
           }
 
-          const {rule, object} = parser.parse(fhirRuleSource, fhirRuleTarget, variables)
+          const {rule, object} = parser.parse(fhirRule.name, fhirRuleSource, fhirRuleTarget, variables)
           if (isDefined(rule)) {
             struc.rules.push(rule)
           }
@@ -97,8 +104,23 @@ export class FMLStructure {
             struc.objects[object.name] = object;
           }
         })
+
+        fhirRule.rule?.forEach(subRule => {
+          _parseRule(subRule, variables)
+        })
+      }
+
+
+      fhirGroup.rule.forEach(fhirRule => {
+        // init variables
+        const variables = group(fhirGroup.input, i => i.name, i => i.type);
+        _parseRule(fhirRule, variables)
+
+        console.log(variables)
       })
     })
+
+    console.log(struc)
     return struc
   }
 }
