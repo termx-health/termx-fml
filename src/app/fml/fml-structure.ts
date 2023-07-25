@@ -1,5 +1,9 @@
-import {group, isDefined} from '@kodality-web/core-util';
+import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {ElementDefinition, StructureMap} from 'fhir/r5';
+import {FMLRuleParser} from './rule-parsers/parser';
+import {FMLCopyParser} from './rule-parsers/copy.parser';
+import {FMLCreateParser} from './rule-parsers/create.parser';
+import {FMLUuidParser} from './rule-parsers/uuid.parser';
 
 export interface FMLStructureObjectField {
   name: string;
@@ -14,7 +18,7 @@ export class FMLStructureObject {
   resource: string;
   name: string;
   fields: FMLStructureObjectField[] = [];
-  mode: 'source' | 'target' | string;
+  mode: 'source' | 'target' | 'object' | string;
 
   _fhirDefinition?: ElementDefinition;
 
@@ -42,6 +46,13 @@ export class FMLStructure {
 
 
   public static map(fhir: StructureMap): FMLStructure {
+    const ruleParsers: FMLRuleParser[] = [
+      new FMLCopyParser(),
+      new FMLCreateParser(),
+      new FMLUuidParser()
+    ]
+
+
     const struc = new FMLStructure();
     struc.objects = group(fhir.structure ?? [], s => s.url.substring(s.url.lastIndexOf('/') + 1), s => {
       const obj = new FMLStructureObject()
@@ -72,43 +83,22 @@ export class FMLStructure {
         const fhirRuleSource = fhirRule.source[0]
 
         fhirRule.target.forEach(fhirRuleTarget => {
-          const rule = new FMLStructureRule()
-          rule.name = fhirRule.name + '.' + fhirRuleTarget.transform;
-          rule.alias = fhirRuleTarget.variable
-          rule.action = fhirRuleTarget.transform;
-          rule.parameters = fhirRuleTarget.parameter?.map(p =>
-            p.valueId ??
-            p.valueString ??
-            p.valueBoolean ??
-            p.valueInteger ??
-            p.valueDecimal ??
-            p.valueDate ??
-            p.valueTime ??
-            p.valueDateTime
-          )
+          const parser = ruleParsers.find(p => p.action === fhirRuleTarget.transform)
+          if (isNil(parser)){
+            console.warn(`Parser for the "${fhirRuleTarget.transform}" transformation not found!`)
+            return
+          }
 
-          rule.sourceObject = variables[fhirRuleSource.context];
-          rule.sourceField = fhirRuleSource.element
-          rule.targetObject = variables[fhirRuleTarget.context];
-          rule.targetField = fhirRuleTarget.element
-          struc.rules.push(rule)
-
-
-          if (rule.action === 'create') {
-            const obj = new FMLStructureObject()
-            obj.resource = variables[fhirRuleTarget.variable]
-            obj.name = variables[fhirRuleTarget.variable]
-            obj.mode = 'target'
-            struc.objects[obj.name] = obj;
-
-            rule.sourceObject = obj.name;
-            rule.sourceField = 'id'
+          const {rule, object} = parser.parse(fhirRuleSource, fhirRuleTarget, variables)
+          if (isDefined(rule)) {
+            struc.rules.push(rule)
+          }
+          if (isDefined(object)) {
+            struc.objects[object.name] = object;
           }
         })
       })
     })
-
-
     return struc
   }
 }

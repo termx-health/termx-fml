@@ -106,14 +106,16 @@ export class FMLEditor extends Drawflow {
     );
   }
 
-  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, constant?: boolean}): number {
+  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number}): number {
     if (isDefined(this._getNodeId(rule.name))) {
       throw Error(`Rule node with name "${rule.name}" is already created`)
     }
 
+    const isConstant = ['uuid'].includes(rule.action)
+
     return this.addNode(
       rule.name,
-      options?.constant ? 0 : 1, 1,
+      isConstant ? 0 : 1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
@@ -141,7 +143,6 @@ export class FMLEditor extends Drawflow {
       );
     } catch (e) {
       console.error(`Connection failed "${source}:${sField}" -> "${target}:${tField}"`)
-      throw e;
     }
   };
 }

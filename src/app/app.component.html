@@ -66,7 +66,7 @@
       <!--      ></app-structure-definition-tree>-->
 
       <div *ngIf="node.data.obj as obj">
-        <h5>Resource</h5>
+        <h5>Resource | {{obj.mode}}</h5>
 
         <m-table mSize="small">
           <tr *ngFor="let f of obj.fields">
@@ -86,6 +86,18 @@
           <m-input [(ngModel)]="rule.name"></m-input>
         </m-form-item>
 
+        <div class="form-view"
+          style="border-top: var(--border-table); margin-inline: -1rem; padding: 1rem 1rem 0.6rem;"
+        >
+          <m-form-item mLabel="Action">
+            {{rule.action}}
+          </m-form-item>
+          <m-form-item mLabel="Parameters">
+            <ul>
+              <li *ngFor="let p of rule.parameters">{{p}}</li>
+            </ul>
+          </m-form-item>
+        </div>
 
         <div class="form-view"
           style="border-top: var(--border-table); margin-inline: -1rem; padding: 1rem 1rem 0;"

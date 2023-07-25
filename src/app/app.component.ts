@@ -13,8 +13,7 @@ import {isDefined, isNil} from '@kodality-web/core-util';
 interface RuleDescription {
   code: string,
   name: string,
-  description?: string,
-  constant?: boolean
+  description?: string
 }
 
 const RULES: RuleDescription[] = [
@@ -31,8 +30,7 @@ const RULES: RuleDescription[] = [
   {
     code: 'uuid',
     name: 'uuid',
-    description: 'Generate a random UUID (in lowercase). No Parameters',
-    constant: true
+    description: 'Generate a random UUID (in lowercase). No Parameters'
   }
 ]
 
@@ -68,7 +66,7 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     const _structureMap = () => {
-      const name = "structuremap-supplyrequest-transform";
+      const name = "tobacco-use-transform";
       const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
       return this.structureMapService.getStructureMap(url);
     }
@@ -105,11 +103,16 @@ export class AppComponent implements OnInit {
 
   private prepareObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
-      fml.objects[key] = this.getFMLStructureObject(
-        this.getStructureDefinition(key),
-        key, // aka. path
-        fml.objects[key].mode
-      )
+      try {
+
+        fml.objects[key] = this.getFMLStructureObject(
+          this.getStructureDefinition(key),
+          key, // aka. path
+          fml.objects[key].mode
+        )
+      } catch (e) {
+        console.log(e)
+      }
     })
   }
 
@@ -139,6 +142,9 @@ export class AppComponent implements OnInit {
   private getFMLStructureObject(parentDef: StructureDefinition, path: string, mode: string): FMLStructureObject {
     // find matching element
     const pathElement = parentDef.snapshot.element.find(el => el.path === path);
+    if (isNil(pathElement)) {
+      throw Error(`Element on path "${path}" does not exist`)
+    }
     const pathElementType = pathElement.type?.[0].code; // fixme: the first type is used!
 
     let structureDefinition = parentDef;
@@ -207,7 +213,7 @@ export class AppComponent implements OnInit {
 
       editor._createRuleNode(rule, {
         y: 25 + prevRuleBounds?.top + prevRuleBounds?.height,
-        x: viewportWidth / 2,
+        x: viewportWidth / 2
       });
 
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
@@ -289,14 +295,14 @@ export class AppComponent implements OnInit {
     rule.action = data.code;
 
     this.fml.rules.push(rule)
-    this.editor._createRuleNode(rule, {y: ev.y, x: ev.x, constant: data.constant})
+    this.editor._createRuleNode(rule, {y: ev.y, x: ev.x})
   }
 
 
   /* Utils */
 
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
-    return f.types.some(t => this._isComplexResource(t))
+    return f.types?.some(t => this._isComplexResource(t))
   }
 
   private _isComplexResource(type: string): boolean {
@@ -304,8 +310,8 @@ export class AppComponent implements OnInit {
   }
 
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
-    return f.types.some(t => ['BackboneElement', 'Element'].includes(t)) ||
-      this.resourceBundle.entry.some(e => f.types.includes(e.resource.type));
+    return f.types?.some(t => ['BackboneElement', 'Element'].includes(t)) ||
+      this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
   }
 
   protected get simpleFML(): FMLStructure {
