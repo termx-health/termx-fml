@@ -35,60 +35,111 @@
         }
       ],
       "rule": [
-
         {
-          "name": "rule-performer",
+          "name": "rule-value",
           "source": [
             {
-              "context": "src",
-              "element": "labiviija",
-              "variable": "doc"
+              "context": "src"
             }
           ],
           "target": [
             {
               "context": "obs",
-              "element": "performer",
-              "variable": "docRef",
+              "element": "value",
+              "variable": "newCC",
               "transform": "create",
               "parameter": [
                 {
-                  "valueString": "Reference"
+                  "valueString": "CodeableConcept"
                 }
               ]
             }
           ],
           "rule": [
             {
-              "name": "rule-docref-1",
+              "name": "rule-value-coding",
               "source": [
                 {
-                  "context": "doc"
+                  "context": "src"
                 }
               ],
               "target": [
                 {
-                  "context": "docRef",
-                  "element": "type",
-                  "transform": "copy",
+                  "context": "newCC",
+                  "element": "coding",
+                  "variable": "newCoding",
+                  "transform": "create",
                   "parameter": [
                     {
-                      "valueString": "Practitioner"
+                      "valueString": "Coding"
+                    }
+                  ]
+                }
+              ],
+              "rule": [
+                {
+                  "name": "rule-value-coding-system",
+                  "source": [
+                    {
+                      "context": "src"
+                    }
+                  ],
+                  "target": [
+                    {
+                      "context": "newCoding",
+                      "element": "system",
+                      "transform": "copy",
+                      "parameter": [
+                        {
+                          "valueString": "http://snomed.info/sct"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "context": "docRef",
-                  "element": "reference",
-                  "transform": "append",
-                  "parameter": [
+                  "name": "rule-value-coding-code",
+                  "source": [
                     {
-                      "valueString": "Practitioner?identifier="
-                    },
+                      "context": "src",
+                      "element": "tulemus",
+                      "variable": "val"
+                    }
+                  ],
+                  "target": [
                     {
-                      "valueId": "doc"
+                      "context": "newCoding",
+                      "element": "code",
+                      "transform": "copy",
+                      "parameter": [
+                        {
+                          "valueId": "val"
+                        }
+                      ]
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_effectiveTime",
+          "source": [
+            {
+              "context": "src",
+              "element": "aeg",
+              "variable": "aeg"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "effective",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "aeg"
                 }
               ]
             }

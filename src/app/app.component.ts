@@ -8,7 +8,7 @@ import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {getCanvasFont, getTextWidth} from './fml/fml.utils';
-import {isDefined, isNil} from '@kodality-web/core-util';
+import {group, isDefined, isNil} from '@kodality-web/core-util';
 
 interface RuleDescription {
   code: string,
@@ -66,6 +66,7 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     const _structureMap = () => {
+      // const name = "structuremap-supplyrequest-transform";
       const name = "tobacco-use-transform";
       const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
       return this.structureMapService.getStructureMap(url);
@@ -75,6 +76,7 @@ export class AppComponent implements OnInit {
         'CodeableReference',
         'CodeableConcept',
         'Reference',
+        'Coding',
       ]
 
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
@@ -104,11 +106,7 @@ export class AppComponent implements OnInit {
   private prepareObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
-        fml.objects[key] = this.getFMLStructureObject(
-          this.getStructureDefinition(key),
-          key, // aka. path
-          fml.objects[key].mode
-        )
+        fml.objects[key] = this.getFMLStructureObject(fml.objects[key])
       } catch (e) {
         console.error(e)
       }
@@ -138,23 +136,15 @@ export class AppComponent implements OnInit {
    *
    * $path - element field name ('type', 'type.code' etc.)
    */
-  private getFMLStructureObject(parentDef: StructureDefinition, path: string, mode: string): FMLStructureObject {
-    // find matching element
-    const pathElement = parentDef.snapshot.element.find(el => el.path === path);
-    const pathElementType = pathElement.type?.[0].code; // fixme: the first type is used!
-    if (isNil(pathElement)) {
-      throw Error(`Element on path "${path}" does not exist`)
-    }
+  private getFMLStructureObject(object: FMLStructureObject): FMLStructureObject {
+    const structureDefinition = this.getStructureDefinition(object.resource)
 
-    let structureDefinition = parentDef;
-    let elements = parentDef.snapshot.element.filter(el => el.path.startsWith(path));
+
+    // let structureDefinition = parentDef;
+    let elements = structureDefinition.snapshot.element.filter(el => el.path.startsWith(object.name));
 
     // external definition (provided in Bundle)
-    if (this._isComplexResource(pathElementType) && !['BackboneElement', 'Element'].includes(pathElementType)) {
-      structureDefinition = this.getStructureDefinition(pathElementType);
-      if (isNil(structureDefinition)) {
-        throw Error(`ElementDefinition for "${path}" not found`);
-      }
+    if (object.name !== object.resource) {
       elements = structureDefinition.snapshot.element;
     }
 
@@ -162,17 +152,19 @@ export class AppComponent implements OnInit {
     const pathElementDefinition = elements[0];
     const pathElementFields = elements;
 
-    const o = new FMLStructureObject()
-    o.resource = pathElementDefinition.id;
-    o.name = path
-    o.mode = mode;
-    o.fields = pathElementFields.slice(1).map(e => ({
+    // const o = new FMLStructureObject()
+    // o.resource = pathElementDefinition.id;
+    // o.name = path
+    // o.mode = mode;
+    object.fields = pathElementFields.slice(1).map(e => ({
       name: e.path.substring(pathElementDefinition.id.length + 1),
       types: e.type?.map(t => t.code)
     }))
 
-    o._fhirDefinition = pathElementDefinition;
-    return o;
+    object.fields.filter(f => f.name.endsWith("[x]")).forEach(f => f.name = f.name.split("[x]")[0])
+
+    object._fhirDefinition = pathElementDefinition;
+    return object;
   }
 
 
@@ -225,12 +217,12 @@ export class AppComponent implements OnInit {
 
   public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
     const path = `${parentObj.resource}.${field}`;
+    const o = new FMLStructureObject()
+    o.resource = path;
+    o.name = path;
 
-    const obj = this.fml.objects[path] = this.getFMLStructureObject(
-      this.getStructureDefinition(parentObj.resource),
-      path,
-      parentObj.mode
-    );
+
+    const obj = this.fml.objects[path] = this.getFMLStructureObject(o);
 
     if (isNil(obj._fhirDefinition)) {
       console.warn(`FHIR Element Definition is missing, ${obj.resource}`)
@@ -316,6 +308,17 @@ export class AppComponent implements OnInit {
   }
 
   protected get simpleFML(): FMLStructure {
-    return structuredClone(this.fml)
+
+
+    return {
+      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
+        resource: o.resource,
+        name: o.name,
+        fields: o.fields,
+        mode: o.mode
+      }) as FMLStructureObject),
+      rules:[]
+    }
+
   }
 }

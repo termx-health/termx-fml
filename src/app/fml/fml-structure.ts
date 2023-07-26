@@ -1,5 +1,5 @@
 import {group, isDefined, isNil} from '@kodality-web/core-util';
-import {ElementDefinition, StructureMap} from 'fhir/r5';
+import {ElementDefinition, StructureMap, StructureMapGroupRule} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyParser} from './rule-parsers/copy.parser';
 import {FMLCreateParser} from './rule-parsers/create.parser';
@@ -77,17 +77,15 @@ export class FMLStructure {
 
     // group
     fhir.group.forEach(fhirGroup => {
-      const _parseRule = (fhirRule, variables: FMLRuleParserVariables) => {
-        fhirRule.source.filter(frt => isDefined(frt.variable)).forEach(fhirRuleSource => {
-          variables[fhirRuleSource.variable] = `${variables[fhirRuleSource.context]}.${fhirRuleSource.element}`;
-        })
-        fhirRule.target.filter(frt => isDefined(frt.variable)).forEach(fhirRuleTarget => {
-          variables[fhirRuleTarget.variable] = `${variables[fhirRuleTarget.context]}.${fhirRuleTarget.element}`;
-        })
+      const _parseRule = (fhirRule: StructureMapGroupRule, variables: FMLRuleParserVariables) => {
+        [...fhirRule.source, ...fhirRule.target]
+          .filter(r => isDefined(r.variable))
+          .forEach(r => variables[r.variable] = `${variables[r.context]}.${r.element}`)
 
 
         // NB: currently only one source
         const fhirRuleSource = fhirRule.source[0]
+
 
         fhirRule.target.forEach(fhirRuleTarget => {
           const parser = ruleParsers.find(p => p.action === fhirRuleTarget.transform)
