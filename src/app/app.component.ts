@@ -77,6 +77,7 @@ export class AppComponent implements OnInit {
         'CodeableConcept',
         'Reference',
         'Coding',
+        'Annotation',
       ]
 
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
@@ -97,7 +98,6 @@ export class AppComponent implements OnInit {
         const fml = this.fml = FMLStructure.map(resp)
         this.prepareObjects(fml);
         this.initEditor(fml);
-        console.log(fml)
       })
     })
   }
@@ -106,7 +106,8 @@ export class AppComponent implements OnInit {
   private prepareObjects(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
-        fml.objects[key] = this.getFMLStructureObject(fml.objects[key])
+        const {resource, path, mode} = fml.objects[key]
+        fml.objects[key] = this.initFMLStructureObject(resource, path, mode)
       } catch (e) {
         console.error(e)
       }
@@ -136,35 +137,35 @@ export class AppComponent implements OnInit {
    *
    * $path - element field name ('type', 'type.code' etc.)
    */
-  private getFMLStructureObject(object: FMLStructureObject): FMLStructureObject {
-    const structureDefinition = this.getStructureDefinition(object.resource)
-
-
-    // let structureDefinition = parentDef;
-    let elements = structureDefinition.snapshot.element.filter(el => el.path.startsWith(object.name));
-
-    // external definition (provided in Bundle)
-    if (object.name !== object.resource) {
-      elements = structureDefinition.snapshot.element;
+  private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
+    const structureDefinition = this.getStructureDefinition(resource)
+    if (isNil(structureDefinition)) {
+      throw Error(`StructureDefinition for the "${resource}" not found!`)
     }
 
+    let elements = structureDefinition.snapshot.element;
+    if (path === resource) {
+      // inline definition
+      elements = elements.filter(el => el.path.startsWith(path));
+    }
 
-    const pathElementDefinition = elements[0];
-    const pathElementFields = elements;
+    const selfDefinition = elements[0];
+    const selfFields = elements.slice(1);
 
-    // const o = new FMLStructureObject()
-    // o.resource = pathElementDefinition.id;
-    // o.name = path
-    // o.mode = mode;
-    object.fields = pathElementFields.slice(1).map(e => ({
-      name: e.path.substring(pathElementDefinition.id.length + 1),
+    const o = new FMLStructureObject()
+    o._fhirDefinition = selfDefinition;
+    o.resource = resource;
+    o.path = path
+    o.mode = mode;
+    o.fields = selfFields.map(e => ({
+      name: e.path.substring(selfDefinition.id.length + 1),
       types: e.type?.map(t => t.code)
     }))
 
-    object.fields.filter(f => f.name.endsWith("[x]")).forEach(f => f.name = f.name.split("[x]")[0])
+    // fixme: wtf? could be done different?
+    o.fields.filter(f => f.name.endsWith("[x]")).forEach(f => f.name = f.name.split("[x]")[0])
 
-    object._fhirDefinition = pathElementDefinition;
-    return object;
+    return o;
   }
 
 
@@ -217,12 +218,7 @@ export class AppComponent implements OnInit {
 
   public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
     const path = `${parentObj.resource}.${field}`;
-    const o = new FMLStructureObject()
-    o.resource = path;
-    o.name = path;
-
-
-    const obj = this.fml.objects[path] = this.getFMLStructureObject(o);
+    const obj = this.fml.objects[path] = this.initFMLStructureObject(path, path, parentObj.mode);
 
     if (isNil(obj._fhirDefinition)) {
       console.warn(`FHIR Element Definition is missing, ${obj.resource}`)
@@ -231,7 +227,7 @@ export class AppComponent implements OnInit {
     }
 
     this.editor._createObjectNode(obj, {outputs: 1});
-    this.editor._createConnection(obj.name, 1, parentObj.name, field);
+    this.editor._createConnection(obj.path, 1, parentObj.path, field);
   }
 
 
@@ -311,13 +307,13 @@ export class AppComponent implements OnInit {
 
 
     return {
-      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
+      objects: group(Object.values(this.fml?.objects || {}), o => o.path, o => ({
         resource: o.resource,
-        name: o.name,
+        path: o.path,
         fields: o.fields,
         mode: o.mode
       }) as FMLStructureObject),
-      rules:[]
+      rules: []
     }
 
   }

@@ -17,7 +17,7 @@ export interface FMLStructureObjectField {
  */
 export class FMLStructureObject {
   resource: string;
-  name: string;
+  path: string;
   fields: FMLStructureObjectField[] = [];
   mode: 'source' | 'target' | 'object' | string;
   _fhirDefinition?: ElementDefinition;
@@ -25,7 +25,7 @@ export class FMLStructureObject {
   html(): string {
     return `
       <div>
-         <h5 class="node-title">${this.mode} | ${this.name !== this.resource ? `<b>${this.name}</b> | ` : ''} ${this.resource}</div>
+         <h5 class="node-title">${this.mode} | <b>${this.path}</b> ${this.path !== this.resource ? `| ${this.resource}` : ''}</div>
          ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
       </div>
     `
@@ -69,7 +69,7 @@ export class FMLStructure {
       const obj = new FMLStructureObject()
       const resource = s.url.substring(s.url.lastIndexOf('/') + 1);
       obj.resource = resource
-      obj.name = resource;
+      obj.path = resource;
       obj.mode = s.mode
       return obj
     })
@@ -99,7 +99,7 @@ export class FMLStructure {
             struc.rules.push(rule)
           }
           if (isDefined(object)) {
-            struc.objects[object.name] = object;
+            struc.objects[object.path] = object;
           }
         })
 

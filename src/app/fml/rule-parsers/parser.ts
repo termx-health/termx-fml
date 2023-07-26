@@ -52,13 +52,26 @@ export abstract class FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): void {
-    if (variables[fhirRuleSource.context] && fhirRuleSource.element) {
-      rule.sourceObject = variables[fhirRuleSource.context];
-      rule.sourceField = fhirRuleSource.element
+    const doo = (
+      st: StructureMapGroupRuleSource | StructureMapGroupRuleTarget,
+      setObject: (v) => void,
+      setField: (v) => void,
+    ) => {
+      const ctx = variables[st.context];
+      if (st.element) {
+        setObject(ctx)
+        setField(st.element)
+      } else if (ctx.includes('.')) {
+        setObject(ctx.slice(0, ctx.lastIndexOf('.')))
+        setField(ctx.slice(ctx.lastIndexOf('.') + 1))
+      }
     }
-    if (variables[fhirRuleTarget.context] && fhirRuleTarget.element) {
-      rule.targetObject = variables[fhirRuleTarget.context];
-      rule.targetField = fhirRuleTarget.element
+
+    if (variables[fhirRuleSource.context]) {
+      doo(fhirRuleSource, v => rule.sourceObject = v, v => rule.sourceField = v);
+    }
+    if (variables[fhirRuleTarget.context]) {
+      doo(fhirRuleTarget, v => rule.targetObject = v, v => rule.targetField = v);
     }
   }
 }

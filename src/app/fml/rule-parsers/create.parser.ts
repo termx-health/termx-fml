@@ -20,12 +20,10 @@ export class FMLCreateParser extends FMLRuleParser {
 
     const object = new FMLStructureObject()
     object.resource = fhirRuleTarget.parameter?.find(p => isDefined(p.valueString))?.valueString ?? variables[fhirRuleTarget.variable]
-    object.name = variables[fhirRuleTarget.variable]
+    object.path = variables[fhirRuleTarget.variable]
     object.mode = 'object'
 
-    console.log(object.resource)
-
-    rule.sourceObject = object.name;
+    rule.sourceObject = object.path;
     rule.sourceField = 'id'
 
     return {rule, object}

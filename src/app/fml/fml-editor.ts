@@ -33,7 +33,7 @@ export class FMLEditor extends Drawflow {
         const targetFieldIdx = Number(e.input_class.split("_")[1]);
 
         const rule = this._fml.rules.find(r => r.name === sourceNode.data.rule.name);
-        rule.targetObject = targetNode.data.obj.name
+        rule.targetObject = targetNode.data.obj.path
         rule.targetField = targetNode.data.obj.fields[targetFieldIdx - 1].name
 
 
@@ -57,10 +57,11 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         rule.name = 'copy_' + ID++;
         rule.action = 'copy';
-        rule.sourceObject = source.data.obj.name;
+        rule.sourceObject = source.data.obj.path;
         rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1]?.name;
-        rule.targetObject = target.data.obj.name;
+        rule.targetObject = target.data.obj.path;
         rule.targetField = target.data.obj.fields[targetFieldIdx - 1]?.name;
+        rule.html = ()=>`copy`
         this._fml.rules.push(rule)
 
 
@@ -78,8 +79,8 @@ export class FMLEditor extends Drawflow {
   }
 
   public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number, outputs?: number}): number {
-    if (isDefined(this._getNodeId(obj.name))) {
-      throw Error(`Object node with name "${obj.name}" is already created`)
+    if (isDefined(this._getNodeId(obj.path))) {
+      throw Error(`Object node with path "${obj.path}" is already created`)
     }
 
 
@@ -97,7 +98,7 @@ export class FMLEditor extends Drawflow {
 
 
     return this.addNode(
-      obj.name,
+      obj.path,
       inputs, outputs,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
