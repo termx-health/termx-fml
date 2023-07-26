@@ -1,14 +1,13 @@
-import {Component, EnvironmentInjector, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {createCustomElement} from '@angular/elements';
-import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {autoLayout, setExpand} from './fml/fml.utils';
+import {setExpand} from './fml/fml.utils';
 import {group, isDefined, isNil} from '@kodality-web/core-util';
+import {FMLStructureMapper} from './fml/fml-structure-mapper';
 
 interface RuleDescription {
   code: string,
@@ -40,9 +39,30 @@ const RULES: RuleDescription[] = [
 })
 export class AppComponent implements OnInit {
   // todo: @Input()
-  protected structureMap: StructureMap;
-  protected resourceBundle: Bundle<StructureDefinition>;
+  public structureMap: StructureMap;
+  private _structureMap = () => {
+    // const name = "structuremap-supplyrequest-transform";
+    const name = "tobacco-use-transform";
+    const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
+    return this.structureMapService.getStructureMap(url);
+  }
 
+  // todo: @Input()
+  public resourceBundle: Bundle<StructureDefinition>;
+  private _resourceBundle = (sm: StructureMap) => {
+    const resources = [
+      'CodeableReference',
+      'CodeableConcept',
+      'Reference',
+      'Coding',
+      'Annotation',
+    ]
+
+    const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
+    const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
+    resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
+    return forkJoin(reqs$)
+  }
 
   // FML editor
   private fml: FMLStructure;
@@ -54,56 +74,32 @@ export class AppComponent implements OnInit {
   protected isExpanded = true;
 
 
-  constructor(
-    private structureMapService: StructureMapService,
-    injector: EnvironmentInjector
-  ) {
-    if (!customElements.get('ce-structure-definition')) {
-      customElements.define('ce-structure-definition', createCustomElement(StructureDefinitionTreeComponent, {injector}));
-    }
-  }
+  constructor(private structureMapService: StructureMapService) { }
 
 
   public ngOnInit(): void {
-    const _structureMap = () => {
-      // const name = "structuremap-supplyrequest-transform";
-      const name = "tobacco-use-transform";
-      const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
-      return this.structureMapService.getStructureMap(url);
-    }
-    const _resourceBundle = (sm: StructureMap) => {
-      const resources = [
-        'CodeableReference',
-        'CodeableConcept',
-        'Reference',
-        'Coding',
-        'Annotation',
-      ]
-
-      const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
-      const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
-      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
-      return forkJoin(reqs$)
-    }
-
-    _structureMap().subscribe(resp => {
+    this._structureMap().subscribe(resp => {
       this.structureMap = resp;
-      _resourceBundle(resp).subscribe(definitions => {
+      this._resourceBundle(resp).subscribe(definitions => {
         this.resourceBundle = {
           resourceType: 'Bundle',
           type: 'collection',
           entry: definitions.map(def => ({resource: def}))
         }
 
-        const fml = this.fml = FMLStructure.map(resp)
+        const fml = this.fml = FMLStructureMapper.map(resp)
         this.prepareFML(fml);
         this.initEditor(fml);
-
       })
     })
   }
 
 
+  /* FML */
+
+  /**
+   * Decorates FMLStructure objects with fields from the Bundle StructureDefinition.
+   */
   private prepareFML(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
@@ -115,29 +111,6 @@ export class AppComponent implements OnInit {
     })
   }
 
-
-  /* FML */
-
-  private getStructureDefinition(anyPath: string): StructureDefinition {
-    const base = anyPath.includes('.')
-      ? anyPath.slice(0, anyPath.indexOf('.'))
-      : anyPath;
-
-    return this.resourceBundle.entry
-      .map(e => e.resource)
-      .find(e => e.id === base)
-  }
-
-  /**
-   * Parent definition elements example:
-   *
-   * id
-   * type
-   * type.code
-   * type.status
-   *
-   * $path - element field name ('type', 'type.code' etc.)
-   */
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
     const structureDefinition = this.getStructureDefinition(resource)
     if (isNil(structureDefinition)) {
@@ -168,7 +141,6 @@ export class AppComponent implements OnInit {
 
     return o;
   }
-
 
   /* Editor */
 
@@ -207,7 +179,7 @@ export class AppComponent implements OnInit {
 
 
     // auto layout
-    autoLayout(editor, fml)
+    editor._autoLayout()
   }
 
 
@@ -261,6 +233,18 @@ export class AppComponent implements OnInit {
 
 
   /* Utils */
+
+
+  private getStructureDefinition(anyPath: string): StructureDefinition {
+    // Resource.whatever.next (anyPath) => Resource (base)
+    const base = anyPath.includes('.')
+      ? anyPath.slice(0, anyPath.indexOf('.'))
+      : anyPath;
+
+    return this.resourceBundle.entry
+      .map(e => e.resource)
+      .find(e => e.id === base)
+  }
 
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
     return f.types?.some(t => this._isComplexResource(t))

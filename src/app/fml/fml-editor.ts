@@ -2,6 +2,7 @@ import Drawflow, {DrawflowNode} from 'drawflow';
 import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getCanvasFont, getTextWidth} from './fml.utils';
 import {isDefined} from '@kodality-web/core-util';
+import dagre from "dagre";
 
 type FMLDrawflowNode = DrawflowNode & {
   data: {
@@ -61,7 +62,7 @@ export class FMLEditor extends Drawflow {
         rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1]?.name;
         rule.targetObject = target.data.obj.path;
         rule.targetField = target.data.obj.fields[targetFieldIdx - 1]?.name;
-        rule.html = ()=>`copy`
+        rule.html = () => `copy`
         this._fml.rules.push(rule)
 
 
@@ -147,4 +148,44 @@ export class FMLEditor extends Drawflow {
       console.error(`Connection failed "${source}:${sField}" -> "${target}:${tField}"`)
     }
   };
+
+
+  private _getNodeElement(editor: FMLEditor, name: string) {
+    const nodeId = editor._getNodeId(name);
+    return {el: document.getElementById(`node-${nodeId}`), nodeId};
+  }
+
+  public _autoLayout() {
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+    dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
+
+    Object.keys(this._fml.objects).forEach(path => {
+      const {el} = this._getNodeElement(this, path)
+      dagreGraph.setNode(path, {
+        width: el.offsetWidth,
+        height: el.offsetHeight
+      });
+    });
+
+    this._fml.rules.forEach(rule => {
+      const {el} = this._getNodeElement(this, rule.name)
+      dagreGraph.setNode(rule.name, {
+        width: el.offsetWidth,
+        height: el.offsetHeight
+      });
+      dagreGraph.setEdge(rule.sourceObject, rule.name);
+      dagreGraph.setEdge(rule.name, rule.targetObject);
+    });
+
+    dagre.layout(dagreGraph);
+
+    [...Object.keys(this._fml.objects), ...this._fml.rules.map(r => r.name)].forEach(path => {
+      const nodeWithPosition = dagreGraph.node(path);
+      const {el, nodeId} = this._getNodeElement(this, path)
+      el.style.top = (nodeWithPosition.y - el.offsetHeight / 2) + "px"
+      el.style.left = (nodeWithPosition.x - el.offsetWidth / 2) + "px"
+      this.updateConnectionNodes(`node-${nodeId}`)
+    });
+  }
 }

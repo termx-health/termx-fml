@@ -1,6 +1,4 @@
 import {FMLEditor} from './fml-editor';
-import {FMLStructure} from './fml-structure';
-import dagre from "dagre";
 
 export function getTextWidth(text, font) {
   // re-use canvas object for better performance
@@ -24,45 +22,6 @@ export function getCanvasFont(el = document.body) {
 }
 
 
-export function getNodeElement(editor: FMLEditor, name: string) {
-  const nodeId = editor._getNodeId(name);
-  return {el: document.getElementById(`node-${nodeId}`), nodeId};
-}
-
-export function autoLayout(editor: FMLEditor, fml: FMLStructure) {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
-
-
-  Object.keys(fml.objects).forEach(path => {
-    const {el} = getNodeElement(editor, path)
-    dagreGraph.setNode(path, {
-      width: el.offsetWidth,
-      height: el.offsetHeight
-    });
-  });
-
-  fml.rules.forEach(rule => {
-    const {el} = getNodeElement(editor, rule.name)
-    dagreGraph.setNode(rule.name, {
-      width: el.offsetWidth,
-      height: el.offsetHeight
-    });
-    dagreGraph.setEdge(rule.sourceObject, rule.name);
-    dagreGraph.setEdge(rule.name, rule.targetObject);
-  });
-
-  dagre.layout(dagreGraph);
-
-  [...Object.keys(fml.objects), ...fml.rules.map(r => r.name)].forEach(path => {
-    const nodeWithPosition = dagreGraph.node(path);
-    const {el, nodeId} = getNodeElement(editor, path)
-    el.style.top = (nodeWithPosition.y - el.offsetHeight / 2) + "px"
-    el.style.left = (nodeWithPosition.x - el.offsetWidth / 2) + "px"
-    editor.updateConnectionNodes(`node-${nodeId}`)
-  });
-}
 
 export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): void {
   const node = editor.getNodeFromId(editor._getNodeId(id));
