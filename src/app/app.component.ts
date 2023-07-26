@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin} from 'rxjs';
@@ -74,7 +74,10 @@ export class AppComponent implements OnInit {
   protected isExpanded = true;
 
 
-  constructor(private structureMapService: StructureMapService) { }
+  constructor(
+    private structureMapService: StructureMapService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
 
   public ngOnInit(): void {
@@ -151,7 +154,12 @@ export class AppComponent implements OnInit {
     editor.start();
     editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id))
     editor.on('nodeUnselected', () => this.nodeSelected = undefined)
-
+    editor.on('nodeMoved', () => {
+      const selectedNodeId = this.nodeSelected?.id;
+      if (selectedNodeId) {
+        this.nodeSelected = editor.getNodeFromId(selectedNodeId)
+      }
+    });
 
     // render objects
     Object.keys(fml.objects).forEach(k => {
@@ -262,10 +270,8 @@ export class AppComponent implements OnInit {
   protected get simpleFML(): FMLStructure {
     return {
       objects: group(Object.values(this.fml?.objects || {}), o => o.path, o => ({
-        resource: o.resource,
-        path: o.path,
-        fields: o.fields,
-        mode: o.mode
+        ...o,
+        html: undefined
       }) as FMLStructureObject),
       rules: []
     }

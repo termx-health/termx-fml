@@ -1,10 +1,13 @@
-<div style="display: grid; grid-template-columns: 9fr 2fr">
-  <div *ngIf="false" style="border-right: var(--border-table);  height: 100dvh; overflow: auto; background: var(--color-background-component);">
-    <div *ngIf="simpleFML as fml" style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem">
+<div style="display: grid; grid-template-columns: 2fr 9fr 2fr">
+  <div *ngIf="true" style="border-right: var(--border-table);  height: 100dvh; overflow: auto; background: var(--color-background-component);">
+    <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem">
       <m-table mSize="small">
-        <tr *ngFor="let o of fml.objects | values">
+        <tr *ngFor="let o of fml.objects | values ">
           <td>
-            <div>{{o.resource}} ({{o.fields.length}})</div>
+            <div class="m-justify-between">
+              <div>{{o.resource}} ({{o.fields.length}})</div>
+              <span class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
+            </div>
             <div class="description">{{o.path}}</div>
           </td>
         </tr>
@@ -38,7 +41,7 @@
 
     <div
       *ngIf="!nodeSelected"
-      style="padding: 1rem; border-bottom: var(--border-table)"
+      style="padding: 1rem; border-bottom: var(--border-table);"
     >
       <h5>Transformers</h5>
       <m-list mSeparated>
@@ -57,7 +60,6 @@
 
     <div
       *ngIf="nodeSelected as node"
-      style="padding: 1rem; border-bottom: var(--border-table);"
     >
       <!--      <app-structure-definition-tree-->
       <!--        *ngIf="node.data.obj"-->
@@ -65,7 +67,11 @@
       <!--        (selected)="onStructureItemSelect($event)"-->
       <!--      ></app-structure-definition-tree>-->
 
-      <div *ngIf="node.data.obj as obj">
+      <!-- Resource -->
+      <div
+        style="padding: 1rem; border-bottom: var(--border-table);"
+        *ngIf="node.data.obj as obj"
+      >
         <h5>Resource | {{obj.mode}}</h5>
 
         <m-table mSize="small">
@@ -81,13 +87,17 @@
         </m-table>
       </div>
 
+      <!-- Rule -->
       <div *ngIf="node.data.rule as rule">
-        <m-form-item mLabel="Rule">
+        <div
+          style="padding: 1rem; border-bottom: var(--border-table);"
+        >
+          <h5>Rule</h5>
           <m-input [(ngModel)]="rule.name"></m-input>
-        </m-form-item>
+        </div>
 
         <div class="form-view"
-          style="border-top: var(--border-table); margin-inline: -1rem; padding: 1rem 1rem 0.6rem;"
+          style="padding: 1rem; border-bottom: var(--border-table);"
         >
           <m-form-item mLabel="Action">
             {{rule.action}}
@@ -100,7 +110,7 @@
         </div>
 
         <div class="form-view"
-          style="border-top: var(--border-table); margin-inline: -1rem; padding: 1rem 1rem 0;"
+          style="padding: 1rem; border-bottom: var(--border-table);"
           *ngIf="rule.sourceObject || rule.targetObject"
         >
           <m-form-item mLabel="Source" *ngIf="rule.sourceObject">
@@ -112,9 +122,14 @@
         </div>
 
 
-        <!--        <pre>{{rule | json}}</pre>-->
+        <div class="form-view"
+          style="padding: 1rem; border-bottom: var(--border-table);"
+        >
+          <m-form-item mLabel="Position">
+            x: {{rule.position?.x ?? '-'}}; y: {{rule.position?.y ?? '-'}}
+          </m-form-item>
+        </div>
       </div>
     </div>
   </div>
-
 </div>

@@ -1,10 +1,10 @@
 import Drawflow, {DrawflowNode} from 'drawflow';
-import {FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getCanvasFont, getTextWidth} from './fml.utils';
 import {isDefined} from '@kodality-web/core-util';
 import dagre from "dagre";
 
-type FMLDrawflowNode = DrawflowNode & {
+interface FMLDrawflowNode extends DrawflowNode {
   data: {
     obj?: FMLStructureObject,
     rule?: FMLStructureRule
@@ -18,6 +18,19 @@ const getClassIdx = (str: string): number => {
 }
 
 export class FMLEditor extends Drawflow {
+  private _getObject = (path: string): FMLStructureObject => this._fml.objects[path];
+  private _updateObject = (nodeId: number, path: string, fn: (obj: FMLStructureObject) => void) => {
+    const obj = this._getObject(path);
+    fn(obj)
+    this.updateNodeDataFromId(nodeId, {obj})
+  }
+  private _getRule = (name: string): FMLStructureRule => this._fml.rules.find(r => r.name === name);
+  private _updateRule = (nodeId: number, name: string, fn: (rule: FMLStructureRule) => void) => {
+    const rule = this._getRule(name);
+    fn(rule)
+    this.updateNodeDataFromId(nodeId, {rule})
+  }
+
   constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
     render?: object,
     parent?: object
@@ -25,20 +38,31 @@ export class FMLEditor extends Drawflow {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4
 
+
+    this.on('nodeMoved', nodeId => {
+      const el = document.getElementById(`node-${nodeId}`)
+      const y = el.style.top.replace('px', '');
+      const x = el.style.left.replace('px', '');
+      const position: FMLPosition = {x: Number(x), y: Number(y)};
+
+      const node = this.getNodeFromId(nodeId) as FMLDrawflowNode;
+      if ('obj' in node.data) {
+        this._updateObject(nodeId, node.data.obj.path, obj => obj.position = position)
+      } else if ('rule' in node.data) {
+        this._updateRule(nodeId, node.data.rule.name, rule => rule.position = position)
+      }
+    })
+
     this.on('connectionCreated', e => {
       const sourceNode: FMLDrawflowNode = this.getNodeFromId(e.output_id);
       const targetNode: FMLDrawflowNode = this.getNodeFromId(e.input_id);
 
-
       if ('rule' in sourceNode.data) {
         const targetFieldIdx = Number(e.input_class.split("_")[1]);
-
-        const rule = this._fml.rules.find(r => r.name === sourceNode.data.rule.name);
-        rule.targetObject = targetNode.data.obj.path
-        rule.targetField = targetNode.data.obj.fields[targetFieldIdx - 1].name
-
-
-        this.updateNodeDataFromId(sourceNode.id, {rule})
+        this._updateRule(sourceNode.id, sourceNode.data.rule.name, rule => {
+          rule.targetObject = targetNode.data.obj.path
+          rule.targetField = targetNode.data.obj.fields[targetFieldIdx - 1].name
+        })
       }
     });
 
@@ -150,8 +174,8 @@ export class FMLEditor extends Drawflow {
   };
 
 
-  private _getNodeElement(editor: FMLEditor, name: string) {
-    const nodeId = editor._getNodeId(name);
+  private _getNodeElement(name: string) {
+    const nodeId = this._getNodeId(name);
     return {el: document.getElementById(`node-${nodeId}`), nodeId};
   }
 
@@ -161,18 +185,18 @@ export class FMLEditor extends Drawflow {
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
 
     Object.keys(this._fml.objects).forEach(path => {
-      const {el} = this._getNodeElement(this, path)
+      const {el: {offsetWidth, offsetHeight}} = this._getNodeElement(path)
       dagreGraph.setNode(path, {
-        width: el.offsetWidth,
-        height: el.offsetHeight
+        width: offsetWidth,
+        height: offsetHeight
       });
     });
 
     this._fml.rules.forEach(rule => {
-      const {el} = this._getNodeElement(this, rule.name)
+      const {el: {offsetWidth, offsetHeight}} = this._getNodeElement(rule.name)
       dagreGraph.setNode(rule.name, {
-        width: el.offsetWidth,
-        height: el.offsetHeight
+        width: offsetWidth,
+        height: offsetHeight
       });
       dagreGraph.setEdge(rule.sourceObject, rule.name);
       dagreGraph.setEdge(rule.name, rule.targetObject);
@@ -180,12 +204,30 @@ export class FMLEditor extends Drawflow {
 
     dagre.layout(dagreGraph);
 
-    [...Object.keys(this._fml.objects), ...this._fml.rules.map(r => r.name)].forEach(path => {
-      const nodeWithPosition = dagreGraph.node(path);
-      const {el, nodeId} = this._getNodeElement(this, path)
-      el.style.top = (nodeWithPosition.y - el.offsetHeight / 2) + "px"
-      el.style.left = (nodeWithPosition.x - el.offsetWidth / 2) + "px"
+    const setPosition = (name: string): {
+      nodeId: number,
+      x: number,
+      y: number
+    } => {
+      const nodeWithPosition = dagreGraph.node(name);
+      const {el, nodeId} = this._getNodeElement(name)
+      const y = nodeWithPosition.y - el.offsetHeight / 2;
+      const x = nodeWithPosition.x - el.offsetWidth / 2;
+
+      el.style.top = y + "px"
+      el.style.left = x + "px"
       this.updateConnectionNodes(`node-${nodeId}`)
+      return {nodeId, y, x}
+    }
+
+    Object.keys(this._fml.objects).forEach(path => {
+      const {nodeId, ...position} = setPosition(path)
+      this._updateObject(nodeId, path, obj => obj.position = position);
+    });
+
+    this._fml.rules.forEach(rule => {
+      const {nodeId, ...position} = setPosition(rule.name)
+      this._updateRule(nodeId, rule.name, obj => obj.position = position);
     });
   }
 }
