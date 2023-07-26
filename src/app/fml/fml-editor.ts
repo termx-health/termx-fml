@@ -3,6 +3,8 @@ import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from '.
 import {getCanvasFont, getTextWidth} from './fml.utils';
 import {isDefined} from '@kodality-web/core-util';
 import dagre from "dagre";
+import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
+import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
 
 interface FMLDrawflowNode extends DrawflowNode {
   data: {
@@ -17,6 +19,7 @@ const getClassIdx = (str: string): number => {
   return Number(str.split("_")[1])
 }
 
+
 export class FMLEditor extends Drawflow {
   private _getObject = (path: string): FMLStructureObject => this._fml.objects[path];
   private _updateObject = (nodeId: number, path: string, fn: (obj: FMLStructureObject) => void) => {
@@ -24,12 +27,20 @@ export class FMLEditor extends Drawflow {
     fn(obj)
     this.updateNodeDataFromId(nodeId, {obj})
   }
+
   private _getRule = (name: string): FMLStructureRule => this._fml.rules.find(r => r.name === name);
   private _updateRule = (nodeId: number, name: string, fn: (rule: FMLStructureRule) => void) => {
     const rule = this._getRule(name);
     fn(rule)
     this.updateNodeDataFromId(nodeId, {rule})
   }
+
+
+  private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
+  private ruleRenderers = [
+    new FMLCopyRuleRenderer()
+  ]
+
 
   constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
     render?: object,
@@ -103,6 +114,9 @@ export class FMLEditor extends Drawflow {
     })
   }
 
+
+  /* Creator */
+
   public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number, outputs?: number}): number {
     if (isDefined(this._getNodeId(obj.path))) {
       throw Error(`Object node with path "${obj.path}" is already created`)
@@ -138,7 +152,8 @@ export class FMLEditor extends Drawflow {
       throw Error(`Rule node with name "${rule.name}" is already created`)
     }
 
-    const isConstant = ['uuid'].includes(rule.action)
+    const isConstant = ['uuid'].includes(rule.action);
+    const htmlRenderer = this.getRuleRenderer(rule.action)
 
     return this.addNode(
       rule.name,
@@ -146,14 +161,10 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
-      rule.html(),
+      htmlRenderer.render(rule),
       false
     )
   }
-
-  public _getNodeId(name) {
-    return this.getNodesFromName(name)[0]
-  };
 
   public _createConnection(
     source: string, sField: string | number,
@@ -174,10 +185,7 @@ export class FMLEditor extends Drawflow {
   };
 
 
-  private _getNodeElement(name: string) {
-    const nodeId = this._getNodeId(name);
-    return {el: document.getElementById(`node-${nodeId}`), nodeId};
-  }
+  /* Layout */
 
   public _autoLayout() {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -185,7 +193,7 @@ export class FMLEditor extends Drawflow {
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
 
     Object.keys(this._fml.objects).forEach(path => {
-      const {el: {offsetWidth, offsetHeight}} = this._getNodeElement(path)
+      const {el: {offsetWidth, offsetHeight}} = this._getNodeElementByName(path)
       dagreGraph.setNode(path, {
         width: offsetWidth,
         height: offsetHeight
@@ -193,7 +201,7 @@ export class FMLEditor extends Drawflow {
     });
 
     this._fml.rules.forEach(rule => {
-      const {el: {offsetWidth, offsetHeight}} = this._getNodeElement(rule.name)
+      const {el: {offsetWidth, offsetHeight}} = this._getNodeElementByName(rule.name)
       dagreGraph.setNode(rule.name, {
         width: offsetWidth,
         height: offsetHeight
@@ -210,7 +218,7 @@ export class FMLEditor extends Drawflow {
       y: number
     } => {
       const nodeWithPosition = dagreGraph.node(name);
-      const {el, nodeId} = this._getNodeElement(name)
+      const {el, nodeId} = this._getNodeElementByName(name)
       const y = nodeWithPosition.y - el.offsetHeight / 2;
       const x = nodeWithPosition.x - el.offsetWidth / 2;
 
@@ -230,4 +238,16 @@ export class FMLEditor extends Drawflow {
       this._updateRule(nodeId, rule.name, obj => obj.position = position);
     });
   }
+
+
+  /* Utils */
+
+  private _getNodeElementByName(name: string) {
+    const nodeId = this._getNodeId(name);
+    return {el: document.getElementById(`node-${nodeId}`), nodeId};
+  }
+
+  public _getNodeId(name) {
+    return this.getNodesFromName(name)[0]
+  };
 }

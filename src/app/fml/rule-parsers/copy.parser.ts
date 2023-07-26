@@ -1,7 +1,7 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 
-export class FMLCopyParser extends FMLRuleParser {
+export class FMLCopyRuleParser extends FMLRuleParser {
   public action = 'copy';
 
   public override parse(

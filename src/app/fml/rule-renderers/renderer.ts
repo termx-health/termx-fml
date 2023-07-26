@@ -5,8 +5,8 @@ export abstract class FMLRuleRenderer {
 
   public render(rule: FMLStructureRule): string {
     return `
-      <div>
-         ${rule.name}
+      <div >
+         <h5 style="margin: 0">${rule.name}</h5>
       </div>
     `
   }

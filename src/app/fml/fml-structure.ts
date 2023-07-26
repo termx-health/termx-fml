@@ -25,6 +25,7 @@ export class FMLStructureObject {
   // fixme: not sure what for is this
   _fhirDefinition?: ElementDefinition;
 
+  /** @deprecated */
   html(): string {
     return `
       <div>

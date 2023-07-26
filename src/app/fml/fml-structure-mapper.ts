@@ -1,19 +1,19 @@
 import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupRule} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
-import {FMLCopyParser} from './rule-parsers/copy.parser';
-import {FMLCreateParser} from './rule-parsers/create.parser';
-import {FMLUuidParser} from './rule-parsers/uuid.parser';
-import {FMLAppendParser} from './rule-parsers/append.parser';
+import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
+import {FMLCreateRuleParser} from './rule-parsers/create.parser';
+import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
+import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLStructure, FMLStructureObject} from './fml-structure';
 
 export class FMLStructureMapper {
   public static map(fhir: StructureMap): FMLStructure {
     const ruleParsers: FMLRuleParser[] = [
-      new FMLCopyParser(),
-      new FMLCreateParser(),
-      new FMLUuidParser(),
-      new FMLAppendParser(),
+      new FMLCopyRuleParser(),
+      new FMLCreateRuleParser(),
+      new FMLUuidRuleParser(),
+      new FMLAppendRuleParser(),
     ]
 
 

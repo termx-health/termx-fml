@@ -1,7 +1,7 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 
-export class FMLUuidParser extends FMLRuleParser {
+export class FMLUuidRuleParser extends FMLRuleParser {
   public action = 'uuid';
 
   public override parse(

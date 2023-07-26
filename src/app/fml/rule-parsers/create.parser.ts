@@ -3,7 +3,7 @@ import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5'
 import {FMLStructureObject} from '../fml-structure';
 import {isDefined} from '@kodality-web/core-util';
 
-export class FMLCreateParser extends FMLRuleParser {
+export class FMLCreateRuleParser extends FMLRuleParser {
   public action = 'create';
 
   public override parse(
