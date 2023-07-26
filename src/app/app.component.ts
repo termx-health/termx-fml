@@ -7,7 +7,7 @@ import {forkJoin} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {getCanvasFont, getTextWidth} from './fml/fml.utils';
+import {autoLayout, setExpand} from './fml/fml.utils';
 import {group, isDefined, isNil} from '@kodality-web/core-util';
 
 interface RuleDescription {
@@ -96,14 +96,15 @@ export class AppComponent implements OnInit {
         }
 
         const fml = this.fml = FMLStructure.map(resp)
-        this.prepareObjects(fml);
+        this.prepareFML(fml);
         this.initEditor(fml);
+
       })
     })
   }
 
 
-  private prepareObjects(fml: FMLStructure): void {
+  private prepareFML(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
         const {resource, path, mode} = fml.objects[key]
@@ -173,7 +174,6 @@ export class AppComponent implements OnInit {
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
-    const viewportWidth = element.offsetWidth;
 
     const editor = this.editor = new FMLEditor(fml, element);
     editor.start();
@@ -184,15 +184,11 @@ export class AppComponent implements OnInit {
     // render objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
-      const isSource = obj.mode === 'source';
       const isCustomObj = !this.structureMap.structure.some(s => s.url.endsWith(obj.resource));
 
-      const font = getCanvasFont()
-      const maxWidth = Math.max(...obj.fields.map(f => getTextWidth(f, font)))
-
       editor._createObjectNode(obj, {
-        x: isSource ? 80 : viewportWidth - maxWidth - 100,
-        y: 40,
+        x: obj.position?.x,
+        y: obj.position?.y,
         outputs: isCustomObj ? 1 : undefined
       })
     })
@@ -200,17 +196,18 @@ export class AppComponent implements OnInit {
 
     // render rules
     fml.rules.forEach(rule => {
-      const prevRule = Array.from(document.getElementsByClassName('node--rule')).at(-1);
-      const prevRuleBounds = prevRule?.getBoundingClientRect();
-
       editor._createRuleNode(rule, {
-        y: 25 + prevRuleBounds?.top + prevRuleBounds?.height,
-        x: viewportWidth / 2
+        x: rule.position?.x,
+        y: rule.position?.y,
       });
 
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
+
+
+    // auto layout
+    autoLayout(editor, fml)
   }
 
 
@@ -258,32 +255,7 @@ export class AppComponent implements OnInit {
     this.isExpanded = isExpanded;
 
     Object.keys(this.fml.objects).forEach(k => {
-      const node = this.editor.getNodeFromId(this.editor._getNodeId(k));
-      const max = Math.max(Object.keys(node.inputs).length, Object.keys(node.outputs).length)
-
-      const nodeEl = document.getElementById(`node-${node.id}`);
-      const inputEls = nodeEl.getElementsByClassName('inputs').item(0).children
-      const outputEls = nodeEl.getElementsByClassName('outputs').item(0).children
-      const contentEls = nodeEl.getElementsByClassName('drawflow_content_node').item(0).children
-
-      for (let i = 0; i < max; i++) {
-        inputEls.item(i)?.classList.remove('hidden')
-        outputEls.item(i)?.classList.remove('hidden');
-        contentEls.item(i + 1).classList.remove('hidden')
-
-
-        if (
-          !node.inputs[`input_${i + 1}`]?.connections?.length &&
-          !node.outputs[`output_${i + 1}`]?.connections?.length &&
-          !this.isExpanded
-        ) {
-          inputEls.item(i)?.classList.add('hidden')
-          outputEls.item(i)?.classList.add('hidden');
-          contentEls.item(i + 1).classList.add('hidden')
-        }
-      }
-
-      this.editor.updateConnectionNodes(`node-${node.id}`)
+      setExpand(this.editor, k, isExpanded)
     })
   }
 
@@ -304,8 +276,6 @@ export class AppComponent implements OnInit {
   }
 
   protected get simpleFML(): FMLStructure {
-
-
     return {
       objects: group(Object.values(this.fml?.objects || {}), o => o.path, o => ({
         resource: o.resource,
@@ -315,6 +285,5 @@ export class AppComponent implements OnInit {
       }) as FMLStructureObject),
       rules: []
     }
-
   }
 }

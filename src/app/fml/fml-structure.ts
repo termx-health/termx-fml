@@ -11,6 +11,11 @@ export interface FMLStructureObjectField {
   types: string[];
 }
 
+export interface FMLPosition {
+  x: number,
+  y: number
+}
+
 
 /**
  * Represents the ElementDefinition with the externally set fields.
@@ -19,7 +24,11 @@ export class FMLStructureObject {
   resource: string;
   path: string;
   fields: FMLStructureObjectField[] = [];
+
   mode: 'source' | 'target' | 'object' | string;
+  position?: FMLPosition;
+
+  // fixme: not sure what for is this
   _fhirDefinition?: ElementDefinition;
 
   html(): string {
@@ -47,6 +56,7 @@ export class FMLStructureRule {
   targetObject: string;
   targetField: string;
 
+  position?: FMLPosition;
   html: () => string
 }
 
@@ -113,8 +123,6 @@ export class FMLStructure {
         // init variables
         const variables = group(fhirGroup.input, i => i.name, i => i.type);
         _parseRule(fhirRule, variables)
-
-        console.log(variables)
       })
     })
 
