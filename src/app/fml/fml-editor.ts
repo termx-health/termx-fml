@@ -56,7 +56,7 @@ export class FMLEditor extends Drawflow {
   ]
 
 
-  constructor(private _fml: FMLStructure, private element: HTMLElement, options?: {
+  constructor(private _fml: FMLStructure, public element: HTMLElement, options?: {
     render?: object,
     parent?: object
   }) {
@@ -112,12 +112,11 @@ export class FMLEditor extends Drawflow {
         const sourceFieldIdx = getPortIdx(e.output_class);
         const targetFieldIdx = getPortIdx(e.input_class);
 
-        const sourceNode = this.element.querySelector<HTMLElement>(`#node-${e.output_id} .output_${sourceFieldIdx}`)
-        const targetNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`)
+        const sourceOutputNode = this.element.querySelector<HTMLElement>(`#node-${e.output_id} .output_${sourceFieldIdx}`)
+        const targetInputNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`)
 
-
-        const isSourceObject = source.data.obj.mode === 'object';
         const rule = new FMLStructureRule();
+        const isSourceObject = source.data.obj.mode === 'object';
         rule.action = isSourceObject ? 'create' : 'copy';
         rule.name = `${rule.action}_${ID++}`;
         rule.sourceObject = source.data.obj.name;
@@ -128,15 +127,15 @@ export class FMLEditor extends Drawflow {
 
 
         const getOffset = (n: HTMLElement, dir) => {
-          const [_, x, y] = (element.firstElementChild as HTMLDivElement).style.transform.match(/translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m) ?? [0, 0, 0]
+          const {top, left} = this._getOffsets()
           return {
-            top: n.getBoundingClientRect().top - element.offsetTop - Number(y),
-            left: n.getBoundingClientRect().left - element.offsetLeft + -1 * Number(x)
+            top: n.getBoundingClientRect().top - top,
+            left: n.getBoundingClientRect().left - left
           }[dir];
         }
 
-        const midX = (getOffset(sourceNode, 'left') + getOffset(targetNode, 'left')) / 2;
-        const midY = (getOffset(sourceNode, 'top') + getOffset(targetNode, 'top')) / 2;
+        const midX = (getOffset(sourceOutputNode, 'left') + getOffset(targetInputNode, 'left')) / 2;
+        const midY = (getOffset(sourceOutputNode, 'top') + getOffset(targetInputNode, 'top')) / 2;
         const font = getCanvasFont()
         const maxWidth = getTextWidth(rule.name, font)
 
@@ -329,4 +328,12 @@ export class FMLEditor extends Drawflow {
   public _getNodeId(name) {
     return this.getNodesFromName(name)[0]
   };
+
+  public _getOffsets(): {top: number, left: number} {
+    const [_, x, y] = (this.element.firstElementChild as HTMLDivElement).style.transform.match(/translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m) ?? [0, 0, 0]
+    return {
+      top: this.element.offsetTop + Number(y),
+      left: this.element.offsetLeft + Number(x)
+    }
+  }
 }

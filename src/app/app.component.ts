@@ -133,7 +133,7 @@ export class AppComponent implements OnInit {
     }
 
     const selfDefinition = elements[0];
-    const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id; // todo: provide type as argument?
+    const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id; // todo: provide type as an argument?
     const selfFields = elements.slice(1);
 
     // double check whether inline definition assumption was correct
@@ -147,7 +147,6 @@ export class AppComponent implements OnInit {
     }
 
     const o = new FMLStructureObject()
-    o._fhirDefinition = selfDefinition;
     o.resource = selfResourceType;
     o.name = path
     o.mode = mode;
@@ -228,12 +227,6 @@ export class AppComponent implements OnInit {
     }
 
     const obj = this.fml.objects[fieldPath] = this.initFMLStructureObject(resourceType, fieldPath, 'object');
-    if (isNil(obj._fhirDefinition)) {
-      console.warn(`FHIR Element Definition is missing, ${obj.resource}`)
-      // wtf? id field?
-      return;
-    }
-
     this.editor._createObjectNode(obj, {outputs: 1});
     this.editor._createConnection(obj.name, 1, parentObj.name, field);
   }
@@ -252,11 +245,15 @@ export class AppComponent implements OnInit {
   protected onDrop(ev: DragEvent): void {
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
-    rule.name = data.code;
+    rule.name = data.code + new Date().getTime();
     rule.action = data.code;
-
     this.fml.rules.push(rule)
-    this.editor._createRuleNode(rule, {y: ev.y, x: ev.x})
+
+    const {top, left} = this.editor._getOffsets()
+    this.editor._createRuleNode(rule, {
+      y: ev.y - top,
+      x: ev.x - left
+    })
   }
 
 

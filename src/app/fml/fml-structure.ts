@@ -1,5 +1,3 @@
-import {ElementDefinition} from 'fhir/r5';
-
 export interface FMLStructureObjectField {
   name: string;
   types: string[];
@@ -22,8 +20,7 @@ export class FMLStructureObject {
   mode: 'source' | 'target' | 'object' | string;
   position?: FMLPosition;
 
-  // fixme: not sure what for is this
-  _fhirDefinition?: ElementDefinition;
+  // _fhirDefinition?: ElementDefinition;
 
   /** @deprecated */
   html(): string {
