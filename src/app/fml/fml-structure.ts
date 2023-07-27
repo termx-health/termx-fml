@@ -14,8 +14,8 @@ export interface FMLPosition {
 export class FMLStructureObject {
   /** @example CodeableConcept */
   resource: string;
-  /** @example Observation.code */
-  path: string;
+  /** Object's unique name @example Observation.code */
+  name: string;
   /** @example code, category, status etc. */
   fields: FMLStructureObjectField[] = [];
 
@@ -29,11 +29,11 @@ export class FMLStructureObject {
   html(): string {
     return `
       <div>
-        <h5 class="node-title">${this.mode} | <b>${this.resource}</b></div>
+        <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
         ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
 
-        <div style="position: absolute; top: -1.5rem; font-size: 0.7rem; color: var(--color-text-secondary)">
-          ${this.path}
+        <div style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
+          ${this.name}
         </div>
       </div>
     `
@@ -66,6 +66,6 @@ export class FMLStructureRule {
 
 
 export class FMLStructure {
-  objects: {[path: string]: FMLStructureObject} = {};
+  objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = []
 }

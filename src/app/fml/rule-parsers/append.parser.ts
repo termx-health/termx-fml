@@ -14,7 +14,6 @@ export class FMLAppendRuleParser extends FMLRuleParser {
     const rule = this.create(ruleName, fhirRuleSource, fhirRuleTarget);
     this.connect(rule, fhirRuleSource, fhirRuleTarget, variables)
 
-
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);
     if (isDefined(valueIdParam)){
       const variable = variables[valueIdParam.valueId];

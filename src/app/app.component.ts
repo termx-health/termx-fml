@@ -33,6 +33,7 @@ export class AppComponent implements OnInit {
   private _structureMap = () => {
     // const name = "structuremap-supplyrequest-transform";
     const name = "tobacco-use-transform";
+
     const url = `assets/StructureMap/${name}.json`;
     return this.structureMapService.getStructureMap(url).pipe(tap(resp => {
       this.structureMap = resp;
@@ -97,8 +98,8 @@ export class AppComponent implements OnInit {
   private prepareFML(fml: FMLStructure): void {
     Object.keys(fml.objects).forEach(key => {
       try {
-        const {resource, path, mode} = fml.objects[key]
-        fml.objects[key] = this.initFMLStructureObject(resource, path, mode)
+        const {resource, name, mode} = fml.objects[key]
+        fml.objects[key] = this.initFMLStructureObject(resource, name, mode)
       } catch (e) {
         console.error(e)
       }
@@ -106,34 +107,45 @@ export class AppComponent implements OnInit {
   }
 
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
+    // true => assume resource's definition is in the structure definition
+    const inlineDefinition = mode === 'object' && path === resource;
+
+    // try to find resource's structure definition
     const structureDefinition = this.getStructureDefinition(resource)
     if (isNil(structureDefinition)) {
       throw Error(`StructureDefinition for the "${resource}" not found!`)
     }
 
     let elements = structureDefinition.snapshot.element;
-    if (path === resource) {
-      // inline definition
+    if (inlineDefinition) {
       elements = elements.filter(el => el.path.startsWith(path));
     }
 
     const selfDefinition = elements[0];
+    const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id; // todo: provide type as argument?
     const selfFields = elements.slice(1);
+
+    // double check whether inline definition assumption was correct
+    if (inlineDefinition && !this.isBackboneElement(selfResourceType)) {
+      // self definition's element MUST be the BackboneElement, but if you got here, it is not!
+      return this.initFMLStructureObject(selfResourceType, path, mode)
+    }
+
     if (selfDefinition.type?.length > 1) {
       console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
     }
 
     const o = new FMLStructureObject()
     o._fhirDefinition = selfDefinition;
-    o.resource = selfDefinition.type?.[0].code ?? selfDefinition.id;
-    o.path = path
+    o.resource = selfResourceType;
+    o.name = path
     o.mode = mode;
     o.fields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1),
       types: e.type?.map(t => t.code)
     }))
 
-    // fixme: wtf? could be done different?
+    // fixme: wtf? could be done differently?
     o.fields.filter(f => f.name.endsWith("[x]")).forEach(f => f.name = f.name.split("[x]")[0])
 
     return o;
@@ -191,8 +203,8 @@ export class AppComponent implements OnInit {
     let structureDefinition, fieldPath, fieldElement;
 
     if (this.isBackboneElement(parentObj.resource)) {
-      structureDefinition = this.getStructureDefinition(parentObj.path)
-      fieldPath = `${parentObj.path}.${field}`;
+      structureDefinition = this.getStructureDefinition(parentObj.name)
+      fieldPath = `${parentObj.name}.${field}`;
     } else {
       structureDefinition = this.getStructureDefinition(parentObj.resource)
       fieldPath = `${parentObj.resource}.${field}`;
@@ -215,7 +227,7 @@ export class AppComponent implements OnInit {
     }
 
     this.editor._createObjectNode(obj, {outputs: 1});
-    this.editor._createConnection(obj.path, 1, parentObj.path, field);
+    this.editor._createConnection(obj.name, 1, parentObj.name, field);
   }
 
 
@@ -282,7 +294,7 @@ export class AppComponent implements OnInit {
 
   protected get simpleFML(): FMLStructure {
     return {
-      objects: group(Object.values(this.fml?.objects || {}), o => o.path, o => ({
+      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
         ...o,
         html: undefined
       }) as FMLStructureObject),

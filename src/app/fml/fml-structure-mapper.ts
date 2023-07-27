@@ -22,7 +22,7 @@ export class FMLStructureMapper {
       const obj = new FMLStructureObject()
       const resource = s.url.substring(s.url.lastIndexOf('/') + 1);
       obj.resource = resource
-      obj.path = resource;
+      obj.name = resource;
       obj.mode = s.mode
       return obj
     })
@@ -52,7 +52,7 @@ export class FMLStructureMapper {
             struc.rules.push(rule)
           }
           if (isDefined(object)) {
-            struc.objects[object.path] = object;
+            struc.objects[object.name] = object;
           }
         })
 
