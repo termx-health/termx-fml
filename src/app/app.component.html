@@ -1,5 +1,11 @@
-<div style="display: grid; grid-template-columns: 2fr 10fr 2fr">
-  <div *ngIf="true" style="border-right: var(--border-table);  height: 100dvh; overflow: auto; background: var(--color-background-component);">
+<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; border-bottom: 1px solid var(--color-borders);">
+  <div style="width: 100%" class="m-justify-right">
+    <m-button (mClick)="export()" mSize="small">Export</m-button>
+  </div>
+</div>
+
+<div style="height: calc(100dvh - 2.5rem); display: grid; grid-template-columns: 2fr 10fr 2fr">
+  <div *ngIf="true" style="border-right: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component);">
     <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem">
       <m-table mSize="small">
         <tr *ngFor="let o of fml.objects | values ">
@@ -24,7 +30,8 @@
               {{r.action}}
             </div>
             <div class="description">
-              <span *ngIf="r.sourceObject">{{r.sourceObject}}:{{r.sourceField}} -> </span>{{r.targetObject}}:{{r.targetField}}
+              <div>source: {{r.sourceObject ? r.sourceObject + ':' + r.sourceField : '-'}}</div>
+              <div>target: {{r.targetObject ? r.targetObject + ':' + r.targetField : '-'}}</div>
             </div>
           </td>
         </tr>
@@ -32,9 +39,9 @@
     </div>
   </div>
 
-  <div id="drawflow" style="height: 100vh" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+  <div id="drawflow" style="height: 100%; outline: none" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
 
-  <div style="border-left: var(--border-table);  height: 100dvh; overflow: auto; background: var(--color-background-component)">
+  <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
     <div style="border-bottom: var(--border-table); padding: 1rem" class="m-justify-center">
       <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)">
         <label m-radio-button [mValue]="true">Expanded</label>

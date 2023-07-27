@@ -89,6 +89,17 @@ export class AppComponent implements OnInit {
     })
   }
 
+  protected export(): void {
+    const exp = this.editor.export();
+    Object.values(exp.drawflow.Home.data).forEach(el => {
+      const {x, y} = (el.data.obj ?? el.data.rule).position
+      el.pos_x = x;
+      el.pos_y = y;
+    })
+
+    console.log(exp)
+  }
+
 
   /* FML */
 
@@ -199,9 +210,8 @@ export class AppComponent implements OnInit {
 
   /* Structure tree */
 
-  public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    let structureDefinition, fieldPath, fieldElement;
-
+  protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
+    let structureDefinition, fieldPath;
     if (this.isBackboneElement(parentObj.resource)) {
       structureDefinition = this.getStructureDefinition(parentObj.name)
       fieldPath = `${parentObj.name}.${field}`;
@@ -210,14 +220,12 @@ export class AppComponent implements OnInit {
       fieldPath = `${parentObj.resource}.${field}`;
     }
 
-
-    fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
+    const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
 
     let resourceType = fieldElement.type?.[0]?.code;
     if (this.isBackboneElement(resourceType)) {
       resourceType = fieldPath;
     }
-
 
     const obj = this.fml.objects[fieldPath] = this.initFMLStructureObject(resourceType, fieldPath, 'object');
     if (isNil(obj._fhirDefinition)) {
@@ -233,15 +241,15 @@ export class AppComponent implements OnInit {
 
   /* Drag & drop */
 
-  public onDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
+  protected onDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
     ev.dataTransfer.setData("application/json", JSON.stringify(ruleDescription))
   }
 
-  public onDragOver(ev: DragEvent): void {
+  protected onDragOver(ev: DragEvent): void {
     ev.preventDefault();
   }
 
-  public onDrop(ev: DragEvent): void {
+  protected onDrop(ev: DragEvent): void {
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
     rule.name = data.code;

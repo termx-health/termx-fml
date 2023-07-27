@@ -89,6 +89,24 @@ export class FMLEditor extends Drawflow {
       const undo = () => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
 
 
+      // rule -> node
+      if (isRule(source) && isObj(target)) {
+        const renderer = this.getRuleRenderer(source.data.rule.action);
+        renderer.onOutputConnectionCreate(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
+      }
+
+      // node -> rule
+      if (isObj(source) && isRule(target)) {
+        const renderer = this.getRuleRenderer(target.data.rule.action);
+        renderer.onInputConnectionCreate(this, target, getPortIdx(e.input_class), source, getPortIdx(e.output_class))
+      }
+
+      // rule -> rule
+      if (isRule(source) && isRule(target)) {
+        console.warn(`Connection forbidden: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
+        undo();
+      }
+
       // node -> node
       if (isObj(source) && isObj(target)) {
         const sourceFieldIdx = getPortIdx(e.output_class);
@@ -109,8 +127,16 @@ export class FMLEditor extends Drawflow {
         this._fml.rules.push(rule)
 
 
-        const midX = (sourceNode.getBoundingClientRect().left + targetNode.getBoundingClientRect().left) / 2;
-        const midY = (sourceNode.getBoundingClientRect().top + targetNode.getBoundingClientRect().top) / 2;
+        const getOffset = (n: HTMLElement, dir) => {
+          const [_, x, y] = (element.firstElementChild as HTMLDivElement).style.transform.match(/translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m) ?? [0, 0, 0]
+          return {
+            top: n.getBoundingClientRect().top - element.offsetTop - Number(y),
+            left: n.getBoundingClientRect().left - element.offsetLeft + -1 * Number(x)
+          }[dir];
+        }
+
+        const midX = (getOffset(sourceNode, 'left') + getOffset(targetNode, 'left')) / 2;
+        const midY = (getOffset(sourceNode, 'top') + getOffset(targetNode, 'top')) / 2;
         const font = getCanvasFont()
         const maxWidth = getTextWidth(rule.name, font)
 
@@ -118,25 +144,6 @@ export class FMLEditor extends Drawflow {
         this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY})
         this._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
         this._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
-      }
-
-
-      // rule -> rule
-      if (isRule(source) && isRule(target)) {
-        console.warn(`Connection forbidden: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
-        undo();
-      }
-
-      // rule -> node
-      if (isRule(source) && isObj(target)) {
-        const renderer = this.getRuleRenderer(source.data.rule.action);
-        renderer.onOutputConnectionCreate(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
-      }
-
-      // node -> rule
-      if (isObj(source) && isRule(target)) {
-        const renderer = this.getRuleRenderer(target.data.rule.action);
-        renderer.onInputConnectionCreate(this, target, getPortIdx(e.input_class), source, getPortIdx(e.output_class))
       }
     });
 
@@ -291,9 +298,12 @@ export class FMLEditor extends Drawflow {
       const y = nodeWithPosition.y - el.offsetHeight / 2;
       const x = nodeWithPosition.x - el.offsetWidth / 2;
 
+      // hacky way to update position.
+      // export: position should be saved in data and later transferred to node pos_x and pos_y values
       el.style.top = y + "px"
       el.style.left = x + "px"
       this.updateConnectionNodes(`node-${nodeId}`)
+
       return {nodeId, y, x}
     }
 
