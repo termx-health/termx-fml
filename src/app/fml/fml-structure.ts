@@ -30,7 +30,7 @@ export class FMLStructureObject {
     return `
       <div>
         <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
-        ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
+        ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
 
         <div style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
           ${this.name}
@@ -54,6 +54,7 @@ export class FMLStructureRule {
   /** Action parameters */
   parameters?: any[];
 
+  // todo: multiple sources
   /** FMLStructureObject.path */
   sourceObject: string;
   sourceField: string;

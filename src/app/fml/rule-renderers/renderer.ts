@@ -35,8 +35,8 @@ export abstract class FMLRuleRenderer {
 
 
     editor._updateRule(node.id, rule.name, rule => {
-      // rule.sourceObject = source.data.obj.name
-      // rule.sourceField = source.data.obj.fields[sourcePort - 1].name
+      rule.sourceObject = source.data.obj.name
+      rule.sourceField = source.data.obj.fields[sourcePort - 1].name
     })
   }
 
@@ -59,8 +59,8 @@ export abstract class FMLRuleRenderer {
 
     editor._updateRule(node.id, rule.name, rule => {
       // console.log(target)
-      // rule.targetObject = target.data.obj.name
-      // rule.targetField = target.data.obj.fields[targetPort - 1].name
+      rule.targetObject = target.data.obj.name
+      rule.targetField = target.data.obj.fields[targetPort - 1].name
     })
   }
 }

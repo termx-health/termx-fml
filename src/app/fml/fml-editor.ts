@@ -5,6 +5,7 @@ import dagre from "dagre";
 import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
 import {getCanvasFont, getTextWidth} from './fml.utils';
+import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 
 let ID = 42;
 
@@ -50,7 +51,8 @@ export class FMLEditor extends Drawflow {
   // rule renderer
   private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
-    new FMLCopyRuleRenderer()
+    new FMLCopyRuleRenderer(),
+    new FMLAppendRuleRenderer()
   ]
 
 
@@ -166,14 +168,18 @@ export class FMLEditor extends Drawflow {
 
     Object.keys(this._fml.objects).forEach(name => {
       const {el} = this._getNodeElementByName(name)
-      const content = el.getElementsByClassName('drawflow_content_node')[0];
-      content.innerHTML = this._fml.objects[name].html();
+      if (isDefined(el)) {
+        const content = el.getElementsByClassName('drawflow_content_node')[0];
+        content.innerHTML = this._fml.objects[name].html();
+      }
     });
 
     this._fml.rules.forEach(rule => {
       const {el} = this._getNodeElementByName(rule.name)
-      const content = el.getElementsByClassName('drawflow_content_node')[0];
-      content.innerHTML = this.getRuleRenderer(rule.action).render(rule)
+      if (isDefined(el)) {
+        const content = el.getElementsByClassName('drawflow_content_node')[0];
+        content.innerHTML = this.getRuleRenderer(rule.action).render(rule)
+      }
     })
   }
 

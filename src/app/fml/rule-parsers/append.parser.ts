@@ -14,10 +14,10 @@ export class FMLAppendRuleParser extends FMLRuleParser {
     const rule = this.create(ruleName, fhirRuleSource, fhirRuleTarget);
     this.connect(rule, fhirRuleSource, fhirRuleTarget, variables)
 
+    // fixme: multiple sources could be in the parameters
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);
     if (isDefined(valueIdParam)){
       const variable = variables[valueIdParam.valueId];
-
       rule.sourceObject = variable.slice(0, variable.lastIndexOf("."))
       rule.sourceField = variable.slice( variable.lastIndexOf(".") + 1)
     }
