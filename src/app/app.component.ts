@@ -1,7 +1,7 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
-import {forkJoin} from 'rxjs';
+import {forkJoin, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
@@ -43,8 +43,10 @@ export class AppComponent implements OnInit {
   private _structureMap = () => {
     // const name = "structuremap-supplyrequest-transform";
     const name = "tobacco-use-transform";
-    const url = `assets/StructureMap/${name}.json` //`https://www.hl7.org/fhir/${name}.json`;
-    return this.structureMapService.getStructureMap(url);
+    const url = `assets/StructureMap/${name}.json`;
+    return this.structureMapService.getStructureMap(url).pipe(tap(resp => {
+      this.structureMap = resp;
+    }));
   }
 
   // todo: @Input()
@@ -56,12 +58,19 @@ export class AppComponent implements OnInit {
       'Reference',
       'Coding',
       'Annotation',
+      'Identifier',
     ]
 
     const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
     const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
     resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
-    return forkJoin(reqs$)
+    return forkJoin(reqs$).pipe(tap(definitions => {
+      this.resourceBundle = {
+        resourceType: 'Bundle',
+        type: 'collection',
+        entry: definitions.map(def => ({resource: def}))
+      }
+    }))
   }
 
   // FML editor
@@ -75,21 +84,13 @@ export class AppComponent implements OnInit {
 
 
   constructor(
-    private structureMapService: StructureMapService,
-    private cdr: ChangeDetectorRef
+    private structureMapService: StructureMapService
   ) { }
 
 
   public ngOnInit(): void {
     this._structureMap().subscribe(resp => {
-      this.structureMap = resp;
-      this._resourceBundle(resp).subscribe(definitions => {
-        this.resourceBundle = {
-          resourceType: 'Bundle',
-          type: 'collection',
-          entry: definitions.map(def => ({resource: def}))
-        }
-
+      this._resourceBundle(resp).subscribe(() => {
         const fml = this.fml = FMLStructureMapper.map(resp)
         this.prepareFML(fml);
         this.initEditor(fml);
@@ -128,10 +129,13 @@ export class AppComponent implements OnInit {
 
     const selfDefinition = elements[0];
     const selfFields = elements.slice(1);
+    if (selfDefinition.type?.length > 1) {
+      console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
+    }
 
     const o = new FMLStructureObject()
     o._fhirDefinition = selfDefinition;
-    o.resource = resource;
+    o.resource = selfDefinition.type?.[0].code ?? selfDefinition.id;
     o.path = path
     o.mode = mode;
     o.fields = selfFields.map(e => ({
@@ -194,9 +198,26 @@ export class AppComponent implements OnInit {
   /* Structure tree */
 
   public onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    const path = `${parentObj.resource}.${field}`;
-    const obj = this.fml.objects[path] = this.initFMLStructureObject(path, path, parentObj.mode);
+    let structureDefinition, fieldPath, fieldElement;
 
+    if (this.isBackboneElement(parentObj.resource)) {
+      structureDefinition = this.getStructureDefinition(parentObj.path)
+      fieldPath = `${parentObj.path}.${field}`;
+    } else {
+      structureDefinition = this.getStructureDefinition(parentObj.resource)
+      fieldPath = `${parentObj.resource}.${field}`;
+    }
+
+
+    fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
+
+    let resourceType = fieldElement.type?.[0]?.code;
+    if (this.isBackboneElement(resourceType)) {
+      resourceType = fieldPath;
+    }
+
+
+    const obj = this.fml.objects[fieldPath] = this.initFMLStructureObject(resourceType, fieldPath, 'object');
     if (isNil(obj._fhirDefinition)) {
       console.warn(`FHIR Element Definition is missing, ${obj.resource}`)
       // wtf? id field?
@@ -242,6 +263,9 @@ export class AppComponent implements OnInit {
 
   /* Utils */
 
+  private isBackboneElement(resource: string): boolean {
+    return ['BackboneElement', 'Element'].includes(resource);
+  }
 
   private getStructureDefinition(anyPath: string): StructureDefinition {
     // Resource.whatever.next (anyPath) => Resource (base)
@@ -263,8 +287,7 @@ export class AppComponent implements OnInit {
   }
 
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
-    return f.types?.some(t => ['BackboneElement', 'Element'].includes(t)) ||
-      this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
+    return f.types?.some(t => this.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
   }
 
   protected get simpleFML(): FMLStructure {

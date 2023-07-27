@@ -67,7 +67,68 @@
           ]
         },
         {
-          "name": "parameter",
+          "name": "category",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "category",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "'non-stock'"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "priority",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "priority",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "'routine'"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "quantity",
+          "source": [
+            {
+              "context": "source",
+              "element": "quantity",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "category",
+              "transform": "copy"
+            }
+          ]
+        },
+        {
+          "name": "item",
           "source": [
             {
               "context": "source",
@@ -78,14 +139,58 @@
           "target": [
             {
               "context": "target",
-              "element": "parameter",
+              "element": "item",
               "variable": "b",
               "transform": "create"
             },
             {
               "context": "b",
-              "element": "code",
+              "element": "concept",
               "transform": "copy"
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "occurrence",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "authoredOn",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "authoredOn",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
             }
           ]
         }
