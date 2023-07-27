@@ -37,12 +37,6 @@ export abstract class FMLRuleParser {
       p.valueTime ??
       p.valueDateTime
     )
-
-    rule.html = () => `
-      <div>
-         ${rule.name}
-      </div>
-    `
     return rule
   }
 

@@ -5,8 +5,11 @@ export abstract class FMLRuleRenderer {
 
   public render(rule: FMLStructureRule): string {
     return `
-      <div >
-         <h5 style="margin: 0">${rule.name}</h5>
+      <div>
+        <div style="position: absolute; bottom: 0; font-size: 0.7rem; right: 3px; color: var(--color-text-secondary)">
+          x: ${rule.position?.x}; y: ${rule.position?.y}
+        </div>
+        <h5 style="margin: 0">${rule.name}</h5>
       </div>
     `
   }

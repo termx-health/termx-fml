@@ -29,8 +29,12 @@ export class FMLStructureObject {
   html(): string {
     return `
       <div>
-         <h5 class="node-title">${this.mode} | <b>${this.path}</b> ${this.path !== this.resource ? `| ${this.resource}` : ''}</div>
-         ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
+        <h5 class="node-title">${this.mode} | <b>${this.resource}</b></div>
+        ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('')}
+
+        <div style="position: absolute; top: -1.5rem; font-size: 0.7rem; color: var(--color-text-secondary)">
+          ${this.path}
+        </div>
       </div>
     `
   };
@@ -58,8 +62,6 @@ export class FMLStructureRule {
   targetField: string;
 
   position?: FMLPosition;
-  /** @deprecated */
-  html: () => string
 }
 
 

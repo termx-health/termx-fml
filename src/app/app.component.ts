@@ -17,16 +17,6 @@ interface RuleDescription {
 
 const RULES: RuleDescription[] = [
   {
-    code: 'create',
-    name: 'Create',
-    description: 'Use the standard API to create a new instance of data. Where structure definitions have been provided, the type parameter must be a string which is a known type of a root element. Where they haven\'t, the application must know the name somehow'
-  },
-  {
-    code: 'copy',
-    name: 'Copy',
-    description: 'Simply copy the source to the target as is (only allowed when the types in source and target match- typically for primitive types). In the concrete syntax, this is simply represented as the source variable, e.g. src.a = tgt.b'
-  },
-  {
     code: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase). No Parameters'
@@ -296,7 +286,9 @@ export class AppComponent implements OnInit {
         ...o,
         html: undefined
       }) as FMLStructureObject),
-      rules: []
+      rules: this.fml?.rules.map(r => ({
+        ...r
+      }))
     }
   }
 }
