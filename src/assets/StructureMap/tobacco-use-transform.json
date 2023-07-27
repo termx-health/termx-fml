@@ -35,7 +35,93 @@
         }
       ],
       "rule": [
-
+        {
+          "name": "rule_id",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "id",
+              "transform": "uuid"
+            }
+          ]
+        },
+        {
+          "name": "rule_status",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "status",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueString": "final"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_category",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "category",
+              "transform": "cc",
+              "parameter": [
+                {
+                  "valueString": "http://terminology.hl7.org/CodeSystem/observation-category"
+                },
+                {
+                  "valueString": "vital-signs"
+                },
+                {
+                  "valueString": "Vital Signs"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_code",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "code",
+              "transform": "cc",
+              "parameter": [
+                {
+                  "valueString": "http://snomed.info/sct"
+                },
+                {
+                  "valueString": "229819007"
+                },
+                {
+                  "valueString": "Tobacco use and exposure"
+                }
+              ]
+            }
+          ]
+        },
         {
           "name": "rule-value",
           "source": [
