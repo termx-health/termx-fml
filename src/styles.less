@@ -93,6 +93,13 @@ body {
       filter: drop-shadow(0px 1px 2px @mui-primary-color-2);
     }
   }
+
+  &--animated {
+    .connection .main-path {
+      stroke-dasharray: 5;
+      animation: dashdraw .5s linear infinite;
+    }
+  }
 }
 
 .drawflow .node--with-title {
@@ -111,4 +118,11 @@ body {
 
 .hidden {
   display: none;
+}
+
+
+@keyframes dashdraw {
+  0% {
+    stroke-dashoffset: 10
+  }
 }

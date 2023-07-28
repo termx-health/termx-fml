@@ -36,6 +36,306 @@
       ],
       "rule": [
         {
+          "name": "rule_id",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "id",
+              "transform": "uuid"
+            }
+          ]
+        },
+        {
+          "name": "rule_status",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "status",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueString": "final"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_category",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "category",
+              "transform": "cc",
+              "parameter": [
+                {
+                  "valueString": "http://terminology.hl7.org/CodeSystem/observation-category"
+                },
+                {
+                  "valueString": "vital-signs"
+                },
+                {
+                  "valueString": "Vital Signs"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_code",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "code",
+              "transform": "cc",
+              "parameter": [
+                {
+                  "valueString": "http://snomed.info/sct"
+                },
+                {
+                  "valueString": "229819007"
+                },
+                {
+                  "valueString": "Tobacco use and exposure"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule-value",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "value",
+              "variable": "newCC",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "CodeableConcept"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "rule-value-coding",
+              "source": [
+                {
+                  "context": "src"
+                }
+              ],
+              "target": [
+                {
+                  "context": "newCC",
+                  "element": "coding",
+                  "variable": "newCoding",
+                  "transform": "create",
+                  "parameter": [
+                    {
+                      "valueString": "Coding"
+                    }
+                  ]
+                }
+              ],
+              "rule": [
+                {
+                  "name": "rule-value-coding-system",
+                  "source": [
+                    {
+                      "context": "src"
+                    }
+                  ],
+                  "target": [
+                    {
+                      "context": "newCoding",
+                      "element": "system",
+                      "transform": "copy",
+                      "parameter": [
+                        {
+                          "valueString": "http://snomed.info/sct"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "rule-value-coding-code",
+                  "source": [
+                    {
+                      "context": "src",
+                      "element": "tulemus",
+                      "variable": "val"
+                    }
+                  ],
+                  "target": [
+                    {
+                      "context": "newCoding",
+                      "element": "code",
+                      "transform": "copy",
+                      "parameter": [
+                        {
+                          "valueId": "val"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_effectiveTime",
+          "source": [
+            {
+              "context": "src",
+              "element": "aeg",
+              "variable": "aeg"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "effective",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "aeg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_note",
+          "source": [
+            {
+              "context": "src",
+              "element": "kommentaar",
+              "variable": "kom"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "note",
+              "variable": "note",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Annotation"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "rule_note_text",
+              "source": [
+                {
+                  "context": "kom"
+                }
+              ],
+              "target": [
+                {
+                  "context": "note",
+                  "element": "text",
+                  "transform": "copy",
+                  "parameter": [
+                    {
+                      "valueId": "kom"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule-subject",
+          "source": [
+            {
+              "context": "src",
+              "element": "patsient",
+              "variable": "pat"
+            }
+          ],
+          "target": [
+            {
+              "context": "obs",
+              "element": "subject",
+              "variable": "subjectRef",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Reference"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "rule-subref-1",
+              "source": [
+                {
+                  "context": "pat"
+                }
+              ],
+              "target": [
+                {
+                  "context": "subjectRef",
+                  "element": "type",
+                  "transform": "copy",
+                  "parameter": [
+                    {
+                      "valueString": "Patient"
+                    }
+                  ]
+                },
+                {
+                  "context": "subjectRef",
+                  "element": "reference",
+                  "transform": "append",
+                  "parameter": [
+                    {
+                      "valueString": "Patient?identifier="
+                    },
+                    {
+                      "valueId": "pat"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
           "name": "rule-performer",
           "source": [
             {

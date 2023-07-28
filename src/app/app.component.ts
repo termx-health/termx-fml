@@ -76,6 +76,8 @@ export class AppComponent implements OnInit {
   // component
   protected ruleDescriptions = RULES;
   protected isExpanded = true;
+  protected isAnimated = false;
+  protected isHighlighted = false;
 
 
   constructor(
@@ -188,6 +190,9 @@ export class AppComponent implements OnInit {
       }
     });
 
+    editor.on('connectionCreated', () => editor._highlightHangingPaths(this.isHighlighted))
+    editor.on('connectionRemoved', () => editor._highlightHangingPaths(this.isHighlighted))
+
     // render objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
@@ -273,6 +278,14 @@ export class AppComponent implements OnInit {
     Object.keys(this.fml.objects).forEach(k => {
       setExpand(this.editor, k, isExpanded)
     })
+  }
+
+
+  /* Highlight */
+
+  protected toggleHighlight(): void {
+    this.isHighlighted = !this.isHighlighted;
+    this.editor._highlightHangingPaths(this.isHighlighted);
   }
 
 

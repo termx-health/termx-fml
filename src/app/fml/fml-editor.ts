@@ -31,6 +31,9 @@ export const getPortIdx = (str: string): number => {
 
 
 export class FMLEditor extends Drawflow {
+  public isObj = (n: DrawflowNode): n is FMLDrawflowObjectNode => 'obj' in n.data;
+  public isRule = (n: DrawflowNode): n is FMLDrawflowRuleNode => 'rule' in n.data;
+
   // object
   private _getObject = (path: string): FMLStructureObject => this._fml.objects[path];
   public _updateObject = (nodeId: number, path: string, fn: (obj: FMLStructureObject) => void) => {
@@ -63,8 +66,6 @@ export class FMLEditor extends Drawflow {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4
 
-    const isObj = (n: DrawflowNode): n is FMLDrawflowObjectNode => 'obj' in n.data;
-    const isRule = (n: DrawflowNode): n is FMLDrawflowRuleNode => 'rule' in n.data;
 
     this.on('nodeMoved', nodeId => {
       const el = document.getElementById(`node-${nodeId}`)
@@ -73,13 +74,18 @@ export class FMLEditor extends Drawflow {
       const position: FMLPosition = {x: Number(x), y: Number(y)};
 
       const node = this.getNodeFromId(nodeId);
-      if (isObj(node)) {
+      if (this.isObj(node)) {
         this._updateObject(nodeId, node.data.obj.name, obj => obj.position = position)
-      } else if (isRule(node)) {
+      } else if (this.isRule(node)) {
         this._updateRule(nodeId, node.data.rule.name, rule => rule.position = position)
       }
 
       this._rerenderNodes()
+    })
+
+
+    this.on('nodeRemoved', nodeId => {
+      console.log(nodeId)
     })
 
 
@@ -90,25 +96,25 @@ export class FMLEditor extends Drawflow {
 
 
       // rule -> node
-      if (isRule(source) && isObj(target)) {
+      if (this.isRule(source) && this.isObj(target)) {
         const renderer = this.getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionCreate(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
       }
 
       // node -> rule
-      if (isObj(source) && isRule(target)) {
+      if (this.isObj(source) && this.isRule(target)) {
         const renderer = this.getRuleRenderer(target.data.rule.action);
         renderer.onInputConnectionCreate(this, target, getPortIdx(e.input_class), source, getPortIdx(e.output_class))
       }
 
       // rule -> rule
-      if (isRule(source) && isRule(target)) {
+      if (this.isRule(source) && this.isRule(target)) {
         console.warn(`Connection forbidden: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
         undo();
       }
 
       // node -> node
-      if (isObj(source) && isObj(target)) {
+      if (this.isObj(source) && this.isObj(target)) {
         const sourceFieldIdx = getPortIdx(e.output_class);
         const targetFieldIdx = getPortIdx(e.input_class);
 
@@ -152,19 +158,25 @@ export class FMLEditor extends Drawflow {
       const target: FMLDrawflowNode = this.getNodeFromId(e.input_id);
 
       // rule -> node
-      if (isRule(source) && isObj(target)) {
+      // if (this.isRule(source) && this.isObj(target)) {
+      //   const renderer = this.getRuleRenderer(source.data.rule.action);
+      //   renderer.onOutputConnectionRemove(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
+      // }
+
+      // node -> rule
+      if (this.isObj(source) && this.isRule(target)) {
+        const renderer = this.getRuleRenderer(target.data.rule.action);
+        renderer.onInputConnectionRemove(this, target, getPortIdx(e.input_class), source, getPortIdx(e.output_class))
+      }
+
+      // rule -> node
+      if (this.isRule(source) && this.isObj(target)) {
         this._updateRule(source.id, source.data.rule.name, rule => {
           rule.targetObject = undefined;
           rule.targetField = undefined;
         })
       }
-      // node -> rule
-      if (isObj(source) && isRule(target)) {
-        this._updateRule(target.id, target.data.rule.name, rule => {
-          rule.sourceObject = undefined;
-          rule.sourceField = undefined;
-        })
-      }
+
     })
   }
 
@@ -189,6 +201,38 @@ export class FMLEditor extends Drawflow {
     })
   }
 
+  public _highlightHangingPaths(isHighlighted: boolean): void {
+    Array.from(document.getElementsByClassName('connection')).forEach((el: SVGElement) => el.style.removeProperty('--color-text'))
+    if (!isHighlighted) {
+      return
+    }
+
+    this._fml.rules.forEach(rule => {
+      const rN = this._getNodeByName(rule.name);
+
+      Object.keys(rN.inputs).forEach(i => {
+        rN.inputs[i].connections.forEach(c => {
+          const n = this.getNodeFromId(c.node);
+          if (this.isObj(n) && `${rule.sourceObject}|${rule.sourceField}` === `${n.name}|${n.data.obj.fields[getPortIdx(c.input) - 1].name}`) {
+            const s = `connection node_in_node-${rN.id} node_out_node-${n.id} ${c.input} ${i}`;
+            const el = document.getElementsByClassName(s)[0] as SVGElement;
+            el.style.setProperty('--color-text', 'var(--color-primary-5)')
+          }
+        })
+      })
+
+      Object.keys(rN.outputs).forEach(i => {
+        rN.outputs[i].connections.forEach(c => {
+          const n = this.getNodeFromId(c.node);
+          if (this.isObj(n) && `${rule.targetObject}|${rule.targetField}` === `${n.name}|${n.data.obj.fields[getPortIdx(c['output']) - 1].name}`) {
+            const s = `connection node_in_node-${n.id} node_out_node-${rN.id} ${i} ${c['output']}`;
+            const el = document.getElementsByClassName(s)[0] as SVGElement;
+            el.style.setProperty('--color-text', 'var(--color-primary-5)')
+          }
+        })
+      })
+    })
+  }
 
   /* Creator */
 
@@ -330,6 +374,11 @@ export class FMLEditor extends Drawflow {
     const nodeId = this._getNodeId(name);
     return {el: document.getElementById(`node-${nodeId}`), nodeId};
   }
+
+  public _getNodeByName(name) {
+    const nodeId = this._getNodeId(name);
+    return this.getNodeFromId(nodeId);
+  };
 
   public _getNodeId(name) {
     return this.getNodesFromName(name)[0]
