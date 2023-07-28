@@ -6,6 +6,7 @@ import {FMLCreateRuleParser} from './rule-parsers/create.parser';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLCcRuleParser} from './rule-parsers/cc.parser';
 
 export class FMLStructureMapper {
   public static map(fhir: StructureMap): FMLStructure {
@@ -14,6 +15,7 @@ export class FMLStructureMapper {
       new FMLCreateRuleParser(),
       new FMLUuidRuleParser(),
       new FMLAppendRuleParser(),
+      new FMLCcRuleParser()
     ]
 
 

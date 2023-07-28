@@ -268,21 +268,27 @@ export class FMLEditor extends Drawflow {
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
 
     Object.keys(this._fml.objects).forEach(name => {
-      const {el: {offsetWidth, offsetHeight}} = this._getNodeElementByName(name)
-      dagreGraph.setNode(name, {
-        width: offsetWidth,
-        height: offsetHeight
-      });
+      const {el} = this._getNodeElementByName(name)
+      if (isDefined(el)) {
+        const {offsetWidth, offsetHeight} = el;
+        dagreGraph.setNode(name, {
+          width: offsetWidth,
+          height: offsetHeight
+        });
+      }
     });
 
     this._fml.rules.forEach(rule => {
-      const {el: {offsetWidth, offsetHeight}} = this._getNodeElementByName(rule.name)
-      dagreGraph.setNode(rule.name, {
-        width: offsetWidth,
-        height: offsetHeight
-      });
-      dagreGraph.setEdge(rule.sourceObject, rule.name);
-      dagreGraph.setEdge(rule.name, rule.targetObject);
+      const {el} = this._getNodeElementByName(rule.name)
+      if (isDefined(el)) {
+        const {offsetWidth, offsetHeight} = el;
+        dagreGraph.setNode(rule.name, {
+          width: offsetWidth,
+          height: offsetHeight
+        });
+        dagreGraph.setEdge(rule.sourceObject, rule.name);
+        dagreGraph.setEdge(rule.name, rule.targetObject);
+      }
     });
 
     dagre.layout(dagreGraph);

@@ -112,7 +112,7 @@
           <m-form-item mLabel="Action">
             {{rule.action}}
           </m-form-item>
-          <m-form-item mLabel="Parameters">
+          <m-form-item mLabel="Parameters" *ngIf="rule.parameters?.length">
             <ul>
               <li *ngFor="let p of rule.parameters">{{p}}</li>
             </ul>

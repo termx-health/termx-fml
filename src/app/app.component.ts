@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin, tap} from 'rxjs';
@@ -8,6 +8,10 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {setExpand} from './fml/fml.utils';
 import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
+import {createCustomElement} from '@angular/elements';
+import {MuiIconComponent} from '@kodality-web/marina-ui';
+
+let ID = 69;
 
 interface RuleDescription {
   code: string,
@@ -75,8 +79,13 @@ export class AppComponent implements OnInit {
 
 
   constructor(
-    private structureMapService: StructureMapService
-  ) { }
+    private structureMapService: StructureMapService,
+    injector: EnvironmentInjector
+  ) {
+    if (!customElements.get('ce-icon')) {
+      customElements.define('ce-icon', createCustomElement(MuiIconComponent, {injector}));
+    }
+  }
 
 
   public ngOnInit(): void {
@@ -118,6 +127,7 @@ export class AppComponent implements OnInit {
   }
 
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
+    console.log(resource, path, mode)
     // true => assume resource's definition is in the structure definition
     const inlineDefinition = mode === 'object' && path === resource;
 
@@ -147,6 +157,7 @@ export class AppComponent implements OnInit {
     }
 
     const o = new FMLStructureObject()
+    o.element = selfDefinition;
     o.resource = selfResourceType;
     o.name = path
     o.mode = mode;
@@ -210,23 +221,20 @@ export class AppComponent implements OnInit {
   /* Structure tree */
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    let structureDefinition, fieldPath;
-    if (this.isBackboneElement(parentObj.resource)) {
-      structureDefinition = this.getStructureDefinition(parentObj.name)
-      fieldPath = `${parentObj.name}.${field}`;
-    } else {
-      structureDefinition = this.getStructureDefinition(parentObj.resource)
-      fieldPath = `${parentObj.resource}.${field}`;
-    }
+    const structureDefinition = this.getStructureDefinition(parentObj.element.id)
 
+    const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
 
-    let resourceType = fieldElement.type?.[0]?.code;
-    if (this.isBackboneElement(resourceType)) {
-      resourceType = fieldPath;
+    let fieldType = fieldElement.type?.[0]?.code;
+    if (this.isBackboneElement(fieldType)) {
+      fieldType = fieldPath;
     }
 
-    const obj = this.fml.objects[fieldPath] = this.initFMLStructureObject(resourceType, fieldPath, 'object');
+    const obj = this.initFMLStructureObject(fieldType, fieldPath, 'object');
+    obj.name = `${fieldPath}|${ID++}`;
+    this.fml.objects[obj.name] = obj;
+
     this.editor._createObjectNode(obj, {outputs: 1});
     this.editor._createConnection(obj.name, 1, parentObj.name, field);
   }
