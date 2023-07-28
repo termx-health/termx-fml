@@ -8,7 +8,7 @@ export abstract class FMLRuleRenderer {
     return `
       <div>
         <div style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem">
-          ${rule.action} | ${rule['_nodeId']}
+          ${rule.action}
         </div>
 
         <h5 style="margin: 0">${rule.name}</h5>

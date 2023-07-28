@@ -1,5 +1,5 @@
 import {group, isDefined, isNil} from '@kodality-web/core-util';
-import {StructureMap, StructureMapGroupRule} from 'fhir/r5';
+import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
@@ -9,6 +9,70 @@ import {FMLStructure, FMLStructureObject} from './fml-structure';
 import {FMLCcRuleParser} from './rule-parsers/cc.parser';
 
 export class FMLStructureMapper {
+  public static compose(fml: FMLStructure): StructureMap {
+    console.log(fml);
+    const sm: StructureMap = {
+      resourceType: 'StructureMap',
+      url: 'http://termx.health/fhir/StructureMap/fml-compose',
+      name: 'fml-compose',
+      status: 'draft',
+      group: [
+        {
+          name: 'main',
+          input: [],
+          rule: []
+        }
+      ]
+    }
+
+
+    const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
+    const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
+    sm.structure = [...sources, ...targets].map<StructureMapStructure>(o => ({
+      url: `http://termx.health/fhir/StructureDefinition/${o.resource}`,
+      mode: o.mode as StructureMapStructure['mode'],
+      alias: o.resource
+    }))
+
+    const smGroup = sm.group[0]
+    smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>(o => ({
+      name: o.name,
+      type: o.resource,
+      mode: o.mode as StructureMapGroupInput['mode'],
+    }))
+
+
+    const x = (targetObject: string) => {
+      const targetRules = fml.rules.filter(r => r.targetObject === targetObject)
+
+      targetRules.forEach(r => {
+        const fhirRule: StructureMapGroupRule = {
+          name: r.name.slice(0, r.name.lastIndexOf("#")),
+          source: [{
+            context: r.sourceObject,
+            element: r.sourceField
+          }],
+          target: [{
+            context: r.targetObject,
+            element: r.targetField,
+            transform: r.action as StructureMapGroupRuleTarget['transform'],
+            parameter: (r.parameters ?? []).map(p => ({
+              valueString: p
+            }))
+          }]
+        }
+
+        // todo: recursion
+        //  find objects where $obj.target = $rule.source, for each $obj execute x($obj.name)
+
+        smGroup.rule.push(fhirRule);
+      })
+    }
+
+    targets.forEach(({name}) => x(name))
+    return sm
+  }
+
   public static map(fhir: StructureMap): FMLStructure {
     const ruleParsers: FMLRuleParser[] = [
       new FMLCopyRuleParser(),
@@ -71,7 +135,6 @@ export class FMLStructureMapper {
       })
     })
 
-    console.log(struc)
     return struc
   }
 }

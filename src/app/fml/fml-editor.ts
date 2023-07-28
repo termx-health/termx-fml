@@ -264,8 +264,17 @@ export class FMLEditor extends Drawflow {
     source: string, sField: string | number,
     target: string, tField: string | number
   ) {
-    const oIdx = typeof sField === 'string' ? this._fml.objects[source].getFieldIndex(sField) + 1 : sField
-    const iIdx = typeof tField === 'string' ? this._fml.objects[target].getFieldIndex(tField) + 1 : tField
+    let oIdx, iIdx;
+    try {
+      oIdx = typeof sField === 'string' ? this._fml.objects[source].getFieldIndex(sField) + 1 : sField
+    } catch (e) {
+      throw Error(e)
+    }
+    try {
+      iIdx = typeof tField === 'string' ? this._fml.objects[target].getFieldIndex(tField) + 1 : tField
+    } catch (e) {
+      throw Error(e)
+    }
 
     try {
       this.addConnection(

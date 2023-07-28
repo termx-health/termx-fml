@@ -8,6 +8,7 @@ export interface FMLRuleParserResult {
 
 export type FMLRuleParserVariables = {[name: string]: string}
 
+let ID = 420;
 export abstract class FMLRuleParser {
   abstract action: string;
 
@@ -24,7 +25,7 @@ export abstract class FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
   ): FMLStructureRule {
     const rule = new FMLStructureRule()
-    rule.name = `${ruleName}.${fhirRuleTarget.transform}`;
+    rule.name = `${ruleName}#${ID++}`;
     rule.alias = fhirRuleTarget.variable
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
@@ -46,7 +47,8 @@ export abstract class FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): void {
-    const doo = (
+    // todo: better method name
+    const x = (
       st: StructureMapGroupRuleSource | StructureMapGroupRuleTarget,
       setObject: (v) => void,
       setField: (v) => void,
@@ -62,10 +64,10 @@ export abstract class FMLRuleParser {
     }
 
     if (variables[fhirRuleSource.context]) {
-      doo(fhirRuleSource, v => rule.sourceObject = v, v => rule.sourceField = v);
+      x(fhirRuleSource, v => rule.sourceObject = v, v => rule.sourceField = v);
     }
     if (variables[fhirRuleTarget.context]) {
-      doo(fhirRuleTarget, v => rule.targetObject = v, v => rule.targetField = v);
+      x(fhirRuleTarget, v => rule.targetObject = v, v => rule.targetField = v);
     }
   }
 }

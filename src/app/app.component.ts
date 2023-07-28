@@ -1,7 +1,7 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
-import {forkJoin, tap} from 'rxjs';
+import {forkJoin, mergeMap, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
@@ -10,6 +10,7 @@ import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
+import {HttpClient} from '@angular/common/http';
 
 let ID = 69;
 
@@ -24,6 +25,11 @@ const RULES: RuleDescription[] = [
     code: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase). No Parameters'
+  },
+  {
+    code: 'append',
+    name: 'append',
+    description: 'Element or string - just append them all together'
   }
 ]
 
@@ -35,8 +41,9 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = () => {
+    const name = "step9";
     // const name = "structuremap-supplyrequest-transform";
-    const name = "tobacco-use-transform";
+    // const name = "tobacco-use-transform";
 
     const url = `assets/StructureMap/${name}.json`;
     return this.structureMapService.getStructureMap(url).pipe(tap(resp => {
@@ -47,25 +54,19 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public resourceBundle: Bundle<StructureDefinition>;
   private _resourceBundle = (sm: StructureMap) => {
-    const resources = [
-      'CodeableReference',
-      'CodeableConcept',
-      'Reference',
-      'Coding',
-      'Annotation',
-      'Identifier',
-    ]
-
-    const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
-    const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
-    resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
-    return forkJoin(reqs$).pipe(tap(definitions => {
-      this.resourceBundle = {
-        resourceType: 'Bundle',
-        type: 'collection',
-        entry: definitions.map(def => ({resource: def}))
-      }
+    return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
+      const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
+      const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
+      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
+      return forkJoin(reqs$).pipe(tap(definitions => {
+        this.resourceBundle = {
+          resourceType: 'Bundle',
+          type: 'collection',
+          entry: definitions.map(def => ({resource: def}))
+        }
+      }))
     }))
+
   }
 
   // FML editor
@@ -76,10 +77,11 @@ export class AppComponent implements OnInit {
   // component
   protected ruleDescriptions = RULES;
   protected isExpanded = true;
-  protected isAnimated = false;
+  protected isAnimated = true;
 
 
   constructor(
+    private http: HttpClient,
     private structureMapService: StructureMapService,
     injector: EnvironmentInjector
   ) {
@@ -106,7 +108,8 @@ export class AppComponent implements OnInit {
       el.pos_x = x;
       el.pos_y = y;
     })
-    console.log(exp)
+
+    console.log(FMLStructureMapper.compose(this.fml))
   }
 
 
@@ -116,10 +119,9 @@ export class AppComponent implements OnInit {
    * Decorates FMLStructure objects with fields from the Bundle StructureDefinition.
    */
   private prepareFML(fml: FMLStructure): void {
-    Object.keys(fml.objects).forEach(key => {
+    Object.values(fml.objects).forEach(({resource, name, mode}) => {
       try {
-        const {resource, name, mode} = fml.objects[key]
-        fml.objects[key] = this.initFMLStructureObject(resource, name, mode)
+        fml.objects[name] = this.initFMLStructureObject(resource, name, mode)
       } catch (e) {
         console.error(e)
       }
@@ -127,7 +129,7 @@ export class AppComponent implements OnInit {
   }
 
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
-    // true => assume resource's definition is in the structure definition
+    // true => assume resource's definition is described in the structure definition
     const inlineDefinition = mode === 'object' && path === resource;
 
     // try to find resource's structure definition
@@ -152,6 +154,7 @@ export class AppComponent implements OnInit {
     }
 
     if (selfDefinition.type?.length > 1) {
+      // fixme: as for now, warn about multiple types
       console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
     }
 
@@ -161,15 +164,13 @@ export class AppComponent implements OnInit {
     o.name = path
     o.mode = mode;
     o.fields = selfFields.map(e => ({
-      name: e.path.substring(selfDefinition.id.length + 1),
+      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
       types: e.type?.map(t => t.code)
     }))
 
-    // fixme: wtf? could be done differently?
-    o.fields.filter(f => f.name.endsWith("[x]")).forEach(f => f.name = f.name.split("[x]")[0])
-
     return o;
   }
+
 
   /* Editor */
 
@@ -187,18 +188,16 @@ export class AppComponent implements OnInit {
       }
     });
 
-    // render objects
-    Object.keys(fml.objects).forEach(k => {
-      const obj = fml.objects[k];
-      const isCustomObj = !this.structureMap.structure.some(s => s.url.endsWith(obj.resource));
+    // fixme (objects & rules): currently x, y are undefined! they should be stored in StrcutureMap somewhere and restored on load
 
+    // render objects
+    Object.values(fml.objects).forEach(obj => {
       editor._createObjectNode(obj, {
         x: obj.position?.x,
         y: obj.position?.y,
-        outputs: isCustomObj ? 1 : undefined
+        outputs: obj.mode === 'object' ? 1 : undefined
       })
     })
-
 
     // render rules
     fml.rules.forEach(rule => {
@@ -207,14 +206,15 @@ export class AppComponent implements OnInit {
         y: rule.position?.y,
       });
 
+      // fixme: some rule can have multiple inputs, what to do then?
       editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
       editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
     })
 
-
     // auto layout
     editor._autoLayout()
 
+    // rerender nodes
     editor._rerenderNodes();
   }
 
@@ -227,6 +227,7 @@ export class AppComponent implements OnInit {
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
 
+    // fixme: ACHTUNG! the first type is selected!
     let fieldType = fieldElement.type?.[0]?.code;
     if (this.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
@@ -256,6 +257,7 @@ export class AppComponent implements OnInit {
     const rule = new FMLStructureRule();
     rule.name = data.code + new Date().getTime();
     rule.action = data.code;
+    rule.parameters = [];
     this.fml.rules.push(rule)
 
     const {top, left} = this.editor._getOffsets()
@@ -284,7 +286,7 @@ export class AppComponent implements OnInit {
   }
 
   private getStructureDefinition(anyPath: string): StructureDefinition {
-    // Resource.whatever.next (anyPath) => Resource (base)
+    // Resource.whatever.element (anyPath) => Resource (base)
     const base = anyPath.includes('.')
       ? anyPath.slice(0, anyPath.indexOf('.'))
       : anyPath;
@@ -299,6 +301,7 @@ export class AppComponent implements OnInit {
   }
 
   private _isComplexResource(type: string): boolean {
+    // fixme: if starts with capital letter, then complex resource?
     return isDefined(type) && type.charAt(0).toUpperCase() === type.charAt(0);
   }
 

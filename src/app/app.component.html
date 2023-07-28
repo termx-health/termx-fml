@@ -40,10 +40,7 @@
           <td>
             <div class="m-justify-between">
               <div>{{r.name}}</div>
-              <span class="m-subtitle">x: {{r.position?.x ?? '-'}}; y:{{r.position?.y ?? '-'}}</span>
-            </div>
-            <div class="description">
-              {{r.action}}
+              <span class="m-subtitle">{{r.action}}</span>
             </div>
             <div class="description">
               <div>source: {{r.sourceObject ? r.sourceObject + ':' + r.sourceField : '-'}}</div>
