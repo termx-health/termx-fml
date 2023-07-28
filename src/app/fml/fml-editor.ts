@@ -1,6 +1,6 @@
 import Drawflow, {DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {isDefined} from '@kodality-web/core-util';
+import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
@@ -36,8 +36,8 @@ export class FMLEditor extends Drawflow {
 
   // object
   private _getObject = (path: string): FMLStructureObject => this._fml.objects[path];
-  public _updateObject = (nodeId: number, path: string, fn: (obj: FMLStructureObject) => void) => {
-    const obj = this._getObject(path);
+  public _updateObject = (nodeId: number, name: string, fn: (obj: FMLStructureObject) => void) => {
+    const obj = this._getObject(name);
     fn(obj)
     this.updateNodeDataFromId(nodeId, {obj})
   }
@@ -85,7 +85,17 @@ export class FMLEditor extends Drawflow {
 
 
     this.on('nodeRemoved', nodeId => {
-      console.log(nodeId)
+      Object.values(this._fml.objects).forEach(o => {
+        if (o['_nodeId'] === Number(nodeId)) {
+          delete this._fml.objects[o.name]
+        }
+      })
+
+      this._fml.rules.forEach(r => {
+        if (r['_nodeId'] === Number(nodeId)) {
+          remove(this._fml.rules, r);
+        }
+      })
     })
 
 
@@ -124,7 +134,7 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         const isSourceObject = source.data.obj.mode === 'object';
         rule.action = isSourceObject ? 'create' : 'copy';
-        rule.name = `${rule.action}_${ID++}`;
+        rule.name = `${rule.action}#${ID++}`;
         rule.sourceObject = source.data.obj.name;
         rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1]?.name;
         rule.targetObject = target.data.obj.name;
@@ -157,12 +167,6 @@ export class FMLEditor extends Drawflow {
       const source: FMLDrawflowNode = this.getNodeFromId(e.output_id);
       const target: FMLDrawflowNode = this.getNodeFromId(e.input_id);
 
-      // rule -> node
-      // if (this.isRule(source) && this.isObj(target)) {
-      //   const renderer = this.getRuleRenderer(source.data.rule.action);
-      //   renderer.onOutputConnectionRemove(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
-      // }
-
       // node -> rule
       if (this.isObj(source) && this.isRule(target)) {
         const renderer = this.getRuleRenderer(target.data.rule.action);
@@ -171,12 +175,9 @@ export class FMLEditor extends Drawflow {
 
       // rule -> node
       if (this.isRule(source) && this.isObj(target)) {
-        this._updateRule(source.id, source.data.rule.name, rule => {
-          rule.targetObject = undefined;
-          rule.targetField = undefined;
-        })
+        const renderer = this.getRuleRenderer(source.data.rule.action);
+        renderer.onOutputConnectionRemove(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class))
       }
-
     })
   }
 
@@ -201,38 +202,6 @@ export class FMLEditor extends Drawflow {
     })
   }
 
-  public _highlightHangingPaths(isHighlighted: boolean): void {
-    Array.from(document.getElementsByClassName('connection')).forEach((el: SVGElement) => el.style.removeProperty('--color-text'))
-    if (!isHighlighted) {
-      return
-    }
-
-    this._fml.rules.forEach(rule => {
-      const rN = this._getNodeByName(rule.name);
-
-      Object.keys(rN.inputs).forEach(i => {
-        rN.inputs[i].connections.forEach(c => {
-          const n = this.getNodeFromId(c.node);
-          if (this.isObj(n) && `${rule.sourceObject}|${rule.sourceField}` === `${n.name}|${n.data.obj.fields[getPortIdx(c.input) - 1].name}`) {
-            const s = `connection node_in_node-${rN.id} node_out_node-${n.id} ${c.input} ${i}`;
-            const el = document.getElementsByClassName(s)[0] as SVGElement;
-            el.style.setProperty('--color-text', 'var(--color-primary-5)')
-          }
-        })
-      })
-
-      Object.keys(rN.outputs).forEach(i => {
-        rN.outputs[i].connections.forEach(c => {
-          const n = this.getNodeFromId(c.node);
-          if (this.isObj(n) && `${rule.targetObject}|${rule.targetField}` === `${n.name}|${n.data.obj.fields[getPortIdx(c['output']) - 1].name}`) {
-            const s = `connection node_in_node-${n.id} node_out_node-${rN.id} ${i} ${c['output']}`;
-            const el = document.getElementsByClassName(s)[0] as SVGElement;
-            el.style.setProperty('--color-text', 'var(--color-primary-5)')
-          }
-        })
-      })
-    })
-  }
 
   /* Creator */
 
@@ -255,7 +224,7 @@ export class FMLEditor extends Drawflow {
     }[obj.mode];
 
 
-    return this.addNode(
+    const nodeId = this.addNode(
       obj.name,
       inputs, outputs,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
@@ -264,6 +233,9 @@ export class FMLEditor extends Drawflow {
       obj.html(),
       false
     );
+
+    this._updateObject(nodeId, obj.name, o => o['_nodeId'] = nodeId)
+    return nodeId;
   }
 
   public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number}): number {
@@ -274,7 +246,7 @@ export class FMLEditor extends Drawflow {
     const isConstant = ['uuid'].includes(rule.action);
     const htmlRenderer = this.getRuleRenderer(rule.action)
 
-    return this.addNode(
+    const nodeId = this.addNode(
       rule.name,
       isConstant ? 0 : 1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
@@ -282,7 +254,10 @@ export class FMLEditor extends Drawflow {
       'node--rule', {rule},
       htmlRenderer.render(rule),
       false
-    )
+    );
+
+    this._updateRule(nodeId, rule.name, r => r['_nodeId'] = nodeId)
+    return nodeId
   }
 
   public _createConnection(

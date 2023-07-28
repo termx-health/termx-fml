@@ -1,8 +1,22 @@
 <div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; border-bottom: 1px solid var(--color-borders);">
-  <div style="width: 100%" class="m-justify-right">
-    <m-button (mClick)="isAnimated = !isAnimated" mSize="small">Animation {{isAnimated ? 'OFF' : 'ON'}}</m-button>
-    <m-button (mClick)="toggleHighlight()" mSize="small">Highlight {{isHighlighted ? 'OFF' : 'ON'}}</m-button>
-    <m-button (mClick)="export()" mSize="small">Export</m-button>
+  <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
+    <div>
+      <m-button (mClick)="export()" mSize="small">Export</m-button>
+    </div>
+
+    <div class="m-items-middle" style="justify-self: center">
+      <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)" mSize="small">
+        <label m-radio-button [mValue]="true">Expanded</label>
+        <label m-radio-button [mValue]="false">Collapsed</label>
+      </m-radio-group>
+      <!--    <m-button (mClick)="isAnimated = !isAnimated" mSize="small">Animation {{isAnimated ? 'OFF' : 'ON'}}</m-button>-->
+    </div>
+
+    <div style="justify-self: end">
+      Animation
+      <nz-switch [(ngModel)]="isAnimated" nzSize="small"></nz-switch>
+    </div>
+
   </div>
 </div>
 
@@ -44,13 +58,6 @@
   <div id="drawflow" [class.drawflow--animated]="isAnimated" style="height: 100%; outline: none" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
 
   <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
-    <div style="border-bottom: var(--border-table); padding: 1rem" class="m-justify-center">
-      <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)">
-        <label m-radio-button [mValue]="true">Expanded</label>
-        <label m-radio-button [mValue]="false">Collapsed</label>
-      </m-radio-group>
-    </div>
-
     <div
       *ngIf="!nodeSelected"
       style="padding: 1rem; border-bottom: var(--border-table);"

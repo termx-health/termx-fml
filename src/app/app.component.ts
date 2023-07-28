@@ -77,7 +77,6 @@ export class AppComponent implements OnInit {
   protected ruleDescriptions = RULES;
   protected isExpanded = true;
   protected isAnimated = false;
-  protected isHighlighted = false;
 
 
   constructor(
@@ -107,7 +106,6 @@ export class AppComponent implements OnInit {
       el.pos_x = x;
       el.pos_y = y;
     })
-
     console.log(exp)
   }
 
@@ -129,7 +127,6 @@ export class AppComponent implements OnInit {
   }
 
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
-    console.log(resource, path, mode)
     // true => assume resource's definition is in the structure definition
     const inlineDefinition = mode === 'object' && path === resource;
 
@@ -190,9 +187,6 @@ export class AppComponent implements OnInit {
       }
     });
 
-    editor.on('connectionCreated', () => editor._highlightHangingPaths(this.isHighlighted))
-    editor.on('connectionRemoved', () => editor._highlightHangingPaths(this.isHighlighted))
-
     // render objects
     Object.keys(fml.objects).forEach(k => {
       const obj = fml.objects[k];
@@ -220,6 +214,8 @@ export class AppComponent implements OnInit {
 
     // auto layout
     editor._autoLayout()
+
+    editor._rerenderNodes();
   }
 
 
@@ -237,7 +233,7 @@ export class AppComponent implements OnInit {
     }
 
     const obj = this.initFMLStructureObject(fieldType, fieldPath, 'object');
-    obj.name = `${fieldPath}|${ID++}`;
+    obj.name = `${fieldPath}#${ID++}`;
     this.fml.objects[obj.name] = obj;
 
     this.editor._createObjectNode(obj, {outputs: 1});
@@ -278,14 +274,6 @@ export class AppComponent implements OnInit {
     Object.keys(this.fml.objects).forEach(k => {
       setExpand(this.editor, k, isExpanded)
     })
-  }
-
-
-  /* Highlight */
-
-  protected toggleHighlight(): void {
-    this.isHighlighted = !this.isHighlighted;
-    this.editor._highlightHangingPaths(this.isHighlighted);
   }
 
 

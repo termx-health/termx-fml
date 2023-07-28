@@ -8,7 +8,7 @@ export abstract class FMLRuleRenderer {
     return `
       <div>
         <div style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem">
-          ${rule.action}
+          ${rule.action} | ${rule['_nodeId']}
         </div>
 
         <h5 style="margin: 0">${rule.name}</h5>
@@ -25,13 +25,11 @@ export abstract class FMLRuleRenderer {
     sourcePort: number
   ): void {
     const rule = node.data.rule;
-
     // target.inputs[e.input_class].connections.forEach(c => {
     //   if (`${c['node']}|${c['input']}` !== `${e.output_id}|${e.output_class}`) {
     //     this.removeSingleConnection(c['node'], e.input_id, c['input'], e.input_class);
     //   }
     // })
-
     editor._updateRule(node.id, rule.name, rule => {
       rule.sourceObject = source.data.obj.name
       rule.sourceField = source.data.obj.fields[sourcePort - 1].name
@@ -46,15 +44,12 @@ export abstract class FMLRuleRenderer {
     targetPort: number
   ): void {
     const rule = node.data.rule;
-
     // source.outputs[e.output_class].connections.forEach(c => {
     //   if (`${c['node']}|${c['output']}` !== `${e.input_id}|${e.input_class}`) {
     //     this.removeSingleConnection(e.output_id, c['node'], e.output_class, c['output']);
     //   }
     // })
-
     editor._updateRule(node.id, rule.name, rule => {
-      // console.log(target)
       rule.targetObject = target.data.obj.name
       rule.targetField = target.data.obj.fields[targetPort - 1].name
     })
@@ -70,6 +65,7 @@ export abstract class FMLRuleRenderer {
   ): void {
     const rule = node.data.rule;
     if (`${rule.sourceObject}|${rule.sourceField}` !== `${source.name}|${source.data.obj.fields[sourcePort - 1].name}`) {
+      console.warn(`Current: "${rule.sourceObject}|${rule.sourceField}". Deleted: "${source.name}|${source.data.obj.fields[sourcePort - 1].name}"`)
       return
     }
 
@@ -83,6 +79,33 @@ export abstract class FMLRuleRenderer {
       } else {
         rule.sourceObject = undefined
         rule.sourceField = undefined
+      }
+    })
+  }
+
+  public onOutputConnectionRemove(
+    editor: FMLEditor,
+    node: FMLDrawflowRuleNode,
+    nodePort: number,
+    target: FMLDrawflowObjectNode,
+    targetPort: number
+  ): void {
+    const rule = node.data.rule;
+    if (`${rule.targetObject}|${rule.targetField}` !== `${target.name}|${target.data.obj.fields[targetPort - 1].name}`) {
+      console.warn(`Current: "${rule.targetObject}|${rule.targetField}". Deleted "${target.name}|${target.data.obj.fields[targetPort - 1].name}"`)
+      return
+    }
+
+    editor._updateRule(node.id, rule.name, rule => {
+      const {node: nodeId, output} = node.outputs[`output_${nodePort}`]?.connections?.[0] ?? {} as any
+      if (nodeId && editor.isObj(editor.getNodeFromId(nodeId))) {
+        // after deletion the rule node has other target connections, restore first
+        const objNode = editor.getNodeFromId(nodeId);
+        rule.targetObject = objNode.name
+        rule.targetObject = objNode.data.obj.fields[getPortIdx(output) - 1].name
+      } else {
+        rule.targetObject = undefined
+        rule.targetObject = undefined
       }
     })
   }
