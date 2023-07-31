@@ -1,0 +1,115 @@
+{
+  "name": "tutorial-step3a",
+  "description": "Tutorial Step 3s",
+  "id": "tutorial-step3a",
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a2 as a -&gt; tgt.b1 = truncate(a, 20) &quot;rule_a20a&quot;;\r\n  src.a2 as a where a2.length() &lt; 20 -&gt; tgt.b2 = a &quot;rule_a20b&quot;;\r\n  src.a2 as a check a2.length() &lt;= 20 -&gt; tgt.b3 = a &quot;rule_a20c&quot;;\r\n}\r\n\r\n</pre></div>"
+  },
+  "title": "Tutorial Step 3s",
+  "url": "http://hl7.org/fhir/StructureMap/tutorial-step3a",
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
+      "mode": "source",
+      "alias": "TLeft"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step3-right",
+      "mode": "target",
+      "alias": "TRight"
+    }
+  ],
+  "resourceType": "StructureMap",
+  "status": "draft",
+  "group": [
+    {
+      "name": "tutorial",
+      "input": [
+        {
+          "name": "src",
+          "type": "TLeft",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "TRight",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_a20a",
+          "source": [
+            {
+              "context": "src",
+              "element": "a2",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "b1",
+              "transform": "truncate",
+              "parameter": [
+                {
+                  "valueId": "a"
+                },
+                {
+                  "valueInteger": 20
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_a20b",
+          "source": [
+            {
+              "context": "src",
+              "element": "a2",
+              "variable": "a",
+              "condition": "a2.length() < 20"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "b2",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "a"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_a20c",
+          "source": [
+            {
+              "context": "src",
+              "element": "a2",
+              "variable": "a",
+              "check": "a2.length() <= 20"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "b3",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "a"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

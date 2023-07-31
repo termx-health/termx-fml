@@ -1,0 +1,62 @@
+{
+  "abstract": true,
+  "extension": [
+    {
+      "valueUri": "http://hl7.org/fhir/tutorial",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace"
+    }
+  ],
+  "type": "TRight",
+  "derivation": "specialization",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
+  "snapshot": {
+    "element": [
+      {
+        "max": "1",
+        "path": "TRight",
+        "id": "TRight",
+        "min": 1
+      },
+      {
+        "max": "1",
+        "path": "TRight.b1",
+        "min": 1,
+        "id": "TRight.b1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "max": "1",
+        "path": "TRight.b2",
+        "min": 1,
+        "id": "TRight.b2",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "max": "1",
+        "path": "TRight.b3",
+        "min": 1,
+        "id": "TRight.b3",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      }
+    ]
+  },
+  "status": "draft",
+  "name": "TRight",
+  "kind": "logical",
+  "fhirVersion": "4.0.1",
+  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right",
+  "id": "TRight",
+  "resourceType": "StructureDefinition"
+}

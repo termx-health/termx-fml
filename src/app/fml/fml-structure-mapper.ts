@@ -82,11 +82,12 @@ export class FMLStructureMapper {
       new FMLCcRuleParser()
     ]
 
+    const getKey = (s: StructureMapStructure) => s.alias ?? s.url.substring(s.url.lastIndexOf('/') + 1);
 
     const struc = new FMLStructure();
-    struc.objects = group(fhir.structure ?? [], s => s.url.substring(s.url.lastIndexOf('/') + 1), s => {
+    struc.objects = group(fhir.structure ?? [], s => getKey(s), s => {
       const obj = new FMLStructureObject()
-      const resource = s.url.substring(s.url.lastIndexOf('/') + 1);
+      const resource = getKey(s);
       obj.resource = resource
       obj.name = resource;
       obj.mode = s.mode

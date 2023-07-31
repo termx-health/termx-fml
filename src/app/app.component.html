@@ -97,7 +97,7 @@
                 <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onStructureItemSelect(obj, f.name)">{{f.name}}</a>
                 <div class="description">{{f.types | join: ', '}}</div>
               </ng-container>
-              <ng-template #name>{{f.name}}</ng-template>
+              <ng-template #name>{{f.name}} {{f.multiple ? '*' :''}}</ng-template>
             </td>
           </tr>
         </m-table>

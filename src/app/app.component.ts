@@ -41,7 +41,8 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = () => {
-    const name = "step9";
+    const name = "step3";
+    // const name = "step5";
     // const name = "structuremap-supplyrequest-transform";
     // const name = "tobacco-use-transform";
 
@@ -93,8 +94,10 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this._structureMap().subscribe(resp => {
-      this._resourceBundle(resp).subscribe(() => {
+      this._resourceBundle(resp).subscribe((a) => {
+        console.log(a)
         const fml = this.fml = FMLStructureMapper.map(resp)
+        console.log(fml)
         this.prepareFML(fml);
         this.initEditor(fml);
       })
@@ -119,9 +122,14 @@ export class AppComponent implements OnInit {
    * Decorates FMLStructure objects with fields from the Bundle StructureDefinition.
    */
   private prepareFML(fml: FMLStructure): void {
+    const sm = group(this.structureMap.structure,
+      s => s.alias ?? s.url.slice(s.url.lastIndexOf("/") + 1),
+      s => this.resourceBundle.entry.find(c => s.url === c.resource.url)?.resource
+    );
+
     Object.values(fml.objects).forEach(({resource, name, mode}) => {
       try {
-        fml.objects[name] = this.initFMLStructureObject(resource, name, mode)
+        fml.objects[name] = this.initFMLStructureObject(sm[resource]?.id ?? resource, name, mode)
       } catch (e) {
         console.error(e)
       }
@@ -129,6 +137,10 @@ export class AppComponent implements OnInit {
   }
 
   private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
+    if (isNil(resource)) {
+      throw Error(`Resource name is missing for the "${path}"`);
+    }
+
     // true => assume resource's definition is described in the structure definition
     const inlineDefinition = mode === 'object' && path === resource;
 
@@ -136,6 +148,9 @@ export class AppComponent implements OnInit {
     const structureDefinition = this.getStructureDefinition(resource)
     if (isNil(structureDefinition)) {
       throw Error(`StructureDefinition for the "${resource}" not found!`)
+    }
+    if (!('snapshot' in structureDefinition)) {
+      throw Error(`StructureDefinition "${resource}" does not have the snapshot!`)
     }
 
     let elements = structureDefinition.snapshot.element;
@@ -165,7 +180,8 @@ export class AppComponent implements OnInit {
     o.mode = mode;
     o.fields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
-      types: e.type?.map(t => t.code)
+      types: e.type?.map(t => t.code),
+      multiple: e.max !== '1'
     }))
 
     return o;

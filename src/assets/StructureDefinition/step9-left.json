@@ -1,21 +1,21 @@
 {
-  "id": "TRight",
-  "type": "TRight",
+  "id": "TLeft",
+  "type": "TLeft",
   "fhirVersion": "4.0.1",
-  "name": "TRight",
+  "name": "TLeft",
   "status": "draft",
-  "differential": {
+  "snapshot": {
     "element": [
       {
-        "path": "TRight",
-        "id": "TRight",
-        "definition": "TRight definition",
+        "path": "TLeft",
+        "id": "TLeft",
+        "definition": "TLeft definition",
         "min": 1,
         "max": "1"
       },
       {
-        "path": "TRight.j",
-        "id": "TRight.j",
+        "path": "TLeft.i",
+        "id": "TLeft.i",
         "type": [
           {
             "code": "string"
@@ -25,19 +25,19 @@
         "max": "1"
       },
       {
-        "path": "TRight.k",
-        "id": "TRight.k",
+        "path": "TLeft.m",
+        "id": "TLeft.m",
         "type": [
           {
-            "code": "string"
+            "code": "integer"
           }
         ],
-        "min": 0,
+        "min": 1,
         "max": "1"
       }
     ]
   },
-  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right-9",
+  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-left-9",
   "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
   "derivation": "specialization",
   "resourceType": "StructureDefinition",

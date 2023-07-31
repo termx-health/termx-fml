@@ -3,6 +3,7 @@ import {ElementDefinition} from 'fhir/r5';
 export interface FMLStructureObjectField {
   name: string;
   types: string[];
+  multiple: boolean;
 }
 
 export interface FMLPosition {
@@ -12,9 +13,9 @@ export interface FMLPosition {
 
 
 export class FMLStructureObject {
+  element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
-  element: ElementDefinition;
   /** Object's unique name @example Observation.code */
   name: string;
   /** @example code, category, status etc. */

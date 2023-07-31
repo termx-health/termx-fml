@@ -2,17 +2,17 @@
   "id": "2d129d35-e756-4bb0-8a51-420e2e029012",
   "text": {
     "status": "generated",
-    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial9&quot; = &quot;&quot;\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/tutorial-left-9&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/tutorial-right-9&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.i as i where src.m &lt; 2 -&gt; tgt.j = i;\r\n  src.i as i where src.m &gt;= 2 -&gt; tgt.k = i;\r\n}\r\n\r\n</pre></div>"
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial9&quot; = &quot;&quot;\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step9-left&quot; alias TLefty9 as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step9-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLefty9, target tgt : TRight) {\r\n  src.i as i where src.m &lt; 2 -&gt; tgt.j = i;\r\n  src.i as i where src.m &gt;= 2 -&gt; tgt.k = i;\r\n}\r\n\r\n</pre></div>"
   },
   "url": "http://hl7.org/fhir/StructureMap/tutorial9",
   "structure": [
     {
-      "url": "http://hl7.org/fhir/StructureDefinition/tutorial-left-9",
+      "url": "http://hl7.org/fhir/StructureDefinition/step9-left",
       "mode": "source",
-      "alias": "TLeft"
+      "alias": "TLefty9"
     },
     {
-      "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right-9",
+      "url": "http://hl7.org/fhir/StructureDefinition/step9-right",
       "mode": "target",
       "alias": "TRight"
     }
@@ -25,7 +25,7 @@
       "input": [
         {
           "name": "src",
-          "type": "TLeft",
+          "type": "TLefty9",
           "mode": "source"
         },
         {

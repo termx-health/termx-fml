@@ -261,20 +261,13 @@ export class FMLEditor extends Drawflow {
   }
 
   public _createConnection(
-    source: string, sField: string | number,
-    target: string, tField: string | number
+    source: string,
+    sourceField: string | number,
+    target: string,
+    targetField: string | number
   ) {
-    let oIdx, iIdx;
-    try {
-      oIdx = typeof sField === 'string' ? this._fml.objects[source].getFieldIndex(sField) + 1 : sField
-    } catch (e) {
-      throw Error(e)
-    }
-    try {
-      iIdx = typeof tField === 'string' ? this._fml.objects[target].getFieldIndex(tField) + 1 : tField
-    } catch (e) {
-      throw Error(e)
-    }
+    const oIdx = typeof sourceField === 'string' ? this._fml.objects[source].getFieldIndex(sourceField) + 1 : sourceField
+    const iIdx = typeof targetField === 'string' ? this._fml.objects[target].getFieldIndex(targetField) + 1 : targetField
 
     try {
       this.addConnection(
@@ -283,7 +276,7 @@ export class FMLEditor extends Drawflow {
         `input_${iIdx}`,
       );
     } catch (e) {
-      console.error(`Connection failed "${source}:${sField}" -> "${target}:${tField}"`)
+      console.error(`Connection "${source}:${sourceField}" -> "${target}:${targetField}" failed!`)
     }
   };
 

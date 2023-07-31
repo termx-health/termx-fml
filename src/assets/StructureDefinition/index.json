@@ -1,1 +1,23 @@
-["ActivityDefinition","Annotation","Bundle","CodeableConcept","CodeableReference","Coding","Condition","Identifier","Meta","Observation","Period","QuestionnaireResponse","Reference","SupplyRequest","TobaccoUseModel","tutorial-left-9","tutorial-right-9"]
+[
+  "ActivityDefinition",
+  "Annotation",
+  "Bundle",
+  "CodeableConcept",
+  "CodeableReference",
+  "Coding",
+  "Condition",
+  "Identifier",
+  "Meta",
+  "Observation",
+  "Period",
+  "QuestionnaireResponse",
+  "Reference",
+  "SupplyRequest",
+  "TobaccoUseModel",
+  "step3-left",
+  "step3-right",
+  "step5-left",
+  "step5-right",
+  "step9-left",
+  "step9-right"
+]
