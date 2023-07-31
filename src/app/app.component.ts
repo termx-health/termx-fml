@@ -41,8 +41,9 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = () => {
-    const name = "step3";
+    // const name = "step3";
     // const name = "step5";
+    const name = "step9";
     // const name = "structuremap-supplyrequest-transform";
     // const name = "tobacco-use-transform";
 
@@ -95,7 +96,6 @@ export class AppComponent implements OnInit {
   public ngOnInit(): void {
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe((a) => {
-        console.log(a)
         const fml = this.fml = FMLStructureMapper.map(resp)
         console.log(fml)
         this.prepareFML(fml);

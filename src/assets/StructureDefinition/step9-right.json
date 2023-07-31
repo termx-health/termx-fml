@@ -37,7 +37,7 @@
       }
     ]
   },
-  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right-9",
+  "url": "http://hl7.org/fhir/StructureDefinition/step9-right",
   "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
   "derivation": "specialization",
   "resourceType": "StructureDefinition",

@@ -34,7 +34,7 @@
   "name": "TLeft",
   "kind": "logical",
   "fhirVersion": "4.0.1",
-  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-left",
+  "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
   "id": "TLeft",
   "resourceType": "StructureDefinition"
 }

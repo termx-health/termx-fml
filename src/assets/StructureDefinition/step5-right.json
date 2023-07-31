@@ -1,7 +1,7 @@
 {
   "resourceType": "StructureDefinition",
   "status": "draft",
-  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right-5",
+  "url": "http://hl7.org/fhir/StructureDefinition/step5-right",
   "kind": "logical",
   "name": "TRight",
   "snapshot": {

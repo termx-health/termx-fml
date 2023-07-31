@@ -56,7 +56,7 @@
   "name": "TRight",
   "kind": "logical",
   "fhirVersion": "4.0.1",
-  "url": "http://hl7.org/fhir/StructureDefinition/tutorial-right",
+  "url": "http://hl7.org/fhir/StructureDefinition/step3-right",
   "id": "TRight",
   "resourceType": "StructureDefinition"
 }

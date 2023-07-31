@@ -4,7 +4,7 @@
   "id": "tutorial-step5",
   "text": {
     "status": "generated",
-    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step5&quot; = &quot;tutorial-step5&quot;\r\n\r\n// Tutorial Step 5\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step5-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step5-right&quot; alias TRight5 as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight5) {\r\n  src.a22 as a -&gt; tgt.a22 = a &quot;rule_a22&quot;;\r\n}\r\n\r\n</pre></div>"
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step5&quot; = &quot;tutorial-step5&quot;\r\n\r\n// Tutorial Step 5\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step5-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step5-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a22 as a -&gt; tgt.a22 = a &quot;rule_a22&quot;;\r\n}\r\n\r\n</pre></div>"
   },
   "title": "Tutorial Step 5",
   "url": "http://hl7.org/fhir/StructureMap/tutorial-step5",
@@ -17,7 +17,7 @@
     {
       "url": "http://hl7.org/fhir/StructureDefinition/step5-right",
       "mode": "target",
-      "alias": "TRight5"
+      "alias": "TRight"
     }
   ],
   "resourceType": "StructureMap",
@@ -33,7 +33,7 @@
         },
         {
           "name": "tgt",
-          "type": "TRight5",
+          "type": "TRight",
           "mode": "target"
         }
       ],
