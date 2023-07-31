@@ -8,7 +8,13 @@ export interface FMLRuleParserResult {
 
 export type FMLRuleParserVariables = {[name: string]: string}
 
-let ID = 420;
+export const RULE_ID = {
+  v: 420,
+  next: function () {
+    return this.v++
+  }
+};
+
 export abstract class FMLRuleParser {
   abstract action: string;
 
@@ -25,7 +31,7 @@ export abstract class FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
   ): FMLStructureRule {
     const rule = new FMLStructureRule()
-    rule.name = `${ruleName}#${ID++}`;
+    rule.name = `${ruleName}#${RULE_ID.next()}`;
     rule.alias = fhirRuleTarget.variable
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
@@ -37,7 +43,8 @@ export abstract class FMLRuleParser {
       p.valueDate ??
       p.valueTime ??
       p.valueDateTime
-    )
+    );
+    rule.condition = fhirRuleSource.condition;
     return rule
   }
 

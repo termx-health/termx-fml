@@ -7,6 +7,8 @@ import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLStructure, FMLStructureObject} from './fml-structure';
 import {FMLCcRuleParser} from './rule-parsers/cc.parser';
+import {FMLEvaluateRuleParser} from './rule-parsers/evaluate.parser';
+import {FMLTruncateRuleParser} from './rule-parsers/truncate.parser';
 
 export class FMLStructureMapper {
   public static compose(fml: FMLStructure): StructureMap {
@@ -79,7 +81,9 @@ export class FMLStructureMapper {
       new FMLCreateRuleParser(),
       new FMLUuidRuleParser(),
       new FMLAppendRuleParser(),
-      new FMLCcRuleParser()
+      new FMLCcRuleParser(),
+      new FMLEvaluateRuleParser(),
+      new FMLTruncateRuleParser()
     ]
 
     const getKey = (s: StructureMapStructure) => s.alias ?? s.url.substring(s.url.lastIndexOf('/') + 1);

@@ -2,12 +2,11 @@ import Drawflow, {DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
-import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
 import {getCanvasFont, getTextWidth} from './fml.utils';
 import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
+import {RULE_ID} from './rule-parsers/parser';
 
-let ID = 42;
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
   data: {
@@ -54,7 +53,6 @@ export class FMLEditor extends Drawflow {
   // rule renderer
   private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
-    new FMLCopyRuleRenderer(),
     new FMLAppendRuleRenderer()
   ]
 
@@ -134,7 +132,7 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         const isSourceObject = source.data.obj.mode === 'object';
         rule.action = isSourceObject ? 'create' : 'copy';
-        rule.name = `${rule.action}#${ID++}`;
+        rule.name = `${rule.action}#${RULE_ID.next()}`;
         rule.sourceObject = source.data.obj.name;
         rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1]?.name;
         rule.targetObject = target.data.obj.name;

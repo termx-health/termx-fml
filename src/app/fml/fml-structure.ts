@@ -4,6 +4,7 @@ export interface FMLStructureObjectField {
   name: string;
   types: string[];
   multiple: boolean;
+  required: boolean;
 }
 
 export interface FMLPosition {
@@ -54,6 +55,7 @@ export class FMLStructureRule {
   action: string;
   /** Action parameters */
   parameters?: any[];
+  condition?: string;
 
   // todo: multiple sources
   /** FMLStructureObject.path */

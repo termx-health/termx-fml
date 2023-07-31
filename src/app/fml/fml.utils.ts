@@ -38,7 +38,6 @@ export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): v
     outputEls.item(i)?.classList.remove('hidden');
     contentEls.item(i + 1).classList.remove('hidden')
 
-
     if (
       !node.inputs[`input_${i + 1}`]?.connections?.length &&
       !node.outputs[`output_${i + 1}`]?.connections?.length &&

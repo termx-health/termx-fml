@@ -11,6 +11,7 @@ import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
+import {RULE_ID} from './fml/rule-parsers/parser';
 
 let ID = 69;
 
@@ -41,9 +42,9 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = () => {
-    // const name = "step3";
+    const name = "step3";
     // const name = "step5";
-    const name = "step9";
+    // const name = "step9";
     // const name = "structuremap-supplyrequest-transform";
     // const name = "tobacco-use-transform";
 
@@ -181,7 +182,8 @@ export class AppComponent implements OnInit {
     o.fields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
       types: e.type?.map(t => t.code),
-      multiple: e.max !== '1'
+      multiple: e.max !== '1',
+      required: e.min === 1
     }))
 
     return o;
@@ -238,6 +240,10 @@ export class AppComponent implements OnInit {
   /* Structure tree */
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
+    if (parentObj.mode === 'source') {
+      throw Error(`Element creation from source node is forbidden!`)
+    }
+
     const structureDefinition = this.getStructureDefinition(parentObj.element.id)
 
     const fieldPath = `${parentObj.element.path}.${field}`;
@@ -271,7 +277,7 @@ export class AppComponent implements OnInit {
   protected onDrop(ev: DragEvent): void {
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
-    rule.name = data.code + new Date().getTime();
+    rule.name = `${data.code}#${RULE_ID.next()}`;
     rule.action = data.code;
     rule.parameters = [];
     this.fml.rules.push(rule)

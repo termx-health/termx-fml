@@ -29,4 +29,14 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     // todo: delete when connection is removed
     editor.addNodeInput(node.id)
   }
+
+  public override onInputConnectionRemove(
+    editor: FMLEditor,
+    node: FMLDrawflowRuleNode, nodePort: number,
+    source: FMLDrawflowObjectNode, sourcePort: number
+  ): void {
+    super.onInputConnectionRemove(editor, node, nodePort, source, sourcePort);
+
+    editor.removeNodeInput(node.id, `input_${nodePort}`)
+  }
 }

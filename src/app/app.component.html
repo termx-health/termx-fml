@@ -77,27 +77,22 @@
     <div
       *ngIf="nodeSelected as node"
     >
-      <!--      <app-structure-definition-tree-->
-      <!--        *ngIf="node.data.obj"-->
-      <!--        [fhir]="node.data.obj?._fhir | json | apply: encodeURIComponent"-->
-      <!--        (selected)="onStructureItemSelect($event)"-->
-      <!--      ></app-structure-definition-tree>-->
-
       <!-- Resource -->
-      <div
-        style="padding: 1rem; border-bottom: var(--border-table);"
-        *ngIf="node.data.obj as obj"
-      >
+      <div style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="node.data.obj as obj">
         <h5>Resource | {{obj.mode}}</h5>
 
         <m-table mSize="small">
           <tr *ngFor="let f of obj.fields">
             <td>
-              <ng-container *ngIf="f | apply: isComplexResource; else name">
-                <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onStructureItemSelect(obj, f.name)">{{f.name}}</a>
-                <div class="description">{{f.types | join: ', '}}</div>
-              </ng-container>
-              <ng-template #name>{{f.name}} {{f.multiple ? '*' :''}}</ng-template>
+              <div class="m-items-top m-justify-between">
+                <div>
+                  <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onStructureItemSelect(obj, f.name)">{{f.name}}</a>
+                  <div class="description">{{f.types | join: ', '}}</div>
+                </div>
+                <ng-template #name>{{f.name}}</ng-template>
+
+                <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
+              </div>
             </td>
           </tr>
         </m-table>
@@ -105,30 +100,29 @@
 
       <!-- Rule -->
       <div *ngIf="node.data.rule as rule">
-        <div
-          style="padding: 1rem; border-bottom: var(--border-table);"
-        >
+        <div style="padding: 1rem; border-bottom: var(--border-table);">
           <h5>Rule</h5>
-          <m-input [(ngModel)]="rule.name"></m-input>
+          {{rule.name}}
         </div>
 
-        <div class="form-view"
-          style="padding: 1rem; border-bottom: var(--border-table);"
-        >
+        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
           <m-form-item mLabel="Action">
             {{rule.action}}
           </m-form-item>
-          <m-form-item mLabel="Parameters" *ngIf="rule.parameters?.length">
+
+          <m-form-item mLabel="Condition">
+            {{rule.condition ?? '-'}}
+          </m-form-item>
+
+          <m-form-item mLabel="Parameters">
+            <span *ngIf="!rule.parameters?.length">-</span>
             <ul>
               <li *ngFor="let p of rule.parameters">{{p}}</li>
             </ul>
           </m-form-item>
         </div>
 
-        <div class="form-view"
-          style="padding: 1rem; border-bottom: var(--border-table);"
-          *ngIf="rule.sourceObject || rule.targetObject"
-        >
+        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="rule.sourceObject || rule.targetObject">
           <m-form-item mLabel="Source" *ngIf="rule.sourceObject">
             {{rule.sourceObject}}:<b>{{rule.sourceField}}</b>
           </m-form-item>
@@ -138,9 +132,7 @@
         </div>
 
 
-        <div class="form-view"
-          style="padding: 1rem; border-bottom: var(--border-table);"
-        >
+        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
           <m-form-item mLabel="Position">
             x: {{rule.position?.x ?? '-'}}; y: {{rule.position?.y ?? '-'}}
           </m-form-item>
