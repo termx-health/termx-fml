@@ -1,4 +1,5 @@
 import {FMLEditor} from './fml-editor';
+import {FMLStructureConnection} from './fml-structure';
 
 export function getTextWidth(text, font) {
   // re-use canvas object for better performance
@@ -22,6 +23,8 @@ export function getCanvasFont(el = document.body) {
 }
 
 
+
+/* FML editor  */
 
 export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): void {
   const node = editor.getNodeFromId(editor._getNodeId(id));
@@ -51,3 +54,16 @@ export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): v
 
   editor.updateConnectionNodes(`node-${node.id}`)
 }
+
+
+/* FML structure */
+
+export function newFMLConnection(source: string, sourceIdx: number, target: string, targetIdx: number): FMLStructureConnection {
+  const с = new FMLStructureConnection();
+  с.sourceObject = source;
+  с.sourceFieldIdx = sourceIdx;
+  с.targetObject = target;
+  с.targetFieldIdx = targetIdx;
+  return с;
+}
+

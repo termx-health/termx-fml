@@ -3,8 +3,7 @@ import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from '.
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
-import {getCanvasFont, getTextWidth} from './fml.utils';
-import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
+import {getCanvasFont, getTextWidth, newFMLConnection} from './fml.utils';
 import {RULE_ID} from './rule-parsers/parser';
 
 
@@ -53,7 +52,7 @@ export class FMLEditor extends Drawflow {
   // rule renderer
   private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
-    new FMLAppendRuleRenderer()
+    // new FMLAppendRuleRenderer()
   ]
 
 
@@ -130,14 +129,15 @@ export class FMLEditor extends Drawflow {
         const targetInputNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`)
 
         const rule = new FMLStructureRule();
-        const isSourceObject = source.data.obj.mode === 'object';
-        rule.action = isSourceObject ? 'create' : 'copy';
         rule.name = `${rule.action}#${RULE_ID.next()}`;
-        rule.sourceObject = source.data.obj.name;
-        rule.sourceField = source.data.obj.fields[sourceFieldIdx - 1]?.name;
-        rule.targetObject = target.data.obj.name;
-        rule.targetField = target.data.obj.fields[targetFieldIdx - 1]?.name;
+        rule.action = source.data.obj.mode === 'object' ? 'create' : 'copy';
         this._fml.rules.push(rule)
+
+        const cs = newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0)
+        this._fml.connections.push(cs)
+
+        const ct = newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,)
+        this._fml.connections.push(ct)
 
 
         const getOffset = (n: HTMLElement, dir) => {
@@ -154,9 +154,8 @@ export class FMLEditor extends Drawflow {
         const maxWidth = getTextWidth(rule.name, font)
 
         undo()
-        this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY})
-        this._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
-        this._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
+        this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY});
+        [cs, ct].forEach(c => this._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1))
       }
     });
 
@@ -286,6 +285,7 @@ export class FMLEditor extends Drawflow {
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
 
+    // objects
     Object.keys(this._fml.objects).forEach(name => {
       const {el} = this._getNodeElementByName(name)
       if (isDefined(el)) {
@@ -297,6 +297,7 @@ export class FMLEditor extends Drawflow {
       }
     });
 
+    // rules
     this._fml.rules.forEach(rule => {
       const {el} = this._getNodeElementByName(rule.name)
       if (isDefined(el)) {
@@ -305,10 +306,13 @@ export class FMLEditor extends Drawflow {
           width: offsetWidth,
           height: offsetHeight
         });
-        dagreGraph.setEdge(rule.sourceObject, rule.name);
-        dagreGraph.setEdge(rule.name, rule.targetObject);
       }
     });
+
+    // connections
+    this._fml.connections.forEach(c => {
+      dagreGraph.setEdge(c.sourceObject, c.targetObject);
+    })
 
     dagre.layout(dagreGraph);
 

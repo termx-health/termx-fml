@@ -13,19 +13,27 @@ export interface FMLPosition {
 }
 
 
-export class FMLStructureObject {
+export class FMLStructureConnection {
+  sourceObject: string;
+  sourceFieldIdx: number;
+  targetObject: string;
+  targetFieldIdx: number;
+}
+
+export class FMLStructureEntity {
+  /** Unique name within FML structure */
+  name: string;
+  mode: 'source' | 'target' | 'object' | 'rule' | string;
+  position?: FMLPosition;
+}
+
+export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
   /** Object's unique name @example Observation.code */
-  name: string;
   /** @example code, category, status etc. */
   fields: FMLStructureObjectField[] = [];
-
-  mode: 'source' | 'target' | 'object' | string;
-  position?: FMLPosition;
-
-  // _fhirDefinition?: ElementDefinition;
 
   /** @deprecated */
   html(): string {
@@ -46,9 +54,7 @@ export class FMLStructureObject {
   }
 }
 
-export class FMLStructureRule {
-  /** Rule's unique name within FML structure */
-  name: string;
+export class FMLStructureRule extends FMLStructureEntity {
   /** Variable name */
   alias?: string;
   /** @example copy, create, append etc. */
@@ -56,20 +62,11 @@ export class FMLStructureRule {
   /** Action parameters */
   parameters?: any[];
   condition?: string;
-
-  // todo: multiple sources
-  /** FMLStructureObject.path */
-  sourceObject: string;
-  sourceField: string;
-  /** FMLStructureObject.path */
-  targetObject: string;
-  targetField: string;
-
-  position?: FMLPosition;
 }
 
 
 export class FMLStructure {
   objects: {[name: string]: FMLStructureObject} = {};
-  rules: FMLStructureRule[] = []
+  rules: FMLStructureRule[] = [];
+  connections: FMLStructureConnection[] = []
 }

@@ -1,5 +1,5 @@
 import {FMLStructureRule} from '../fml-structure';
-import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor, getPortIdx} from '../fml-editor';
+import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
 
 export abstract class FMLRuleRenderer {
   abstract action: string;
@@ -32,8 +32,8 @@ export abstract class FMLRuleRenderer {
     //   }
     // })
     editor._updateRule(node.id, rule.name, rule => {
-      rule.sourceObject = source.data.obj.name
-      rule.sourceField = source.data.obj.fields[sourcePort - 1].name
+      // rule.sourceObject = source.data.obj.name
+      // rule.sourceField = source.data.obj.fields[sourcePort - 1].name
     })
   }
 
@@ -51,8 +51,8 @@ export abstract class FMLRuleRenderer {
     //   }
     // })
     editor._updateRule(node.id, rule.name, rule => {
-      rule.targetObject = target.data.obj.name
-      rule.targetField = target.data.obj.fields[targetPort - 1].name
+      // rule.targetObject = target.data.obj.name
+      // rule.targetField = target.data.obj.fields[targetPort - 1].name
     })
   }
 
@@ -65,21 +65,21 @@ export abstract class FMLRuleRenderer {
     sourcePort: number
   ): void {
     const rule = node.data.rule;
-    if (`${rule.sourceObject}|${rule.sourceField}` !== `${source.name}|${source.data.obj.fields[sourcePort - 1].name}`) {
-      console.warn(`Current: "${rule.sourceObject}|${rule.sourceField}". Deleted: "${source.name}|${source.data.obj.fields[sourcePort - 1].name}"`)
-      return
-    }
+    // if (`${rule.sourceObject}|${rule.sourceField}` !== `${source.name}|${source.data.obj.fields[sourcePort - 1].name}`) {
+    //   console.warn(`Current: "${rule.sourceObject}|${rule.sourceField}". Deleted: "${source.name}|${source.data.obj.fields[sourcePort - 1].name}"`)
+    //   return
+    // }
 
     editor._updateRule(node.id, rule.name, rule => {
       const {node: nodeId, input} = node.inputs[`input_${nodePort}`]?.connections?.[0] ?? {}
       if (nodeId && editor.isObj(editor.getNodeFromId(nodeId))) {
         // after deletion the rule node has other source connections, restore first
         const objNode = editor.getNodeFromId(nodeId);
-        rule.sourceObject = objNode.name
-        rule.sourceField = objNode.data.obj.fields[getPortIdx(input) - 1].name
+        // rule.sourceObject = objNode.name
+        // rule.sourceField = objNode.data.obj.fields[getPortIdx(input) - 1].name
       } else {
-        rule.sourceObject = undefined
-        rule.sourceField = undefined
+        // rule.sourceObject = undefined
+        // rule.sourceField = undefined
       }
     })
   }
@@ -92,21 +92,21 @@ export abstract class FMLRuleRenderer {
     targetPort: number
   ): void {
     const rule = node.data.rule;
-    if (`${rule.targetObject}|${rule.targetField}` !== `${target.name}|${target.data.obj.fields[targetPort - 1].name}`) {
-      console.warn(`Current: "${rule.targetObject}|${rule.targetField}". Deleted "${target.name}|${target.data.obj.fields[targetPort - 1].name}"`)
-      return
-    }
+    // if (`${rule.targetObject}|${rule.targetField}` !== `${target.name}|${target.data.obj.fields[targetPort - 1].name}`) {
+    //   console.warn(`Current: "${rule.targetObject}|${rule.targetField}". Deleted "${target.name}|${target.data.obj.fields[targetPort - 1].name}"`)
+    //   return
+    // }
 
     editor._updateRule(node.id, rule.name, rule => {
       const {node: nodeId, output} = node.outputs[`output_${nodePort}`]?.connections?.[0] ?? {} as any
       if (nodeId && editor.isObj(editor.getNodeFromId(nodeId))) {
         // after deletion the rule node has other target connections, restore first
         const objNode = editor.getNodeFromId(nodeId);
-        rule.targetObject = objNode.name
-        rule.targetObject = objNode.data.obj.fields[getPortIdx(output) - 1].name
+        // rule.targetObject = objNode.name
+        // rule.targetObject = objNode.data.obj.fields[getPortIdx(output) - 1].name
       } else {
-        rule.targetObject = undefined
-        rule.targetObject = undefined
+        // rule.targetObject = undefined
+        // rule.targetObject = undefined
       }
     })
   }

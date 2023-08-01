@@ -1,12 +1,12 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
-import {forkJoin, mergeMap, tap} from 'rxjs';
+import {forkJoin, map, mergeMap, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {setExpand} from './fml/fml.utils';
-import {group, isDefined, isNil} from '@kodality-web/core-util';
+import {group, isDefined} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
@@ -61,8 +61,8 @@ export class AppComponent implements OnInit {
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
       const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
       resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
-      return forkJoin(reqs$).pipe(tap(definitions => {
-        this.resourceBundle = {
+      return forkJoin(reqs$).pipe(map(definitions => {
+        return this.resourceBundle = {
           resourceType: 'Bundle',
           type: 'collection',
           entry: definitions.map(def => ({resource: def}))
@@ -96,10 +96,9 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this._structureMap().subscribe(resp => {
-      this._resourceBundle(resp).subscribe((a) => {
-        const fml = this.fml = FMLStructureMapper.map(resp)
+      this._resourceBundle(resp).subscribe(bundle => {
+        const fml = this.fml = FMLStructureMapper.map(bundle, resp)
         console.log(fml)
-        this.prepareFML(fml);
         this.initEditor(fml);
       })
     })
@@ -114,79 +113,6 @@ export class AppComponent implements OnInit {
     })
 
     console.log(FMLStructureMapper.compose(this.fml))
-  }
-
-
-  /* FML */
-
-  /**
-   * Decorates FMLStructure objects with fields from the Bundle StructureDefinition.
-   */
-  private prepareFML(fml: FMLStructure): void {
-    const sm = group(this.structureMap.structure,
-      s => s.alias ?? s.url.slice(s.url.lastIndexOf("/") + 1),
-      s => this.resourceBundle.entry.find(c => s.url === c.resource.url)?.resource
-    );
-
-    Object.values(fml.objects).forEach(({resource, name, mode}) => {
-      try {
-        fml.objects[name] = this.initFMLStructureObject(sm[resource]?.id ?? resource, name, mode)
-      } catch (e) {
-        console.error(e)
-      }
-    })
-  }
-
-  private initFMLStructureObject(resource: string, path: string, mode: string): FMLStructureObject {
-    if (isNil(resource)) {
-      throw Error(`Resource name is missing for the "${path}"`);
-    }
-
-    // true => assume resource's definition is described in the structure definition
-    const inlineDefinition = mode === 'object' && path === resource;
-
-    // try to find resource's structure definition
-    const structureDefinition = this.getStructureDefinition(resource)
-    if (isNil(structureDefinition)) {
-      throw Error(`StructureDefinition for the "${resource}" not found!`)
-    }
-    if (!('snapshot' in structureDefinition)) {
-      throw Error(`StructureDefinition "${resource}" does not have the snapshot!`)
-    }
-
-    let elements = structureDefinition.snapshot.element;
-    if (inlineDefinition) {
-      elements = elements.filter(el => el.path.startsWith(path));
-    }
-
-    const selfDefinition = elements[0];
-    const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id; // todo: provide type as an argument?
-    const selfFields = elements.slice(1);
-
-    // double check whether inline definition assumption was correct
-    if (inlineDefinition && !this.isBackboneElement(selfResourceType)) {
-      // self definition's element MUST be the BackboneElement, but if you got here, it is not!
-      return this.initFMLStructureObject(selfResourceType, path, mode)
-    }
-
-    if (selfDefinition.type?.length > 1) {
-      // fixme: as for now, warn about multiple types
-      console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
-    }
-
-    const o = new FMLStructureObject()
-    o.element = selfDefinition;
-    o.resource = selfResourceType;
-    o.name = path
-    o.mode = mode;
-    o.fields = selfFields.map(e => ({
-      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
-      types: e.type?.map(t => t.code),
-      multiple: e.max !== '1',
-      required: e.min === 1
-    }))
-
-    return o;
   }
 
 
@@ -223,10 +149,11 @@ export class AppComponent implements OnInit {
         x: rule.position?.x,
         y: rule.position?.y,
       });
+    })
 
-      // fixme: some rule can have multiple inputs, what to do then?
-      editor._createConnection(rule.sourceObject, rule.sourceField, rule.name, 1);
-      editor._createConnection(rule.name, 1, rule.targetObject, rule.targetField);
+    // render connections
+    fml.connections.forEach(c => {
+      editor._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1);
     })
 
     // auto layout
@@ -244,7 +171,7 @@ export class AppComponent implements OnInit {
       throw Error(`Element creation from source node is forbidden!`)
     }
 
-    const structureDefinition = this.getStructureDefinition(parentObj.element.id)
+    const structureDefinition = FMLStructureMapper.getStructureDefinition(this.resourceBundle, parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
@@ -255,7 +182,7 @@ export class AppComponent implements OnInit {
       fieldType = fieldPath;
     }
 
-    const obj = this.initFMLStructureObject(fieldType, fieldPath, 'object');
+    const obj = FMLStructureMapper.initFMLStructureObject(this.resourceBundle, fieldType, fieldPath, 'object');
     obj.name = `${fieldPath}#${ID++}`;
     this.fml.objects[obj.name] = obj;
 
@@ -303,20 +230,8 @@ export class AppComponent implements OnInit {
 
   /* Utils */
 
-  private isBackboneElement(resource: string): boolean {
-    return ['BackboneElement', 'Element'].includes(resource);
-  }
+  private isBackboneElement = FMLStructureMapper.isBackboneElement
 
-  private getStructureDefinition(anyPath: string): StructureDefinition {
-    // Resource.whatever.element (anyPath) => Resource (base)
-    const base = anyPath.includes('.')
-      ? anyPath.slice(0, anyPath.indexOf('.'))
-      : anyPath;
-
-    return this.resourceBundle.entry
-      .map(e => e.resource)
-      .find(e => e.id === base)
-  }
 
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
     return f.types?.some(t => this._isComplexResource(t))
@@ -340,6 +255,6 @@ export class AppComponent implements OnInit {
       rules: this.fml?.rules.map(r => ({
         ...r
       }))
-    }
+    } as any
   }
 }

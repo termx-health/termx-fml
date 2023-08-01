@@ -3,7 +3,7 @@
   "id": "tutorial-step3a",
   "text": {
     "status": "generated",
-    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a2 as v -&gt; truncate(v, 20) as trunc then {\r\n    src -&gt; tgt.b2 = append('test=', trunc) &quot;r2&quot;;\r\n  } &quot;r1&quot;;\r\n}\r\n\r\n</pre></div>"
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a2 as v -&gt; truncate(v, 20) as trunc then {\r\n    src -&gt; tgt.b2 = append('test=', trunc) &quot;r2&quot;;\r\n  } &quot;r1&quot;;\r\n  src.a2 as v -&gt; tgt.b3 = truncate(v, 20) &quot;r3&quot;;\r\n}\r\n\r\n</pre></div>"
   },
   "url": "http://hl7.org/fhir/StructureMap/tutorial-step3a",
   "name": "tutorial-step3a",
@@ -82,6 +82,31 @@
                       "valueId": "trunc"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "r2",
+          "source": [
+            {
+              "context": "src",
+              "element": "a2",
+              "variable": "v"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "b3",
+              "transform": "truncate",
+              "parameter": [
+                {
+                  "valueId": "v"
+                },
+                {
+                  "valueInteger": 20
                 }
               ]
             }
