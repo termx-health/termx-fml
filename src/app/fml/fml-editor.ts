@@ -118,7 +118,7 @@ export class FMLEditor extends Drawflow {
       // rule -> rule
       if (this.isRule(source) && this.isRule(target)) {
         console.warn(`Connection forbidden: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
-        undo();
+        // fixme: undo();
       }
 
       // node -> node

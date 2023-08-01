@@ -106,6 +106,18 @@ export class FMLStructureMapper {
           .filter(r => isDefined(r.variable))
           .forEach(r => variables[r.variable] = `${variables[r.context]}.${r.element}`)
 
+        /*
+          fhirRule.target
+          .filter(r => isDefined(r.variable) || r.parameter.findIndex(p => isDefined(p.valueId)) !== -1)
+          .forEach(r => {
+            if (isNil(r.context)) {
+              const pValueId = r.parameter.find(p => isDefined(p.valueId))?.valueId
+              variables[r.variable] = `${pValueId}`;
+            }else{
+              variables[r.variable] = `${variables[r.context]}.${r.element}`;
+            }
+          })*/
+
 
         // NB: currently only one source
         const fhirRuleSource = fhirRule.source[0]
@@ -127,6 +139,8 @@ export class FMLStructureMapper {
           }
         })
 
+
+        console.log(variables)
         fhirRule.rule?.forEach(subRule => {
           _parseRule(subRule, variables)
         })

@@ -18,10 +18,6 @@ export class FMLTruncateRuleParser extends FMLRuleParser {
       const variable = variables[valueIdParam.valueId];
       rule.sourceObject = variable.slice(0, variable.lastIndexOf("."));
       rule.sourceField = variable.slice(variable.lastIndexOf(".") + 1);
-      const idx = rule.parameters.indexOf(valueIdParam.valueId)
-      if (idx !== -1){
-        rule.parameters[idx] = variable
-      }
     }
 
 

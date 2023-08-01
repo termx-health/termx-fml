@@ -1,13 +1,15 @@
 {
-  "name": "tutorial-step3a",
-  "description": "Tutorial Step 3s",
+  "resourceType": "StructureMap",
   "id": "tutorial-step3a",
   "text": {
     "status": "generated",
-    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  // src.a2 as a -&gt; tgt.b1 = truncate(a, 20) &quot;rule_a20a&quot;;\r\n  src.a2 as a where src.a2.length() &gt;= 20 -&gt; tgt.b2 = a &quot;rule_a20b&quot;;\r\n  src.a2 as a where $this.length() &gt;= 20 -&gt; tgt.b2 = a &quot;rule_a20b&quot;;\r\n}\r\n\r\n</pre></div>"
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a2 as v -&gt; truncate(v, 20) as trunc then {\r\n    src -&gt; tgt.b2 = append('test=', trunc) &quot;r2&quot;;\r\n  } &quot;r1&quot;;\r\n}\r\n\r\n</pre></div>"
   },
-  "title": "Tutorial Step 3s",
   "url": "http://hl7.org/fhir/StructureMap/tutorial-step3a",
+  "name": "tutorial-step3a",
+  "title": "Tutorial Step 3s",
+  "status": "draft",
+  "description": "Tutorial Step 3s",
   "structure": [
     {
       "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
@@ -20,8 +22,6 @@
       "alias": "TRight"
     }
   ],
-  "resourceType": "StructureMap",
-  "status": "draft",
   "group": [
     {
       "name": "tutorial",
@@ -39,71 +39,49 @@
       ],
       "rule": [
         {
-          "name": "rule_a20a",
+          "name": "r1",
           "source": [
             {
               "context": "src",
               "element": "a2",
-              "variable": "a"
+              "variable": "v"
             }
           ],
           "target": [
             {
-              "context": "tgt",
-              "element": "b3",
+              "variable": "trunc",
               "transform": "truncate",
               "parameter": [
                 {
-                  "valueId": "a"
+                  "valueId": "v"
                 },
                 {
-                  "valueInteger": "20"
+                  "valueInteger": 20
                 }
               ]
             }
-          ]
-        },
-        {
-          "name": "rule_a20b1",
-          "source": [
-            {
-              "context": "src",
-              "element": "a2",
-              "variable": "a",
-              "condition": "src.a2.length() >= 20"
-            }
           ],
-          "target": [
+          "rule": [
             {
-              "context": "tgt",
-              "element": "b2",
-              "transform": "copy",
-              "parameter": [
+              "name": "r2",
+              "source": [
                 {
-                  "valueId": "a"
+                  "context": "src"
                 }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "rule_a20b2",
-          "source": [
-            {
-              "context": "src",
-              "element": "a2",
-              "variable": "a",
-              "condition": "$this.length() >= 20"
-            }
-          ],
-          "target": [
-            {
-              "context": "tgt",
-              "element": "b2",
-              "transform": "copy",
-              "parameter": [
+              ],
+              "target": [
                 {
-                  "valueId": "a"
+                  "context": "tgt",
+                  "element": "b2",
+                  "transform": "append",
+                  "parameter": [
+                    {
+                      "valueString": "test="
+                    },
+                    {
+                      "valueId": "trunc"
+                    }
+                  ]
                 }
               ]
             }
