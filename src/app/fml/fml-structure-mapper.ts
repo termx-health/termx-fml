@@ -5,11 +5,13 @@ import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
 import {FMLStructure, FMLStructureObject} from './fml-structure';
 import {FMLTruncateRuleParser} from './rule-parsers/truncate.parser';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
+import {FMLCreateRuleParser} from './rule-parsers/create.parser';
+import {newFMLObject} from './fml.utils';
+import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
 
 
 export class FMLStructureMapper {
   public static compose(fml: FMLStructure): StructureMap {
-    console.log(fml);
     const sm: StructureMap = {
       resourceType: 'StructureMap',
       url: 'http://termx.health/fhir/StructureMap/fml-compose',
@@ -77,8 +79,8 @@ export class FMLStructureMapper {
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const ruleParsers: FMLRuleParser[] = [
       new FMLCopyRuleParser(),
-      // new FMLCreateRuleParser(),
-      // new FMLUuidRuleParser(),
+      new FMLCreateRuleParser(),
+      new FMLUuidRuleParser(),
       new FMLAppendRuleParser(),
       // new FMLCcRuleParser(),
       // new FMLEvaluateRuleParser(),
@@ -99,10 +101,12 @@ export class FMLStructureMapper {
     const getKey = ({url}: StructureMapStructure) => bundle.entry.find(c => c.resource.url === url)?.resource?.id;
 
     const struc = new FMLStructure();
+    struc.bundle = bundle;
+
     // [alias | resource] -> FMLStructureObject
     struc.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
       const resource = getKey(s);
-      return this.initFMLStructureObject(bundle, resource, s.alias ?? getKey(s), s.mode)
+      return newFMLObject(bundle, resource, s.alias ?? getKey(s), s.mode)
     })
 
 
@@ -201,73 +205,5 @@ export class FMLStructureMapper {
     })
 
     return struc
-  }
-
-
-  public static initFMLStructureObject(bundle: Bundle<StructureDefinition>, resource: string, path: string, mode: string): FMLStructureObject {
-    if (isNil(resource)) {
-      throw Error(`Resource name is missing for the "${path}"`);
-    }
-
-    // true => assume resource's definition is described within the structure definition
-    const inlineDefinition = mode === 'object' && path === resource;
-
-    // try to find resource's structure definition
-    const structureDefinition = this.getStructureDefinition(bundle, resource)
-    if (isNil(structureDefinition)) {
-      throw Error(`StructureDefinition for the "${resource}" not found!`)
-    } else if (isNil(structureDefinition.snapshot)) {
-      throw Error(`Snapshot is missing in the StructureDefinition "${resource}"!`)
-    }
-
-    let elements = structureDefinition.snapshot.element;
-    if (inlineDefinition) {
-      elements = elements.filter(el => el.path.startsWith(path));
-    }
-
-    const selfDefinition = elements[0];
-    // fixme: provide type as an argument? currently take the first one
-    const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
-    const selfFields = elements.slice(1);
-
-    // double check whether inline definition assumption was correct
-    if (inlineDefinition && !this.isBackboneElement(selfResourceType)) {
-      // self definition's element MUST be the BackboneElement, but if you got here, it is not!
-      return this.initFMLStructureObject(bundle, selfResourceType, path, mode)
-    }
-
-    if (selfDefinition.type?.length > 1) {
-      // fixme: as for now, warn about multiple types, see fixme above
-      console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
-    }
-
-    const o = new FMLStructureObject()
-    o.element = selfDefinition;
-    o.resource = selfResourceType;
-    o.name = path
-    o.mode = mode;
-    o.fields = selfFields.map(e => ({
-      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
-      types: e.type?.map(t => t.code) ?? [],
-      multiple: e.max !== '1',
-      required: e.min === 1
-    }))
-
-    return o;
-  }
-
-  public static getStructureDefinition(bundle: Bundle<StructureDefinition>, anyPath: string): StructureDefinition {
-    // Resource.whatever.element (anyPath) => Resource (base)
-    const base = anyPath.includes('.')
-      ? anyPath.slice(0, anyPath.indexOf('.'))
-      : anyPath;
-
-    return bundle.entry
-      .map(e => e.resource)
-      .find(e => e.id === base)
-  }
-
-  public static isBackboneElement(resource: string): boolean {
-    return ['BackboneElement', 'Element'].includes(resource);
   }
 }

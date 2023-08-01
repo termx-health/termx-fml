@@ -19,14 +19,7 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     node: FMLDrawflowRuleNode, nodePort: number,
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
-    const rule = node.data.rule;
-
-    editor._updateRule(node.id, rule.name, rule => {
-      rule.sourceObject = source.data.obj.name
-      rule.sourceField = source.data.obj.fields[sourcePort - 1].name
-    })
-
-    // todo: delete when connection is removed
+    // new connection is pushed
     editor.addNodeInput(node.id)
   }
 

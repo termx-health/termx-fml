@@ -1,4 +1,4 @@
-import {ElementDefinition} from 'fhir/r5';
+import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 
 export interface FMLStructureObjectField {
   name: string;
@@ -31,7 +31,7 @@ export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
-  /** Object's unique name @example Observation.code */
+
   /** @example code, category, status etc. */
   fields: FMLStructureObjectField[] = [];
 
@@ -66,7 +66,8 @@ export class FMLStructureRule extends FMLStructureEntity {
 
 
 export class FMLStructure {
+  bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
-  connections: FMLStructureConnection[] = []
+  connections: FMLStructureConnection[] = [];
 }

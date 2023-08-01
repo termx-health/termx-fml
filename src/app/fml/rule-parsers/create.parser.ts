@@ -1,28 +1,43 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {FMLStructureObject} from '../fml-structure';
+import {FMLStructure} from '../fml-structure';
 import {isDefined} from '@kodality-web/core-util';
+import {newFMLConnection, newFMLObject} from '../fml.utils';
 
 export class FMLCreateRuleParser extends FMLRuleParser {
   public action = 'create';
 
   public override parse(
+    fml: FMLStructure,
     ruleName: string,
     fhirRuleSource: StructureMapGroupRuleSource,
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
-    const rule = this.create(ruleName, fhirRuleSource, fhirRuleTarget);
-    this.connect(rule, fhirRuleSource, fhirRuleTarget, variables)
+    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
 
-    const object = new FMLStructureObject()
-    object.resource = fhirRuleTarget.parameter?.find(p => isDefined(p.valueString))?.valueString ?? variables[fhirRuleTarget.variable]
-    object.name = variables[fhirRuleTarget.variable]
-    object.mode = 'object'
+    const objectName = variables[fhirRuleTarget.variable];
+    const objectResource = fhirRuleTarget.parameter?.find(p => isDefined(p.valueString))?.valueString ?? objectName;
+    const object = newFMLObject(
+      fml.bundle,
+      objectResource, objectName,
+      'object'
+    );
 
-    rule.sourceObject = object.name;
-    rule.sourceField = 'id'
+    const sourceConnection = newFMLConnection(
+      object.name, object.getFieldIndex('id'),
+      rule.name, 0
+    );
 
-    return {rule, object}
+
+
+    return {
+      rule,
+      object,
+      connections: [
+        sourceConnection,
+        ...this.connectTarget(fml, rule, fhirRuleTarget, variables)
+      ]
+    }
   }
 }

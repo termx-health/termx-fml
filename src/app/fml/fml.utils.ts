@@ -1,5 +1,7 @@
 import {FMLEditor} from './fml-editor';
-import {FMLStructureConnection} from './fml-structure';
+import {FMLStructureConnection, FMLStructureObject} from './fml-structure';
+import {Bundle, StructureDefinition} from 'fhir/r5';
+import {isNil} from '@kodality-web/core-util';
 
 export function getTextWidth(text, font) {
   // re-use canvas object for better performance
@@ -21,7 +23,6 @@ export function getCanvasFont(el = document.body) {
 
   return `${fontWeight} ${fontSize} ${fontFamily}`;
 }
-
 
 
 /* FML editor  */
@@ -59,11 +60,79 @@ export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): v
 /* FML structure */
 
 export function newFMLConnection(source: string, sourceIdx: number, target: string, targetIdx: number): FMLStructureConnection {
-  const с = new FMLStructureConnection();
-  с.sourceObject = source;
-  с.sourceFieldIdx = sourceIdx;
-  с.targetObject = target;
-  с.targetFieldIdx = targetIdx;
-  return с;
+  const c = new FMLStructureConnection();
+  c.sourceObject = source;
+  c.sourceFieldIdx = sourceIdx;
+  c.targetObject = target;
+  c.targetFieldIdx = targetIdx;
+  return c;
+}
+
+/* fixme: move to FMLStructure as class method? */
+export function newFMLObject(bundle: Bundle<StructureDefinition>, resource: string, path: string, mode: string): FMLStructureObject {
+  if (isNil(resource)) {
+    throw Error(`Resource name is missing for the "${path}"`);
+  }
+
+  // true => assume resource's definition is described within the structure definition
+  const inlineDefinition = mode === 'object' && path === resource;
+
+  // try to find resource's structure definition
+  const structureDefinition = findStructureDefinition(bundle, resource)
+  if (isNil(structureDefinition)) {
+    throw Error(`StructureDefinition for the "${resource}" not found!`)
+  } else if (isNil(structureDefinition.snapshot)) {
+    throw Error(`Snapshot is missing in the StructureDefinition "${resource}"!`)
+  }
+
+  let elements = structureDefinition.snapshot.element;
+  if (inlineDefinition) {
+    elements = elements.filter(el => el.path.startsWith(path));
+  }
+
+  const selfDefinition = elements[0];
+  // fixme: provide type as an argument? currently take the first one
+  const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
+  const selfFields = elements.slice(1);
+
+  // double check whether inline definition assumption was correct
+  if (inlineDefinition && !isBackboneElement(selfResourceType)) {
+    // self definition's element MUST be the BackboneElement, but if you got here, it is not!
+    return newFMLObject(bundle, selfResourceType, path, mode)
+  }
+
+  if (selfDefinition.type?.length > 1) {
+    // fixme: as for now, warn about multiple types, see fixme above
+    console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
+  }
+
+  const o = new FMLStructureObject()
+  o.element = selfDefinition;
+  o.resource = selfResourceType;
+  o.name = path
+  o.mode = mode;
+  o.fields = selfFields.map(e => ({
+    name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
+    types: e.type?.map(t => t.code) ?? [],
+    multiple: e.max !== '1',
+    required: e.min === 1
+  }))
+
+  return o;
+}
+
+export function findStructureDefinition(bundle: Bundle<StructureDefinition>, anyPath: string): StructureDefinition {
+  // Resource.whatever.element (anyPath) => Resource (base)
+  const base = anyPath.includes('.')
+    ? anyPath.slice(0, anyPath.indexOf('.'))
+    : anyPath;
+
+  return bundle.entry
+    .map(e => e.resource)
+    .find(e => e.id === base)
+}
+
+export function isBackboneElement(resource: string): boolean {
+  return ['BackboneElement', 'Element'].includes(resource);
 }
 
