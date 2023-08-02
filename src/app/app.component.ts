@@ -42,8 +42,8 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
-    // const name = "step3";
-    const name = "step5";
+    const name = "step3";
+    // const name = "step5";
     // const name = "step9";
     // const name = "structuremap-supplyrequest-transform";
     // const name = "tobacco-use-transform";
@@ -177,7 +177,7 @@ export class AppComponent implements OnInit {
 
     // fixme: ACHTUNG! the first type is selected!
     let fieldType = fieldElement.type?.[0]?.code;
-    if (this.isBackboneElement(fieldType)) {
+    if (FMLStructure.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
 
@@ -229,19 +229,9 @@ export class AppComponent implements OnInit {
 
   /* Utils */
 
-  private isBackboneElement = FMLStructure.isBackboneElement;
-
-  protected isComplexResource = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => this._isComplexResource(t));
-  };
-
-  private _isComplexResource(type: string): boolean {
-    // fixme: if starts with capital letter, then complex resource?
-    return isDefined(type) && type.charAt(0).toUpperCase() === type.charAt(0);
-  }
 
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
-    return f.types?.some(t => this.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
+    return f.types?.some(t => FMLStructure.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
   };
 
   protected get simpleFML(): {

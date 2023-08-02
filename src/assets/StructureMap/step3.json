@@ -88,27 +88,29 @@
           ]
         },
         {
-          "name": "r3",
+          "name": "rule-value",
           "source": [
             {
               "context": "src",
-              "element": "a2",
-              "variable": "v"
+              "element": "a1"
             }
           ],
           "target": [
             {
               "context": "tgt",
-              "element": "b3",
-              "transform": "truncate",
+              "element": "jurisdiction",
+              "variable": "newCC",
+              "transform": "create",
               "parameter": [
                 {
-                  "valueId": "v"
-                },
-                {
-                  "valueInteger": 20
+                  "valueString": "CodeableConcept"
                 }
               ]
+            },
+            {
+              "context": "newCC",
+              "element": "text",
+              "transform": "copy"
             }
           ]
         }

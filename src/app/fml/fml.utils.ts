@@ -53,3 +53,7 @@ export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): v
   editor.updateConnectionNodes(`node-${node.id}`);
 }
 
+
+export function getPortNumber(str: string): number {
+  return Number(str.split("_")[1]);
+}

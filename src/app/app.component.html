@@ -111,10 +111,12 @@
 
         <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
           <m-form-item mLabel="Source" *ngIf="obj.name | apply: fml.getSources as srcs">
-            <div *ngFor="let src of srcs">{{src | apply: toObjectFieldPath}}</div>
+            <span *ngIf="!srcs?.length">-</span>
+            <div *ngFor="let src of srcs">{{src.object}}<b *ngIf="src.field">:{{src.field}}</b></div>
           </m-form-item>
           <m-form-item mLabel="Target" *ngIf="obj.name | apply: fml.getTargets as tgts">
-            <div *ngFor="let tgt of tgts">{{tgt | apply: toObjectFieldPath}}</div>
+            <span *ngIf="!tgts?.length">-</span>
+            <div *ngFor="let tgt of tgts">{{tgt.object}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
           </m-form-item>
         </div>
       </div>
@@ -135,7 +137,6 @@
             {{rule.alias ?? '-'}}
           </m-form-item>
 
-
           <m-form-item mLabel="Condition">
             {{rule.condition ?? '-'}}
           </m-form-item>
@@ -150,10 +151,12 @@
 
         <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
           <m-form-item mLabel="Source" *ngIf="rule.name | apply: fml.getSources as srcs">
-            <div *ngFor="let src of srcs">{{src | apply: toObjectFieldPath}}</div>
+            <span *ngIf="!srcs?.length">-</span>
+            <div *ngFor="let src of srcs">{{src.object}}<b *ngIf="src.field">:{{src.field}}</b></div>
           </m-form-item>
           <m-form-item mLabel="Target" *ngIf="rule.name | apply: fml.getTargets as tgts">
-            <div *ngFor="let tgt of tgts">{{tgt | apply: toObjectFieldPath}}</div>
+            <span *ngIf="!tgts?.length">-</span>
+            <div *ngFor="let tgt of tgts">{{tgt.object}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
           </m-form-item>
         </div>
 
