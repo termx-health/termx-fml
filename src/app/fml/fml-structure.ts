@@ -47,8 +47,8 @@ export class FMLStructureObject extends FMLStructureEntity {
           ${this.name}
         </div>
       </div>
-    `
-  };
+    `;
+  }
 
   getFieldIndex(field: string): number {
     return this.fields.findIndex(f => f.name === field);
@@ -82,11 +82,11 @@ export class FMLStructure {
     const inlineDefinition = mode === 'object' && path === resource;
 
     // try to find resource's structure definition
-    const structureDefinition = this.findStructureDefinition(this.bundle, resource)
+    const structureDefinition = this.findStructureDefinition(this.bundle, resource);
     if (isNil(structureDefinition)) {
-      throw Error(`StructureDefinition for the "${resource}" not found!`)
+      throw Error(`StructureDefinition for the "${resource}" not found!`);
     } else if (isNil(structureDefinition.snapshot)) {
-      throw Error(`Snapshot is missing in the StructureDefinition "${resource}"!`)
+      throw Error(`Snapshot is missing in the StructureDefinition "${resource}"!`);
     }
 
     let elements = structureDefinition.snapshot.element;
@@ -102,25 +102,25 @@ export class FMLStructure {
     // double check whether inline definition assumption was correct
     if (inlineDefinition && !FMLStructure.isBackboneElement(selfResourceType)) {
       // self definition's element MUST be the BackboneElement, but if you got here, it is not!
-      return this.newFMLObject(selfResourceType, path, mode)
+      return this.newFMLObject(selfResourceType, path, mode);
     }
 
     if (selfDefinition.type?.length > 1) {
       // fixme: as for now, warn about multiple types, see fixme above
-      console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`)
+      console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`);
     }
 
-    const o = new FMLStructureObject()
+    const o = new FMLStructureObject();
     o.element = selfDefinition;
     o.resource = selfResourceType;
-    o.name = path
+    o.name = path;
     o.mode = mode;
     o.fields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
       types: e.type?.map(t => t.code) ?? [],
       multiple: e.max !== '1',
       required: e.min === 1
-    }))
+    }));
 
     return o;
   }
@@ -142,7 +142,7 @@ export class FMLStructure {
 
     return bundle.entry
       .map(e => e.resource)
-      .find(e => e.id === base)
+      .find(e => e.id === base);
   }
 
   public static isBackboneElement(resource: string): boolean {

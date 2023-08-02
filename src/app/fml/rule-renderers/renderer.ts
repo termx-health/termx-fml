@@ -14,7 +14,7 @@ export abstract class FMLRuleRenderer {
           <div>${rule.action}</div>
           ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
         </h5>
-    `
+    `;
   }
 
 
@@ -34,7 +34,7 @@ export abstract class FMLRuleRenderer {
     editor._updateRule(node.id, rule.name, rule => {
       // rule.sourceObject = source.data.obj.name
       // rule.sourceField = source.data.obj.fields[sourcePort - 1].name
-    })
+    });
   }
 
   public onOutputConnectionCreate(
@@ -53,7 +53,7 @@ export abstract class FMLRuleRenderer {
     editor._updateRule(node.id, rule.name, rule => {
       // rule.targetObject = target.data.obj.name
       // rule.targetField = target.data.obj.fields[targetPort - 1].name
-    })
+    });
   }
 
 
@@ -71,7 +71,7 @@ export abstract class FMLRuleRenderer {
     // }
 
     editor._updateRule(node.id, rule.name, rule => {
-      const {node: nodeId, input} = node.inputs[`input_${nodePort}`]?.connections?.[0] ?? {}
+      const {node: nodeId, input} = node.inputs[`input_${nodePort}`]?.connections?.[0] ?? {};
       if (nodeId && editor.isObj(editor.getNodeFromId(nodeId))) {
         // after deletion the rule node has other source connections, restore first
         const objNode = editor.getNodeFromId(nodeId);
@@ -81,7 +81,7 @@ export abstract class FMLRuleRenderer {
         // rule.sourceObject = undefined
         // rule.sourceField = undefined
       }
-    })
+    });
   }
 
   public onOutputConnectionRemove(
@@ -98,7 +98,7 @@ export abstract class FMLRuleRenderer {
     // }
 
     editor._updateRule(node.id, rule.name, rule => {
-      const {node: nodeId, output} = node.outputs[`output_${nodePort}`]?.connections?.[0] ?? {} as any
+      const {node: nodeId, output} = node.outputs[`output_${nodePort}`]?.connections?.[0] ?? {} as any;
       if (nodeId && editor.isObj(editor.getNodeFromId(nodeId))) {
         // after deletion the rule node has other target connections, restore first
         const objNode = editor.getNodeFromId(nodeId);
@@ -108,6 +108,6 @@ export abstract class FMLRuleRenderer {
         // rule.targetObject = undefined
         // rule.targetObject = undefined
       }
-    })
+    });
   }
 }

@@ -34,6 +34,6 @@ export class FMLCreateRuleParser extends FMLRuleParser {
         sourceConnection,
         ...this.connectTarget(fml, rule, fhirRuleTarget, variables)
       ]
-    }
+    };
   }
 }

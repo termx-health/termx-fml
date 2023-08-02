@@ -14,6 +14,6 @@ export class FMLTruncateRuleParser extends FMLRuleParser {
   ): FMLRuleParserResult {
     const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
     const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
-    return {rule, connections}
+    return {rule, connections};
   }
 }

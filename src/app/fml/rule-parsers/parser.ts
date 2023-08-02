@@ -13,7 +13,7 @@ export type FMLRuleParserVariables = {[name: string]: string}
 export const RULE_ID = {
   v: 420,
   next: function () {
-    return this.v++
+    return this.v++;
   }
 };
 
@@ -34,9 +34,9 @@ export abstract class FMLRuleParser {
     fhirRuleSource: StructureMapGroupRuleSource,
     fhirRuleTarget: StructureMapGroupRuleTarget,
   ): FMLStructureRule {
-    const rule = new FMLStructureRule()
+    const rule = new FMLStructureRule();
     rule.name = `${ruleName}#${RULE_ID.next()}`;
-    rule.alias = fhirRuleTarget.variable
+    rule.alias = fhirRuleTarget.variable;
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
       p.valueId ??
@@ -49,7 +49,7 @@ export abstract class FMLRuleParser {
       p.valueDateTime
     );
     rule.condition = fhirRuleSource.condition;
-    return rule
+    return rule;
   }
 
   public connect(
@@ -61,14 +61,14 @@ export abstract class FMLRuleParser {
   ): FMLStructureConnection[] {
     const conns = [];
 
-    fhirRuleTarget.parameter ??= []
+    fhirRuleTarget.parameter ??= [];
     // find valueId parameters
     const valueIdParams = fhirRuleTarget.parameter
       .filter(p => isDefined(p.valueId))
       .map(p => p.valueId);
 
     valueIdParams.forEach(valueId => {
-      const variable = variables[valueId]
+      const variable = variables[valueId];
       const source = variable.includes(".")
         ? variable.substring(0, variable.lastIndexOf("."))
         : variable;
@@ -76,17 +76,17 @@ export abstract class FMLRuleParser {
       if (isDefined(fml.objects[source])) {
         // fml object
         const sourceField = variable.slice(source.length + (variable.includes(".") ? 1 : 0));
-        const sourceFieldIdx = fml.objects[source].getFieldIndex(sourceField)
-        conns.push(fml.newFMLConnection(source, sourceFieldIdx, rule.name, 0))
+        const sourceFieldIdx = fml.objects[source].getFieldIndex(sourceField);
+        conns.push(fml.newFMLConnection(source, sourceFieldIdx, rule.name, 0));
       } else {
         // fml rule, using startsWith because variable has the StructureMap rule's raw name
         // fixme: use real rule name?
-        const fmlRule = fml.rules.find(r => r.name.startsWith(source))
-        conns.push(fml.newFMLConnection(fmlRule.name, 0, rule.name, 0))
+        const fmlRule = fml.rules.find(r => r.name.startsWith(source));
+        conns.push(fml.newFMLConnection(fmlRule.name, 0, rule.name, 0));
       }
-    })
+    });
 
-    const sourceInParams = valueIdParams.some(valueId => valueId === fhirRuleSource.variable)
+    const sourceInParams = valueIdParams.some(valueId => valueId === fhirRuleSource.variable);
     if (!sourceInParams) {
       // connect to source
       conns.push(...this.connectSource(fml, rule, fhirRuleSource, variables));
@@ -106,16 +106,16 @@ export abstract class FMLRuleParser {
     if (isNil(variables[fhirRuleSource.context])) {
       return [];
     }
-    const [sourceObject, sourceField] = this.parseConnection(fhirRuleSource, variables)
+    const [sourceObject, sourceField] = this.parseConnection(fhirRuleSource, variables);
     if (isNil(sourceObject)) {
-      return []
+      return [];
     }
     return [
       fml.newFMLConnection(
         sourceObject, fml.objects[sourceObject].getFieldIndex(sourceField) ?? 0,
         rule.name, 0
       )
-    ]
+    ];
   }
 
   public connectTarget(
@@ -127,16 +127,16 @@ export abstract class FMLRuleParser {
     if (isNil(variables[fhirRuleTarget.context])) {
       return [];
     }
-    const [targetObject, targetField] = this.parseConnection(fhirRuleTarget, variables)
+    const [targetObject, targetField] = this.parseConnection(fhirRuleTarget, variables);
     if (isNil(targetObject)) {
-      return []
+      return [];
     }
     return [
       fml.newFMLConnection(
         rule.name, 0,
         targetObject, fml.objects[targetObject].getFieldIndex(targetField) ?? 0,
       )
-    ]
+    ];
   }
 
   public parseConnection(
@@ -145,9 +145,9 @@ export abstract class FMLRuleParser {
   ): [string, string] {
     const ctx = variables[st.context];
     if (st.element) {
-      return [ctx, st.element]
+      return [ctx, st.element];
     } else if (ctx.includes('.')) {
-      return [ctx.slice(0, ctx.lastIndexOf('.')), ctx.slice(ctx.lastIndexOf('.') + 1)]
+      return [ctx.slice(0, ctx.lastIndexOf('.')), ctx.slice(ctx.lastIndexOf('.') + 1)];
     }
     return [undefined, undefined];
   }

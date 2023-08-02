@@ -20,7 +20,7 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
     // new connection is pushed
-    editor.addNodeInput(node.id)
+    editor.addNodeInput(node.id);
   }
 
   public override onInputConnectionRemove(
@@ -30,6 +30,6 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
   ): void {
     super.onInputConnectionRemove(editor, node, nodePort, source, sourcePort);
 
-    editor.removeNodeInput(node.id, `input_${nodePort}`)
+    editor.removeNodeInput(node.id, `input_${nodePort}`);
   }
 }

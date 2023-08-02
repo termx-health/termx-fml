@@ -25,7 +25,7 @@ export class FMLStructureMapper {
           rule: []
         }
       ]
-    }
+    };
 
 
     const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
@@ -34,14 +34,14 @@ export class FMLStructureMapper {
       url: `http://termx.health/fhir/StructureDefinition/${o.resource}`,
       mode: o.mode as StructureMapStructure['mode'],
       alias: o.resource
-    }))
+    }));
 
-    const smGroup = sm.group[0]
+    const smGroup = sm.group[0];
     smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>(o => ({
       name: o.name,
       type: o.resource,
       mode: o.mode as StructureMapGroupInput['mode'],
-    }))
+    }));
 
 
     /*
@@ -74,7 +74,7 @@ export class FMLStructureMapper {
     */
 
     // targets.forEach(({name}) => x(name))
-    return sm
+    return sm;
   }
 
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
@@ -90,12 +90,12 @@ export class FMLStructureMapper {
 
 
     const getRuleParser = (transform) => {
-      const parser = ruleParsers.find(p => p.action === transform)
+      const parser = ruleParsers.find(p => p.action === transform);
       if (isNil(parser)) {
-        throw new Error(`Parser for the "${transform}" transformation not found!`)
+        throw new Error(`Parser for the "${transform}" transformation not found!`);
       }
       return parser;
-    }
+    };
 
 
     // finds the correct resource type based on URL
@@ -107,8 +107,8 @@ export class FMLStructureMapper {
     // [alias | resource] -> FMLStructureObject
     struc.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
       const resource = getKey(s);
-      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode)
-    })
+      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode);
+    });
 
 
     // groups
@@ -116,8 +116,8 @@ export class FMLStructureMapper {
       // rules
       fhirGroup.rule.forEach(fhirRule => {
         const variables = group(fhirGroup.input, i => i.name, i => i.type);
-        _parseRule(fhirRule, variables)
-      })
+        _parseRule(fhirRule, variables);
+      });
 
 
       // hoisting
@@ -132,11 +132,11 @@ export class FMLStructureMapper {
             } else {
               variables[r.variable] = `${variables[r.context]}.${r.element}`;
             }
-          })
+          });
 
 
         // NB: currently only one source
-        const fhirRuleSource = fhirRule.source[0]
+        const fhirRuleSource = fhirRule.source[0];
 
         fhirRule.target.forEach(fhirRuleTarget => {
           try {
@@ -144,26 +144,26 @@ export class FMLStructureMapper {
               rule,
               object,
               connections
-            } = getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables)
+            } = getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
 
             if (isDefined(object)) {
               struc.objects[object.name] = object;
             }
             if (isDefined(rule)) {
-              struc.rules.push(rule)
+              struc.rules.push(rule);
             }
             if (isDefined(connections)) {
               struc.connections.push(...connections);
             }
           } catch (e) {
-            console.error(e)
+            console.error(e);
           }
-        })
+        });
 
 
-        fhirRule.rule?.forEach(subRule => _parseRule(subRule, variables))
+        fhirRule.rule?.forEach(subRule => _parseRule(subRule, variables));
       }
-    })
+    });
 
 
     // validate
@@ -174,37 +174,37 @@ export class FMLStructureMapper {
 
     struc.connections.forEach(c => {
       if (isNil(merged[c.sourceObject])) {
-        console.warn(`Unknown SOURCE object "${c.sourceObject}"`)
+        console.warn(`Unknown SOURCE object "${c.sourceObject}"`);
       } else if (
         merged[c.sourceObject] instanceof FMLStructureObject &&
         merged[c.sourceObject]['fields'].length < c.sourceFieldIdx
       ) {
-        console.warn(`Unknown SOURCE FIELD of object "${c.sourceObject}"`)
+        console.warn(`Unknown SOURCE FIELD of object "${c.sourceObject}"`);
       }
 
       if (isNil(merged[c.targetObject])) {
-        console.warn(`Unknown TARGET object "${c.targetObject}"`)
+        console.warn(`Unknown TARGET object "${c.targetObject}"`);
       } else if (
         merged[c.targetObject] instanceof FMLStructureObject &&
         merged[c.targetObject]['fields'].length < c.targetFieldIdx
       ) {
-        console.warn(`Unknown TARGET FIELD of object "${c.targetObject}"`)
+        console.warn(`Unknown TARGET FIELD of object "${c.targetObject}"`);
       }
-    })
+    });
 
 
     fhir.group.forEach(fhirGroup => {
       const _collectNames = (r: StructureMapGroupRule): string[] => {
         return [r.name, ...(r.rule?.flatMap(sr => _collectNames(sr)) ?? [])];
-      }
+      };
 
-      const rules = fhirGroup.rule.flatMap(fhirRule => _collectNames(fhirRule))
-      const duplicates = rules.filter(duplicate)
+      const rules = fhirGroup.rule.flatMap(fhirRule => _collectNames(fhirRule));
+      const duplicates = rules.filter(duplicate);
       if (duplicates.length) {
-        console.warn(`Structure Map's group ${fhirGroup.name} has duplicate rules`, duplicates.filter(unique))
+        console.warn(`Structure Map's group ${fhirGroup.name} has duplicate rules`, duplicates.filter(unique));
       }
-    })
+    });
 
-    return struc
+    return struc;
   }
 }

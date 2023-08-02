@@ -13,7 +13,7 @@ export class FMLUuidRuleParser extends FMLRuleParser {
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
     const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
-    const connection = this.connectTarget(fml, rule, fhirRuleTarget, variables)
-    return {rule, connections: connection}
+    const connection = this.connectTarget(fml, rule, fhirRuleTarget, variables);
+    return {rule, connections: connection};
   }
 }

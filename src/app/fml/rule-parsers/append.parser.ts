@@ -20,12 +20,12 @@ export class FMLAppendRuleParser extends FMLRuleParser {
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);
     if (isDefined(valueIdParam)) {
       const variable = variables[valueIdParam.valueId];
-      fhirRuleSource.context = variable.slice(0, variable.lastIndexOf("."))
-      fhirRuleSource.element = variable.slice(variable.lastIndexOf(".") + 1)
+      fhirRuleSource.context = variable.slice(0, variable.lastIndexOf("."));
+      fhirRuleSource.element = variable.slice(variable.lastIndexOf(".") + 1);
     }
 
 
-    const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables)
-    return {rule, connections}
+    const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
+    return {rule, connections};
   }
 }

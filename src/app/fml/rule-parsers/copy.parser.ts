@@ -14,12 +14,12 @@ export class FMLCopyRuleParser extends FMLRuleParser {
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
     const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
-    const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables)
+    const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
 
     fhirRuleTarget.parameter.filter(p => isDefined(p.valueId)).forEach(p => {
       rule.parameters = remove(rule.parameters, p.valueId);
-    })
+    });
 
-    return {rule, connections}
+    return {rule, connections};
   }
 }

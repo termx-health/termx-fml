@@ -32,7 +32,7 @@ const RULES: RuleDescription[] = [
     name: 'append',
     description: 'Element or string - just append them all together'
   }
-]
+];
 
 @Component({
   selector: 'app-root',
@@ -52,7 +52,7 @@ export class AppComponent implements OnInit {
     return this.structureMapService.getStructureMap(url).pipe(tap(resp => {
       this.structureMap = resp;
     }));
-  }
+  };
 
   // todo: @Input()
   public resourceBundle: Bundle<StructureDefinition>;
@@ -60,17 +60,17 @@ export class AppComponent implements OnInit {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
       const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
       const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
-      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)))
+      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)));
       return forkJoin(reqs$).pipe(map(definitions => {
         return this.resourceBundle = {
           resourceType: 'Bundle',
           type: 'collection',
           entry: definitions.map(def => ({resource: def}))
-        }
-      }))
-    }))
+        };
+      }));
+    }));
 
-  }
+  };
 
   // FML editor
   private fml: FMLStructure;
@@ -97,22 +97,22 @@ export class AppComponent implements OnInit {
   public ngOnInit(): void {
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe(bundle => {
-        const fml = this.fml = FMLStructureMapper.map(bundle, resp)
-        console.log(fml)
+        const fml = this.fml = FMLStructureMapper.map(bundle, resp);
+        console.log(fml);
         this.initEditor(fml);
-      })
-    })
+      });
+    });
   }
 
   protected export(): void {
     const exp = this.editor.export();
     Object.values(exp.drawflow.Home.data).forEach(el => {
-      const {x, y} = (el.data.obj ?? el.data.rule).position
+      const {x, y} = (el.data.obj ?? el.data.rule).position;
       el.pos_x = x;
       el.pos_y = y;
-    })
+    });
 
-    console.log(FMLStructureMapper.compose(this.fml))
+    console.log(FMLStructureMapper.compose(this.fml));
   }
 
 
@@ -123,12 +123,12 @@ export class AppComponent implements OnInit {
 
     const editor = this.editor = new FMLEditor(fml, element);
     editor.start();
-    editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id))
-    editor.on('nodeUnselected', () => this.nodeSelected = undefined)
+    editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id));
+    editor.on('nodeUnselected', () => this.nodeSelected = undefined);
     editor.on('nodeMoved', () => {
       const selectedNodeId = this.nodeSelected?.id;
       if (selectedNodeId) {
-        this.nodeSelected = editor.getNodeFromId(selectedNodeId)
+        this.nodeSelected = editor.getNodeFromId(selectedNodeId);
       }
     });
 
@@ -140,8 +140,8 @@ export class AppComponent implements OnInit {
         x: obj.position?.x,
         y: obj.position?.y,
         outputs: obj.mode === 'object' ? 1 : undefined
-      })
-    })
+      });
+    });
 
     // render rules
     fml.rules.forEach(rule => {
@@ -149,15 +149,15 @@ export class AppComponent implements OnInit {
         x: rule.position?.x,
         y: rule.position?.y,
       });
-    })
+    });
 
     // render connections
     fml.connections.forEach(c => {
       editor._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1);
-    })
+    });
 
     // auto layout
-    editor._autoLayout()
+    editor._autoLayout();
 
     // rerender nodes
     editor._rerenderNodes();
@@ -168,13 +168,13 @@ export class AppComponent implements OnInit {
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
     if (parentObj.mode === 'source') {
-      throw Error(`Element creation from source node is forbidden!`)
+      throw Error(`Element creation from source node is forbidden!`);
     }
 
     const structureDefinition = this.fml.findStructureDefinition(this.resourceBundle, parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
-    const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
+    const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
 
     // fixme: ACHTUNG! the first type is selected!
     let fieldType = fieldElement.type?.[0]?.code;
@@ -194,7 +194,7 @@ export class AppComponent implements OnInit {
   /* Drag & drop */
 
   protected onDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
-    ev.dataTransfer.setData("application/json", JSON.stringify(ruleDescription))
+    ev.dataTransfer.setData("application/json", JSON.stringify(ruleDescription));
   }
 
   protected onDragOver(ev: DragEvent): void {
@@ -207,13 +207,13 @@ export class AppComponent implements OnInit {
     rule.name = `${data.code}#${RULE_ID.next()}`;
     rule.action = data.code;
     rule.parameters = [];
-    this.fml.rules.push(rule)
+    this.fml.rules.push(rule);
 
-    const {top, left} = this.editor._getOffsets()
+    const {top, left} = this.editor._getOffsets();
     this.editor._createRuleNode(rule, {
       y: ev.y - top,
       x: ev.x - left
-    })
+    });
   }
 
 
@@ -223,19 +223,19 @@ export class AppComponent implements OnInit {
     this.isExpanded = isExpanded;
 
     Object.keys(this.fml.objects).forEach(k => {
-      setExpand(this.editor, k, isExpanded)
-    })
+      setExpand(this.editor, k, isExpanded);
+    });
   }
 
 
   /* Utils */
 
-  private isBackboneElement = FMLStructure.isBackboneElement
+  private isBackboneElement = FMLStructure.isBackboneElement;
 
 
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => this._isComplexResource(t))
-  }
+    return f.types?.some(t => this._isComplexResource(t));
+  };
 
   private _isComplexResource(type: string): boolean {
     // fixme: if starts with capital letter, then complex resource?
@@ -244,7 +244,7 @@ export class AppComponent implements OnInit {
 
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
     return f.types?.some(t => this.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
-  }
+  };
 
   protected get simpleFML(): FMLStructure {
     return {
@@ -255,6 +255,6 @@ export class AppComponent implements OnInit {
       rules: this.fml?.rules.map(r => ({
         ...r
       }))
-    } as any
+    } as any;
   }
 }
