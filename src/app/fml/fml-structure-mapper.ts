@@ -149,7 +149,7 @@ export class FMLStructureMapper {
               struc.rules.push(rule);
             }
             if (isDefined(connections)) {
-              struc.connections.push(...connections);
+              connections.forEach(c => struc.putConnection(c));
             }
           } catch (e) {
             console.error(e);

@@ -1,5 +1,5 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {isNil} from '@kodality-web/core-util';
+import {isNil, remove} from '@kodality-web/core-util';
 
 export interface FMLStructureObjectField {
   name: string;
@@ -69,27 +69,54 @@ export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
-  connections: FMLStructureConnection[] = [];
+  _connections: FMLStructureConnection[] = [];
 
-  public getSources =(target: string, targetField?: string): {object: string, field?: string}[] =>{
+
+  /* Connections */
+
+  public get connections(): readonly FMLStructureConnection[] {
+    return this._connections;
+  }
+
+  public getSources = (target: string, field?: string): {object: string, field?: string}[] => {
     return this.connections
       .filter(c => c.targetObject === target)
-      .filter(c => isNil(targetField) || targetField === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
       .map(c => ({
         object: c.sourceObject,
         field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name
       }));
-  }
+  };
 
-  public getTargets = (source: string, sourceField?: string): {object: string, field?: string}[] =>{
+  public getTargets = (source: string, field?: string): {object: string, field?: string}[] => {
     return this.connections
       .filter(c => c.sourceObject === source)
-      .filter(c => isNil(sourceField) || sourceField === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
+      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
       .map(c => ({
         object: c.targetObject,
         field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
       }));
+  };
+
+  public putConnection(conn: FMLStructureConnection): void {
+    const exists = this.connections.some(c =>
+      c.sourceObject === conn.sourceObject && c.sourceFieldIdx === conn.sourceFieldIdx &&
+      c.targetObject === conn.targetObject && c.targetFieldIdx === conn.targetFieldIdx
+    );
+    if (!exists) {
+      this._connections.push(conn);
+    }
   }
+
+  public removeConnection(source: string, sourceFieldIdx: number, target: string, targetFieldIdx: number): void {
+    remove(this._connections, this._connections.find(c =>
+      c.sourceObject === source && c.sourceFieldIdx === sourceFieldIdx &&
+      c.targetObject === target && c.targetFieldIdx === targetFieldIdx
+    ));
+  }
+
+
+  /* Builders */
 
   public newFMLObject(resource: string, path: string, mode: string): FMLStructureObject {
     if (isNil(resource)) {
@@ -151,6 +178,9 @@ export class FMLStructure {
     c.targetFieldIdx = targetIdx;
     return c;
   }
+
+
+  /* Utils */
 
   public findStructureDefinition(bundle: Bundle<StructureDefinition>, anyPath: string): StructureDefinition {
     // Resource.whatever.element (anyPath) => Resource (base)

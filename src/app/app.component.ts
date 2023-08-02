@@ -42,8 +42,8 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
-    const name = "step3";
-    // const name = "step5";
+    // const name = "step3";
+    const name = "step5";
     // const name = "step9";
     // const name = "structuremap-supplyrequest-transform";
     // const name = "tobacco-use-transform";
@@ -259,7 +259,7 @@ export class AppComponent implements OnInit {
         sources: this.fml.getSources(r.name).map(this.toObjectFieldPath),
         targets: this.fml.getTargets(r.name).map(this.toObjectFieldPath),
       })),
-      connections: this.fml?.connections
+      connections: this.fml?.connections as any
     };
   }
 

@@ -87,10 +87,12 @@
       *ngIf="nodeSelected as node"
     >
       <!-- Resource -->
-      <div style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="node.data.obj as obj">
-        <h5>Resource | {{obj.mode}}</h5>
+      <div *ngIf="node.data.obj as obj">
+        <div style="padding: 1rem; border-bottom: var(--border-table);">
+          <h5>Resource | {{obj.mode}}</h5>
+        </div>
 
-        <m-table mSize="small">
+        <m-table mSize="small" style="padding: 1rem; border-bottom: var(--border-table); display: block">
           <tr *ngFor="let f of obj.fields">
             <td>
               <div class="m-items-top m-justify-between">
@@ -105,6 +107,16 @@
             </td>
           </tr>
         </m-table>
+
+
+        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+          <m-form-item mLabel="Source" *ngIf="obj.name | apply: fml.getSources as srcs">
+            <div *ngFor="let src of srcs">{{src | apply: toObjectFieldPath}}</div>
+          </m-form-item>
+          <m-form-item mLabel="Target" *ngIf="obj.name | apply: fml.getTargets as tgts">
+            <div *ngFor="let tgt of tgts">{{tgt | apply: toObjectFieldPath}}</div>
+          </m-form-item>
+        </div>
       </div>
 
       <!-- Rule -->
@@ -143,9 +155,6 @@
           <m-form-item mLabel="Target" *ngIf="rule.name | apply: fml.getTargets as tgts">
             <div *ngFor="let tgt of tgts">{{tgt | apply: toObjectFieldPath}}</div>
           </m-form-item>
-          <!--          <m-form-item mLabel="Target" *ngIf="rule.targetObject">-->
-          <!--            {{rule.targetObject}}:<b>{{rule.targetField}}</b>-->
-          <!--          </m-form-item>-->
         </div>
 
 
