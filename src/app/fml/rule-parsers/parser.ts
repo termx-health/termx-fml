@@ -1,6 +1,5 @@
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../fml-structure';
-import {newFMLConnection} from '../fml.utils';
 import {isDefined, isNil} from '@kodality-web/core-util';
 
 export interface FMLRuleParserResult {
@@ -78,12 +77,12 @@ export abstract class FMLRuleParser {
         // fml object
         const sourceField = variable.slice(source.length + (variable.includes(".") ? 1 : 0));
         const sourceFieldIdx = fml.objects[source].getFieldIndex(sourceField)
-        conns.push(newFMLConnection(source, sourceFieldIdx, rule.name, 0))
+        conns.push(fml.newFMLConnection(source, sourceFieldIdx, rule.name, 0))
       } else {
         // fml rule, using startsWith because variable has the StructureMap rule's raw name
         // fixme: use real rule name?
         const fmlRule = fml.rules.find(r => r.name.startsWith(source))
-        conns.push(newFMLConnection(fmlRule.name, 0, rule.name, 0))
+        conns.push(fml.newFMLConnection(fmlRule.name, 0, rule.name, 0))
       }
     })
 
@@ -112,7 +111,7 @@ export abstract class FMLRuleParser {
       return []
     }
     return [
-      newFMLConnection(
+      fml.newFMLConnection(
         sourceObject, fml.objects[sourceObject].getFieldIndex(sourceField) ?? 0,
         rule.name, 0
       )
@@ -133,7 +132,7 @@ export abstract class FMLRuleParser {
       return []
     }
     return [
-      newFMLConnection(
+      fml.newFMLConnection(
         rule.name, 0,
         targetObject, fml.objects[targetObject].getFieldIndex(targetField) ?? 0,
       )

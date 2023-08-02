@@ -2,7 +2,6 @@ import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './pars
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructure} from '../fml-structure';
 import {isDefined} from '@kodality-web/core-util';
-import {newFMLConnection, newFMLObject} from '../fml.utils';
 
 export class FMLCreateRuleParser extends FMLRuleParser {
   public action = 'create';
@@ -18,18 +17,15 @@ export class FMLCreateRuleParser extends FMLRuleParser {
 
     const objectName = variables[fhirRuleTarget.variable];
     const objectResource = fhirRuleTarget.parameter?.find(p => isDefined(p.valueString))?.valueString ?? objectName;
-    const object = newFMLObject(
-      fml.bundle,
+    const object = fml.newFMLObject(
       objectResource, objectName,
       'object'
     );
 
-    const sourceConnection = newFMLConnection(
+    const sourceConnection = fml.newFMLConnection(
       object.name, object.getFieldIndex('id'),
       rule.name, 0
     );
-
-
 
     return {
       rule,

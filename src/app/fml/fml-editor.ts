@@ -3,8 +3,9 @@ import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from '.
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
-import {getCanvasFont, getTextWidth, newFMLConnection} from './fml.utils';
+import {getCanvasFont, getTextWidth} from './fml.utils';
 import {RULE_ID} from './rule-parsers/parser';
+import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
@@ -52,7 +53,7 @@ export class FMLEditor extends Drawflow {
   // rule renderer
   private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
-    // new FMLAppendRuleRenderer()
+    new FMLAppendRuleRenderer()
   ]
 
 
@@ -82,15 +83,15 @@ export class FMLEditor extends Drawflow {
 
 
     this.on('nodeRemoved', nodeId => {
-      Object.values(this._fml.objects).forEach(o => {
+      Object.values(_fml.objects).forEach(o => {
         if (o['_nodeId'] === Number(nodeId)) {
-          delete this._fml.objects[o.name]
+          delete _fml.objects[o.name]
         }
       })
 
-      this._fml.rules.forEach(r => {
+      _fml.rules.forEach(r => {
         if (r['_nodeId'] === Number(nodeId)) {
-          remove(this._fml.rules, r);
+          remove(_fml.rules, r);
         }
       })
     })
@@ -116,7 +117,7 @@ export class FMLEditor extends Drawflow {
 
       // rule -> rule
       if (this.isRule(source) && this.isRule(target)) {
-        console.warn(`Connection forbidden: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
+        console.warn(`Connection between rules: "${source.data.rule.name}" -> "${target.data.rule.name}"`)
         // fixme: undo();
       }
 
@@ -131,13 +132,13 @@ export class FMLEditor extends Drawflow {
         const rule = new FMLStructureRule();
         rule.name = `${rule.action}#${RULE_ID.next()}`;
         rule.action = source.data.obj.mode === 'object' ? 'create' : 'copy';
-        this._fml.rules.push(rule)
+        _fml.rules.push(rule)
 
-        const cs = newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0)
-        this._fml.connections.push(cs)
+        const cs = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0)
+        _fml.connections.push(cs)
 
-        const ct = newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,)
-        this._fml.connections.push(ct)
+        const ct = _fml.newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,)
+        _fml.connections.push(ct)
 
 
         const getOffset = (n: HTMLElement, dir) => {

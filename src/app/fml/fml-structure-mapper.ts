@@ -6,8 +6,9 @@ import {FMLStructure, FMLStructureObject} from './fml-structure';
 import {FMLTruncateRuleParser} from './rule-parsers/truncate.parser';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
-import {newFMLObject} from './fml.utils';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
+import {FMLEvaluateRuleParser} from './rule-parsers/evaluate.parser';
+import {FMLCcRuleParser} from './rule-parsers/cc.parser';
 
 
 export class FMLStructureMapper {
@@ -82,8 +83,8 @@ export class FMLStructureMapper {
       new FMLCreateRuleParser(),
       new FMLUuidRuleParser(),
       new FMLAppendRuleParser(),
-      // new FMLCcRuleParser(),
-      // new FMLEvaluateRuleParser(),
+      new FMLCcRuleParser(),
+      new FMLEvaluateRuleParser(),
       new FMLTruncateRuleParser()
     ];
 
@@ -106,7 +107,7 @@ export class FMLStructureMapper {
     // [alias | resource] -> FMLStructureObject
     struc.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
       const resource = getKey(s);
-      return newFMLObject(bundle, resource, s.alias ?? getKey(s), s.mode)
+      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode)
     })
 
 

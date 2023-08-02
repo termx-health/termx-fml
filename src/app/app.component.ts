@@ -5,7 +5,7 @@ import {forkJoin, map, mergeMap, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {findStructureDefinition, isBackboneElement, newFMLObject, setExpand} from './fml/fml.utils';
+import {setExpand} from './fml/fml.utils';
 import {group, isDefined} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
@@ -171,7 +171,7 @@ export class AppComponent implements OnInit {
       throw Error(`Element creation from source node is forbidden!`)
     }
 
-    const structureDefinition = findStructureDefinition(this.resourceBundle, parentObj.element.id);
+    const structureDefinition = this.fml.findStructureDefinition(this.resourceBundle, parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path))
@@ -182,7 +182,7 @@ export class AppComponent implements OnInit {
       fieldType = fieldPath;
     }
 
-    const obj = newFMLObject(this.resourceBundle, fieldType, fieldPath, 'object');
+    const obj = this.fml.newFMLObject(fieldType, fieldPath, 'object');
     obj.name = `${fieldPath}#${ID++}`;
     this.fml.objects[obj.name] = obj;
 
@@ -230,7 +230,7 @@ export class AppComponent implements OnInit {
 
   /* Utils */
 
-  private isBackboneElement = isBackboneElement
+  private isBackboneElement = FMLStructure.isBackboneElement
 
 
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
