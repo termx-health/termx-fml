@@ -2,20 +2,21 @@ import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5'
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../fml-structure';
 import {isDefined, isNil} from '@kodality-web/core-util';
 
-export interface FMLRuleParserResult {
-  rule: FMLStructureRule,
-  object?: FMLStructureObject;
-  connections: FMLStructureConnection[]
-}
-
-export type FMLRuleParserVariables = {[name: string]: string}
-
 export const RULE_ID = {
   v: 420,
   next: function () {
     return this.v++;
   }
 };
+
+
+export interface FMLRuleParserResult {
+  rule?: FMLStructureRule,
+  object?: FMLStructureObject;
+  connections?: FMLStructureConnection[]
+}
+
+export type FMLRuleParserVariables = {[name: string]: string}
 
 export abstract class FMLRuleParser {
   abstract action: string;

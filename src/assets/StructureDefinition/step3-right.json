@@ -49,6 +49,17 @@
             "code": "string"
           }
         ]
+      },
+      {
+        "id": "TRight.jurisdiction",
+        "path": "TRight.jurisdiction",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
       }
     ]
   },

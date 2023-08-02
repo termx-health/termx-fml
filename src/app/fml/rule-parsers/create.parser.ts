@@ -23,7 +23,7 @@ export class FMLCreateRuleParser extends FMLRuleParser {
     );
 
     const sourceConnection = fml.newFMLConnection(
-      object.name, object.getFieldIndex('id'),
+      object.name, 0,
       rule.name, 0
     );
 

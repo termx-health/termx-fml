@@ -1,5 +1,6 @@
 import {FMLStructureRule} from '../fml-structure';
-import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {FMLDrawflowNode, FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {remove} from '@kodality-web/core-util';
 
 export abstract class FMLRuleRenderer {
   abstract action: string;
@@ -61,7 +62,7 @@ export abstract class FMLRuleRenderer {
     editor: FMLEditor,
     node: FMLDrawflowRuleNode,
     nodePort: number,
-    source: FMLDrawflowObjectNode,
+    source: FMLDrawflowNode,
     sourcePort: number
   ): void {
     const rule = node.data.rule;
@@ -82,13 +83,20 @@ export abstract class FMLRuleRenderer {
         // rule.sourceField = undefined
       }
     });
+
+
+    const _fml = editor._fml;
+    remove(_fml.connections, _fml.connections.find(c =>
+      c.sourceObject === source.name && c.sourceFieldIdx === sourcePort - 1 &&
+      c.targetObject === node.name && c.targetFieldIdx === nodePort - 1
+    ));
   }
 
   public onOutputConnectionRemove(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode,
     nodePort: number,
-    target: FMLDrawflowObjectNode,
+    target: FMLDrawflowNode,
     targetPort: number
   ): void {
     const rule = node.data.rule;
@@ -109,5 +117,13 @@ export abstract class FMLRuleRenderer {
         // rule.targetObject = undefined
       }
     });
+
+
+
+    const _fml = editor._fml;
+    remove(_fml.connections, _fml.connections.find(c =>
+      c.sourceObject === node.name && c.sourceFieldIdx === nodePort - 1 &&
+      c.targetObject === target.name && c.targetFieldIdx === targetPort - 1
+    ));
   }
 }

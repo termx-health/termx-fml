@@ -1,7 +1,7 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {FMLStructure, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
-import {forkJoin, map, mergeMap, tap} from 'rxjs';
+import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
+import {forkJoin, map, mergeMap, Observable} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
@@ -41,7 +41,7 @@ const RULES: RuleDescription[] = [
 export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
-  private _structureMap = () => {
+  private _structureMap = (): Observable<StructureMap> => {
     const name = "step3";
     // const name = "step5";
     // const name = "step9";
@@ -49,18 +49,18 @@ export class AppComponent implements OnInit {
     // const name = "tobacco-use-transform";
 
     const url = `assets/StructureMap/${name}.json`;
-    return this.structureMapService.getStructureMap(url).pipe(tap(resp => {
-      this.structureMap = resp;
-    }));
+    return this.structureMapService.getStructureMap(url).pipe(map(resp => this.structureMap = resp));
   };
 
   // todo: @Input()
   public resourceBundle: Bundle<StructureDefinition>;
-  private _resourceBundle = (sm: StructureMap) => {
+  private _resourceBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
-      const inputResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
-      const reqs$ = inputResources.map(k => this.structureMapService.getStructureDefinition(k));
-      resources.forEach(r => reqs$.push(this.structureMapService.getStructureDefinition(r)));
+      const mapResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
+      const reqs$ = [
+        ...mapResources.map(k => this.structureMapService.getStructureDefinition(k)),
+        ...resources.map(r => this.structureMapService.getStructureDefinition(r))
+      ];
       return forkJoin(reqs$).pipe(map(definitions => {
         return this.resourceBundle = {
           resourceType: 'Bundle',
@@ -69,11 +69,10 @@ export class AppComponent implements OnInit {
         };
       }));
     }));
-
   };
 
   // FML editor
-  private fml: FMLStructure;
+  protected fml: FMLStructure;
   private editor: FMLEditor;
   protected nodeSelected: DrawflowNode;
 
@@ -232,7 +231,6 @@ export class AppComponent implements OnInit {
 
   private isBackboneElement = FMLStructure.isBackboneElement;
 
-
   protected isComplexResource = (f: FMLStructureObjectField): boolean => {
     return f.types?.some(t => this._isComplexResource(t));
   };
@@ -246,15 +244,26 @@ export class AppComponent implements OnInit {
     return f.types?.some(t => this.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
   };
 
-  protected get simpleFML(): FMLStructure {
+  protected get simpleFML(): {
+    objects: {[name: string]: FMLStructureObject},
+    rules: (FMLStructureRule & {sources: string[], targets: string[]})[],
+    connections: FMLStructureConnection[]
+  } {
     return {
       objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
         ...o,
         html: undefined
       }) as FMLStructureObject),
       rules: this.fml?.rules.map(r => ({
-        ...r
-      }))
-    } as any;
+        ...r,
+        sources: this.fml.getSources(r.name).map(this.toObjectFieldPath),
+        targets: this.fml.getTargets(r.name).map(this.toObjectFieldPath),
+      })),
+      connections: this.fml?.connections
+    };
+  }
+
+  protected toObjectFieldPath = ({object, field}) => {
+    return [object, field].filter(isDefined).join(':');
   }
 }

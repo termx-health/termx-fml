@@ -6,6 +6,7 @@ import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
 import {getCanvasFont, getTextWidth} from './fml.utils';
 import {RULE_ID} from './rule-parsers/parser';
 import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
+import {FMLRuleRenderer} from './rule-renderers/renderer';
 
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
@@ -20,7 +21,7 @@ export interface FMLDrawflowObjectNode extends DrawflowNode {
   }
 }
 
-interface FMLDrawflowNode extends FMLDrawflowRuleNode, FMLDrawflowObjectNode {
+export interface FMLDrawflowNode extends FMLDrawflowRuleNode, FMLDrawflowObjectNode {
   data: any
 }
 
@@ -35,7 +36,7 @@ export class FMLEditor extends Drawflow {
 
   // object
   private _getObject = (path: string): FMLStructureObject => this._fml.objects[path];
-  public _updateObject = (nodeId: number, name: string, fn: (obj: FMLStructureObject) => void) => {
+  public _updateObject = (nodeId: number, name: string, fn: (obj: FMLStructureObject) => void): void => {
     const obj = this._getObject(name);
     fn(obj);
     this.updateNodeDataFromId(nodeId, {obj});
@@ -43,7 +44,7 @@ export class FMLEditor extends Drawflow {
 
   // rule
   private _getRule = (name: string): FMLStructureRule => this._fml.rules.find(r => r.name === name);
-  public _updateRule = (nodeId: number, name: string, fn: (rule: FMLStructureRule) => void) => {
+  public _updateRule = (nodeId: number, name: string, fn: (rule: FMLStructureRule) => void): void => {
     const rule = this._getRule(name);
     fn(rule);
     this.updateNodeDataFromId(nodeId, {rule});
@@ -51,13 +52,13 @@ export class FMLEditor extends Drawflow {
 
 
   // rule renderer
-  private getRuleRenderer = (action: string) => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
+  private getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
     new FMLAppendRuleRenderer()
   ];
 
 
-  constructor(private _fml: FMLStructure, public element: HTMLElement, options?: {
+  constructor(public _fml: FMLStructure, public element: HTMLElement, options?: {
     render?: object,
     parent?: object
   }) {
@@ -100,7 +101,7 @@ export class FMLEditor extends Drawflow {
     this.on('connectionCreated', e => {
       const source: FMLDrawflowNode = this.getNodeFromId(e.output_id);
       const target: FMLDrawflowNode = this.getNodeFromId(e.input_id);
-      const undo = () => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
+      const undo = (): void => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
 
 
       // rule -> node
@@ -129,16 +130,17 @@ export class FMLEditor extends Drawflow {
         const sourceOutputNode = this.element.querySelector<HTMLElement>(`#node-${e.output_id} .output_${sourceFieldIdx}`);
         const targetInputNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`);
 
+        const action = source.data.obj.mode === 'object' ? 'create' : 'copy';
         const rule = new FMLStructureRule();
-        rule.name = `${rule.action}#${RULE_ID.next()}`;
-        rule.action = source.data.obj.mode === 'object' ? 'create' : 'copy';
+        rule.name = `${action}#${RULE_ID.next()}`;
+        rule.action = action;
         _fml.rules.push(rule);
 
-        const cs = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0);
-        _fml.connections.push(cs);
+        const sourceConn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0);
+        _fml.connections.push(sourceConn);
 
-        const ct = _fml.newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,);
-        _fml.connections.push(ct);
+        const targetConn = _fml.newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,);
+        _fml.connections.push(targetConn);
 
 
         const getOffset = (n: HTMLElement, dir) => {
@@ -156,7 +158,7 @@ export class FMLEditor extends Drawflow {
 
         undo();
         this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY});
-        [cs, ct].forEach(c => this._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1));
+        [sourceConn, targetConn].forEach(c => this._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1));
       }
     });
 
@@ -176,26 +178,15 @@ export class FMLEditor extends Drawflow {
         const renderer = this.getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionRemove(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class));
       }
-    });
-  }
 
 
-  public _rerenderNodes(): void {
-    // fixme: performance issue
+      // rule -> rule
+      if (this.isRule(source) && this.isRule(target)) {
+        const r1 = this.getRuleRenderer(source.data.rule.action);
+        r1.onOutputConnectionRemove(this, source, getPortIdx(e.output_class), target, getPortIdx(e.input_class));
 
-    Object.keys(this._fml.objects).forEach(name => {
-      const {el} = this._getNodeElementByName(name);
-      if (isDefined(el)) {
-        const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = this._fml.objects[name].html();
-      }
-    });
-
-    this._fml.rules.forEach(rule => {
-      const {el} = this._getNodeElementByName(rule.name);
-      if (isDefined(el)) {
-        const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = this.getRuleRenderer(rule.action).render(rule);
+        const r2 = this.getRuleRenderer(target.data.rule.action);
+        r2.onOutputConnectionRemove(this, target, getPortIdx(e.input_class), source, getPortIdx(e.output_class));
       }
     });
   }
@@ -281,7 +272,7 @@ export class FMLEditor extends Drawflow {
 
   /* Layout */
 
-  public _autoLayout() {
+  public _autoLayout(): void {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
@@ -347,6 +338,25 @@ export class FMLEditor extends Drawflow {
     });
   }
 
+  public _rerenderNodes(): void {
+    // fixme: performance issue
+
+    Object.keys(this._fml.objects).forEach(name => {
+      const {el} = this._getNodeElementByName(name);
+      if (isDefined(el)) {
+        const content = el.getElementsByClassName('drawflow_content_node')[0];
+        content.innerHTML = this._fml.objects[name].html();
+      }
+    });
+
+    this._fml.rules.forEach(rule => {
+      const {el} = this._getNodeElementByName(rule.name);
+      if (isDefined(el)) {
+        const content = el.getElementsByClassName('drawflow_content_node')[0];
+        content.innerHTML = this.getRuleRenderer(rule.action).render(rule);
+      }
+    });
+  }
 
   /* Utils */
 
@@ -355,12 +365,12 @@ export class FMLEditor extends Drawflow {
     return {el: document.getElementById(`node-${nodeId}`), nodeId};
   }
 
-  public _getNodeByName(name) {
+  public _getNodeByName(name): DrawflowNode {
     const nodeId = this._getNodeId(name);
     return this.getNodeFromId(nodeId);
   }
 
-  public _getNodeId(name) {
+  public _getNodeId(name): number {
     return this.getNodesFromName(name)[0];
   }
 

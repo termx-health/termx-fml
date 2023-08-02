@@ -36,7 +36,7 @@
       ],
       "rule": [
         {
-          "name": "i",
+          "name": "i1",
           "source": [
             {
               "context": "src",
@@ -59,7 +59,7 @@
           ]
         },
         {
-          "name": "i",
+          "name": "i2",
           "source": [
             {
               "context": "src",

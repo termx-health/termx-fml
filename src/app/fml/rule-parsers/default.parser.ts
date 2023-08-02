@@ -2,8 +2,8 @@ import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './pars
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructure} from '../fml-structure';
 
-export class FMLCcRuleParser extends FMLRuleParser {
-  public action = 'cc';
+export class FMLDefaultRuleParser extends FMLRuleParser {
+  public action = 'default';
 
   public override parse(
     fml: FMLStructure,
@@ -17,4 +17,3 @@ export class FMLCcRuleParser extends FMLRuleParser {
     return {rule, connections};
   }
 }
-

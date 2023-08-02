@@ -32,7 +32,6 @@ export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
-
   /** @example code, category, status etc. */
   fields: FMLStructureObjectField[] = [];
 
@@ -72,6 +71,25 @@ export class FMLStructure {
   rules: FMLStructureRule[] = [];
   connections: FMLStructureConnection[] = [];
 
+  public getSources =(target: string, targetField?: string): {object: string, field?: string}[] =>{
+    return this.connections
+      .filter(c => c.targetObject === target)
+      .filter(c => isNil(targetField) || targetField === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+      .map(c => ({
+        object: c.sourceObject,
+        field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name
+      }));
+  }
+
+  public getTargets = (source: string, sourceField?: string): {object: string, field?: string}[] =>{
+    return this.connections
+      .filter(c => c.sourceObject === source)
+      .filter(c => isNil(sourceField) || sourceField === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
+      .map(c => ({
+        object: c.targetObject,
+        field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
+      }));
+  }
 
   public newFMLObject(resource: string, path: string, mode: string): FMLStructureObject {
     if (isNil(resource)) {

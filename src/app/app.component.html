@@ -43,10 +43,19 @@
               <span class="m-subtitle">{{r.action}}</span>
             </div>
             <div class="description">
-<!--              <div>source: {{r.sourceObject ? r.sourceObject + ':' + r.sourceField : '-'}}</div>-->
-<!--              <div>target: {{r.targetObject ? r.targetObject + ':' + r.targetField : '-'}}</div>-->
+              <div>source: {{r.sources | join: ', '}}</div>
+              <div>target: {{r.targets | join: ', '}}</div>
             </div>
           </td>
+        </tr>
+      </m-table>
+
+      <m-table mSize="small">
+        <tr *ngFor="let con of fml.connections">
+          <td>{{con.sourceObject}}</td>
+          <td>{{con.sourceFieldIdx}}</td>
+          <td>{{con.targetObject}}</td>
+          <td>{{con.targetFieldIdx}}</td>
         </tr>
       </m-table>
     </div>
@@ -127,13 +136,16 @@
           </m-form-item>
         </div>
 
-        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="rule.sourceObject || rule.targetObject">
-          <m-form-item mLabel="Source" *ngIf="rule.sourceObject">
-            {{rule.sourceObject}}:<b>{{rule.sourceField}}</b>
+        <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+          <m-form-item mLabel="Source" *ngIf="rule.name | apply: fml.getSources as srcs">
+            <div *ngFor="let src of srcs">{{src | apply: toObjectFieldPath}}</div>
           </m-form-item>
-          <m-form-item mLabel="Target" *ngIf="rule.targetObject">
-            {{rule.targetObject}}:<b>{{rule.targetField}}</b>
+          <m-form-item mLabel="Target" *ngIf="rule.name | apply: fml.getTargets as tgts">
+            <div *ngFor="let tgt of tgts">{{tgt | apply: toObjectFieldPath}}</div>
           </m-form-item>
+          <!--          <m-form-item mLabel="Target" *ngIf="rule.targetObject">-->
+          <!--            {{rule.targetObject}}:<b>{{rule.targetField}}</b>-->
+          <!--          </m-form-item>-->
         </div>
 
 

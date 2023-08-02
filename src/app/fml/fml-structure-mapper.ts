@@ -3,12 +3,10 @@ import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput, Struc
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
 import {FMLStructure, FMLStructureObject} from './fml-structure';
-import {FMLTruncateRuleParser} from './rule-parsers/truncate.parser';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
-import {FMLEvaluateRuleParser} from './rule-parsers/evaluate.parser';
-import {FMLCcRuleParser} from './rule-parsers/cc.parser';
+import {FMLDefaultRuleParser} from './rule-parsers/default.parser';
 
 
 export class FMLStructureMapper {
@@ -83,16 +81,14 @@ export class FMLStructureMapper {
       new FMLCreateRuleParser(),
       new FMLUuidRuleParser(),
       new FMLAppendRuleParser(),
-      new FMLCcRuleParser(),
-      new FMLEvaluateRuleParser(),
-      new FMLTruncateRuleParser()
     ];
 
 
     const getRuleParser = (transform) => {
       const parser = ruleParsers.find(p => p.action === transform);
       if (isNil(parser)) {
-        throw new Error(`Parser for the "${transform}" transformation not found!`);
+        console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
+        return new FMLDefaultRuleParser();
       }
       return parser;
     };

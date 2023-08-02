@@ -15,7 +15,6 @@ export class FMLAppendRuleParser extends FMLRuleParser {
   ): FMLRuleParserResult {
     const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
 
-
     // fixme: multiple sources could be in the parameters
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);
     if (isDefined(valueIdParam)) {
@@ -23,7 +22,6 @@ export class FMLAppendRuleParser extends FMLRuleParser {
       fhirRuleSource.context = variable.slice(0, variable.lastIndexOf("."));
       fhirRuleSource.element = variable.slice(variable.lastIndexOf(".") + 1);
     }
-
 
     const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
     return {rule, connections};
