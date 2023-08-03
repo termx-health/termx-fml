@@ -1,0 +1,109 @@
+{
+  "resourceType": "StructureMap",
+  "id": "step22-split",
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/step22-split&quot; = &quot;step22-split&quot;\r\n\r\n// step22-split\r\n\r\nuses &quot;http://example.org/StructureDefinition/SourcePatient&quot; alias SourcePatient as source\r\nuses &quot;http://example.org/StructureDefinition/TargetPatient&quot; alias TargetPatient as target\r\n\r\ngroup example(source src : SourcePatient, target tgt : TargetPatient) {\r\n  src -&gt; tgt.firstName = evaluate(src, src.fullName.split(' ')[0]) &quot;first_name&quot;;\r\n  src.fullName as full_name -&gt; tgt.lastName as last_name then {\r\n    src -&gt; tgt.lastName = evaluate(full_name, full_name.split(' ')[1]) &quot;rule_lastname&quot;;\r\n  } &quot;rule_lname&quot;;\r\n}\r\n\r\n</pre></div>"
+  },
+  "url": "http://hl7.org/fhir/StructureMap/step22-split",
+  "name": "step22-split",
+  "title": "step22-split",
+  "status": "draft",
+  "description": "step22-split",
+  "structure": [
+    {
+      "url": "http://example.org/StructureDefinition/step22-left",
+      "mode": "source",
+      "alias": "SourcePatient"
+    },
+    {
+      "url": "http://example.org/StructureDefinition/step22-right",
+      "mode": "target",
+      "alias": "TargetPatient"
+    }
+  ],
+  "group": [
+    {
+      "name": "example",
+      "input": [
+        {
+          "name": "src",
+          "type": "SourcePatient",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "TargetPatient",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "first_name",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "firstName",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "src"
+                },
+                {
+                  "valueString": "src.fullName.split(' ')[0]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rule_lname",
+          "source": [
+            {
+              "context": "src",
+              "element": "fullName",
+              "variable": "full_name"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "lastName",
+              "variable": "last_name"
+            }
+          ],
+          "rule": [
+            {
+              "name": "rule_lastname",
+              "source": [
+                {
+                  "context": "src"
+                }
+              ],
+              "target": [
+                {
+                  "context": "tgt",
+                  "element": "lastName",
+                  "transform": "evaluate",
+                  "parameter": [
+                    {
+                      "valueId": "full_name"
+                    },
+                    {
+                      "valueString": "full_name.split(' ')[1]"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

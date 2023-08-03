@@ -1,0 +1,151 @@
+{
+  "resourceType": "StructureMap",
+  "id": "step20-date",
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/step20-date&quot; = &quot;step20-date&quot;\r\n\r\n// step20-date\r\n\r\nuses &quot;http://example.org/StructureDefinition/TestModel&quot; alias Left as source\r\nuses &quot;http://example.org/StructureDefinition/TestModel&quot; alias Right as target\r\n\r\ngroup example(source src : Left, target tgt : Right) {\r\n  src.year as y -&gt; tgt.year = y &quot;rule_year&quot;;\r\n  src -&gt; tgt.date = (today()) &quot;issued_date&quot;;\r\n  src -&gt; tgt.date = (now()) &quot;issued_timestamp&quot;;\r\n  // src: year as y, month as m -&gt; tgt.text = append(y) &quot;a1&quot;;\r\n  src -&gt; tgt.date = create('dateTime') as dt then {\r\n    src.year as y -&gt; dt.value = y &quot;y&quot;;\r\n  } &quot;b&quot;;\r\n}\r\n\r\ngroup date(source year : int, source month : int, source day : int, target date : datetime) {\r\n}\r\n\r\n</pre></div>"
+  },
+  "url": "http://hl7.org/fhir/StructureMap/step20-date",
+  "name": "step20-date",
+  "title": "step20-date",
+  "status": "draft",
+  "description": "step20-date",
+  "structure": [
+    {
+      "url": "http://example.org/StructureDefinition/step20-left",
+      "mode": "source",
+      "alias": "Left"
+    },
+    {
+      "url": "http://example.org/StructureDefinition/step20-right",
+      "mode": "target",
+      "alias": "Right"
+    }
+  ],
+  "group": [
+    {
+      "name": "example",
+      "input": [
+        {
+          "name": "src",
+          "type": "Left",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "Right",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_year",
+          "source": [
+            {
+              "context": "src",
+              "element": "year",
+              "variable": "y"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "year",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "y"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "issued_date",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "date",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "today()"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "issued_timestamp",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "date",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "date",
+              "variable": "dt",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "dateTime"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "y",
+              "source": [
+                {
+                  "context": "src",
+                  "element": "year",
+                  "variable": "y"
+                }
+              ],
+              "target": [
+                {
+                  "context": "dt",
+                  "element": "value",
+                  "transform": "copy",
+                  "parameter": [
+                    {
+                      "valueId": "y"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

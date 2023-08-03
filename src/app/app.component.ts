@@ -1,6 +1,6 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin, map, mergeMap, Observable} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
@@ -42,12 +42,7 @@ export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
-    const name = "step3";
-    // const name = "step5";
-    // const name = "step9";
-    // const name = "structuremap-supplyrequest-transform";
-    // const name = "tobacco-use-transform";
-
+    const name = localStorage.getItem('selected_structure_map') ?? "step3";
     const url = `assets/StructureMap/${name}.json`;
     return this.structureMapService.getStructureMap(url).pipe(map(resp => this.structureMap = resp));
   };
@@ -81,6 +76,9 @@ export class AppComponent implements OnInit {
   protected isExpanded = true;
   protected isAnimated = true;
 
+  protected maps: string[];
+  protected localstorage = localStorage;
+
 
   constructor(
     private http: HttpClient,
@@ -94,6 +92,13 @@ export class AppComponent implements OnInit {
 
 
   public ngOnInit(): void {
+    this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
+      this.maps = maps.sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+      this.init();
+    });
+  }
+
+  protected init(): void {
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = this.fml = FMLStructureMapper.map(bundle, resp);
@@ -119,6 +124,7 @@ export class AppComponent implements OnInit {
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
+    element.innerHTML = ''
 
     const editor = this.editor = new FMLEditor(fml, element);
     editor.start();
@@ -166,27 +172,30 @@ export class AppComponent implements OnInit {
   /* Structure tree */
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    if (parentObj.mode === 'source') {
-      throw Error(`Element creation from source node is forbidden!`);
+    let mode: FMLStructureEntityMode = 'object';
+    if (['source', 'element'].includes(parentObj.mode)) {
+      mode = 'element';
     }
 
     const structureDefinition = this.fml.findStructureDefinition(this.resourceBundle, parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
-
-    // fixme: ACHTUNG! the first type is selected!
-    let fieldType = fieldElement.type?.[0]?.code;
+    let fieldType = fieldElement.type?.[0]?.code; // fixme: ACHTUNG! the first type is selected!
     if (FMLStructure.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
 
-    const obj = this.fml.newFMLObject(fieldType, fieldPath, 'object');
+    const obj = this.fml.newFMLObject(fieldType, fieldPath, mode);
     obj.name = `${fieldPath}#${ID++}`;
     this.fml.objects[obj.name] = obj;
 
-    this.editor._createObjectNode(obj, {outputs: 1});
-    this.editor._createConnection(obj.name, 1, parentObj.name, field);
+    this.editor._createObjectNode(obj);
+    if (mode === 'object') {
+      this.editor._createConnection(obj.name, 1, parentObj.name, field);
+    } else {
+      this.editor._createConnection(parentObj.name, field, obj.name, 1);
+    }
   }
 
 
@@ -242,6 +251,7 @@ export class AppComponent implements OnInit {
     return {
       objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
         ...o,
+        fields: o.fields,
         html: undefined
       }) as FMLStructureObject),
       rules: this.fml?.rules.map(r => ({
@@ -255,5 +265,6 @@ export class AppComponent implements OnInit {
 
   protected toObjectFieldPath = ({object, field}) => {
     return [object, field].filter(isDefined).join(':');
-  }
+  };
+  protected readonly localStorage = localStorage;
 }

@@ -1,0 +1,173 @@
+{
+  "resourceType": "StructureMap",
+  "id": "step21-concat",
+  "text": {
+    "status": "generated",
+    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/step21-concat&quot; = &quot;step21-concat&quot;\r\n\r\n// step21-concat\r\n\r\nuses &quot;http://example.org/StructureDefinition/SourcePatient&quot; alias SourcePatient as source\r\nuses &quot;http://example.org/StructureDefinition/TargetPatient&quot; alias TargetPatient as target\r\n\r\ngroup example(source src : SourcePatient, target tgt : TargetPatient) {\r\n  src.firstName as firstName -&gt; tgt.fullName = firstName &quot;fnrule&quot;;\r\n  src.lastName as lastName -&gt; tgt.fullName as fullName then {\r\n    src -&gt; tgt.fullName = evaluate(fullName, fullName &amp; ' ' &amp; lastName) &quot;fullrule&quot;;\r\n  } &quot;lnrule&quot;;\r\n}\r\n\r\ngroup concat(source str1 : string, source str2 : string, target tgt : string) {\r\n  str1 as s -&gt; tgt = s &quot;c1&quot;;\r\n  str2 as s -&gt; tgt = evaluate(tgt, tgt &amp; ' ' &amp; s) &quot;c2&quot;;\r\n}\r\n\r\n</pre></div>"
+  },
+  "url": "http://hl7.org/fhir/StructureMap/step21-concat",
+  "name": "step21-concat",
+  "title": "step21-concat",
+  "status": "draft",
+  "description": "step21-concat",
+  "structure": [
+    {
+      "url": "http://example.org/StructureDefinition/SourcePatient",
+      "mode": "source",
+      "alias": "SourcePatient"
+    },
+    {
+      "url": "http://example.org/StructureDefinition/TargetPatient",
+      "mode": "target",
+      "alias": "TargetPatient"
+    }
+  ],
+  "group": [
+    {
+      "name": "example",
+      "input": [
+        {
+          "name": "src",
+          "type": "SourcePatient",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "TargetPatient",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "fnrule",
+          "source": [
+            {
+              "context": "src",
+              "element": "firstName",
+              "variable": "firstName"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "fullName",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "firstName"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "lnrule",
+          "source": [
+            {
+              "context": "src",
+              "element": "lastName",
+              "variable": "lastName"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "fullName",
+              "variable": "fullName"
+            }
+          ],
+          "rule": [
+            {
+              "name": "fullrule",
+              "source": [
+                {
+                  "context": "src"
+                }
+              ],
+              "target": [
+                {
+                  "context": "tgt",
+                  "element": "fullName",
+                  "transform": "evaluate",
+                  "parameter": [
+                    {
+                      "valueId": "fullName"
+                    },
+                    {
+                      "valueString": "fullName & ' ' & lastName"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "concat",
+      "input": [
+        {
+          "name": "str1",
+          "type": "string",
+          "mode": "source"
+        },
+        {
+          "name": "str2",
+          "type": "string",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "string",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "c1",
+          "source": [
+            {
+              "context": "str1",
+              "variable": "s"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "s"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "c2",
+          "source": [
+            {
+              "context": "str2",
+              "variable": "s"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "tgt"
+                },
+                {
+                  "valueString": "tgt & ' ' & s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from '.
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
-import {getCanvasFont, getPortNumber, getTextWidth} from './fml.utils';
+import {getPortNumber} from './fml.utils';
 import {RULE_ID} from './rule-parsers/parser';
 import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 import {FMLRuleRenderer} from './rule-renderers/renderer';
@@ -95,29 +95,19 @@ export class FMLEditor extends Drawflow {
     this.on('connectionCreated', e => {
       const source: FMLDrawflowNode = this.getNodeFromId(e.output_id);
       const target: FMLDrawflowNode = this.getNodeFromId(e.input_id);
-      const undo = (): void => this.removeSingleConnection(e.output_id, e.input_id, e.output_class, e.input_class);
 
-
-      // rule -> node
-      if (this._isRule(source) && this._isObj(target)) {
+      // rule -> *
+      if (this._isRule(source)) {
         const renderer = this._getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionCreate(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
       }
 
-      // node -> rule
-      if (this._isObj(source) && this._isRule(target)) {
+      // * -> rule
+      if (this._isRule(target)) {
         const renderer = this._getRuleRenderer(target.data.rule.action);
         renderer.onInputConnectionCreate(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
       }
 
-      // rule -> rule
-      if (this._isRule(source) && this._isRule(target)) {
-        const sr = this._getRuleRenderer(source.data.rule.action);
-        sr.onOutputConnectionCreate(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
-
-        const tr = this._getRuleRenderer(target.data.rule.action);
-        tr.onInputConnectionCreate(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
-      }
 
       // node -> node
       if (this._isObj(source) && this._isObj(target)) {
@@ -130,37 +120,9 @@ export class FMLEditor extends Drawflow {
         rule.name = `${action}#${RULE_ID.next()}`;
         rule.action = action;
 
-        const sourceConn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, rule.name, 0);
-        const targetConn = _fml.newFMLConnection(rule.name, 0, target.data.obj.name, targetFieldIdx - 1,);
-
-
-        // calculate position
-        const getOffset = (n: HTMLElement, dir) => {
-          const {top, left} = this._getOffsets();
-          return {
-            top: n.getBoundingClientRect().top - top,
-            left: n.getBoundingClientRect().left - left
-          }[dir];
-        };
-
-        const sourceOutputNode = this.element.querySelector<HTMLElement>(`#node-${e.output_id} .output_${sourceFieldIdx}`);
-        const targetInputNode = this.element.querySelector<HTMLElement>(`#node-${e.input_id} .input_${targetFieldIdx}`);
-        const midX = (getOffset(sourceOutputNode, 'left') + getOffset(targetInputNode, 'left')) / 2;
-        const midY = (getOffset(sourceOutputNode, 'top') + getOffset(targetInputNode, 'top')) / 2;
-        const font = getCanvasFont();
-        const maxWidth = getTextWidth(rule.name, font);
-
-
-        // propagate changes
-        _fml.rules.push(rule);
-        this._createRuleNode(rule, {x: midX - maxWidth / 2, y: midY});
-
-        [sourceConn, targetConn].forEach(c => {
-          _fml.putConnection(c);
-          this._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1);
-        });
-
-        undo();
+        const conn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
+        _fml.putConnection(conn);
+        this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
       }
     });
 
@@ -169,25 +131,25 @@ export class FMLEditor extends Drawflow {
       const source: FMLDrawflowNode = this.getNodeFromId(e.output_id);
       const target: FMLDrawflowNode = this.getNodeFromId(e.input_id);
 
-      // node -> rule
-      if (this._isObj(source) && this._isRule(target)) {
-        const renderer = this._getRuleRenderer(target.data.rule.action);
-        renderer.onInputConnectionRemove(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
-      }
-
-      // rule -> node
-      if (this._isRule(source) && this._isObj(target)) {
+      // rule -> *
+      if (this._isRule(source)) {
         const renderer = this._getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionRemove(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
       }
 
-      // rule -> rule
-      if (this._isRule(source) && this._isRule(target)) {
-        const sr = this._getRuleRenderer(source.data.rule.action);
-        sr.onOutputConnectionRemove(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
+      // * -> rule
+      if (this._isRule(target)) {
+        const renderer = this._getRuleRenderer(target.data.rule.action);
+        renderer.onInputConnectionRemove(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
+      }
 
-        const tr = this._getRuleRenderer(target.data.rule.action);
-        tr.onOutputConnectionRemove(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
+
+      // node -> node
+      if (this._isObj(source) && this._isObj(target)) {
+        const sourceFieldIdx = getPortNumber(e.output_class);
+        const targetFieldIdx = getPortNumber(e.input_class);
+
+        _fml.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
       }
     });
   }
@@ -205,12 +167,14 @@ export class FMLEditor extends Drawflow {
     const inputs = {
       source: 0,
       target: fieldCount,
-      object: fieldCount
+      object: fieldCount,
+      element: 1
     }[obj.mode];
     const outputs = options?.outputs ?? {
       source: fieldCount,
       target: 0,
-      object: 1
+      object: 1,
+      element: fieldCount,
     }[obj.mode];
 
 

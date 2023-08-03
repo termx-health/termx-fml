@@ -6,9 +6,6 @@ export abstract class FMLRuleRenderer {
 
   public render(rule: FMLStructureRule): string {
     return `
-        <div style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem">
-          ${rule.name}
-        </div>
 
         <h5 >
           <div>${rule.action}</div>

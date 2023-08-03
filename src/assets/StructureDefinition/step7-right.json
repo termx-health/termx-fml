@@ -1,0 +1,51 @@
+{
+  "kind": "logical",
+  "snapshot": {
+    "element": [
+      {
+        "id": "TRight",
+        "min": 1,
+        "path": "TRight",
+        "max": "1"
+      },
+      {
+        "min": 0,
+        "path": "TRight.aa",
+        "max": "*",
+        "id": "TRight.aa",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "min": 1,
+        "path": "TRight.aa.ab",
+        "max": "1",
+        "id": "TRight.aa.ab",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      }
+    ]
+  },
+  "type": "TRight",
+  "status": "draft",
+  "derivation": "specialization",
+  "extension": [
+    {
+      "valueUri": "http://hl7.org/fhir/tutorial",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace"
+    }
+  ],
+  "fhirVersion": "4.0.1",
+  "name": "TRight",
+  "url": "http://hl7.org/fhir/StructureDefinition/step7-right",
+  "id": "TRight",
+  "resourceType": "StructureDefinition",
+  "abstract": true,
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element"
+}

@@ -1,0 +1,48 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "TargetPatient",
+  "url": "http://example.org/StructureDefinition/step22-right",
+  "version": "1.0.0",
+  "name": "TargetPatient",
+  "status": "draft",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "TargetPatient",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+  "derivation": "specialization",
+  "snapshot": {
+    "element": [
+      {
+        "id": "TargetPatient",
+        "path": "TargetPatient"
+      },
+      {
+        "id": "TargetPatient.firstName",
+        "path": "TargetPatient.firstName",
+        "short": "Patient first name",
+        "definition": "Patient first name",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "id": "TargetPatient.lastName",
+        "path": "TargetPatient.lastName",
+        "short": "Patient last name",
+        "definition": "Patient last name",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      }
+    ]
+  }
+}

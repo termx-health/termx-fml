@@ -6,6 +6,7 @@ export interface FMLStructureObjectField {
   types: string[];
   multiple: boolean;
   required: boolean;
+  part: boolean; // BackboneElement sub element
 }
 
 export interface FMLPosition {
@@ -21,10 +22,12 @@ export class FMLStructureConnection {
   targetFieldIdx: number;
 }
 
+export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule';
+
 export class FMLStructureEntity {
   /** Unique name within FML structure */
   name: string;
-  mode: 'source' | 'target' | 'object' | 'rule' | string;
+  mode: FMLStructureEntityMode | string;
   position?: FMLPosition;
 }
 
@@ -33,7 +36,16 @@ export class FMLStructureObject extends FMLStructureEntity {
   /** @example CodeableConcept */
   resource: string;
   /** @example code, category, status etc. */
-  fields: FMLStructureObjectField[] = [];
+  rawFields: FMLStructureObjectField[] = [];
+
+  get fields(): FMLStructureObjectField[] {
+    return this.rawFields.filter(f => !f.part);
+  }
+
+  getFieldIndex(field: string): number {
+    return this.fields.findIndex(f => f.name === field);
+  }
+
 
   /** @deprecated */
   html(): string {
@@ -49,8 +61,12 @@ export class FMLStructureObject extends FMLStructureEntity {
     `;
   }
 
-  getFieldIndex(field: string): number {
-    return this.fields.findIndex(f => f.name === field);
+  /** DO NOT REMOVE! Used in JSON.stringify(), because getters are not serialized automatically */
+  toJSON(): any {
+    return {
+      ...this,
+      fields: this.fields
+    };
   }
 }
 
@@ -155,16 +171,21 @@ export class FMLStructure {
       console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`);
     }
 
+    const backboneElementPaths = selfFields
+      .filter(f => f.type?.some(t => FMLStructure.isBackboneElement(t.code)))
+      .map(f => f.path);
+
     const o = new FMLStructureObject();
     o.element = selfDefinition;
     o.resource = selfResourceType;
     o.name = path;
     o.mode = mode;
-    o.fields = selfFields.map(e => ({
+    o.rawFields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
       types: e.type?.map(t => t.code) ?? [],
       multiple: e.max !== '1',
-      required: e.min === 1
+      required: e.min === 1,
+      part: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
     }));
 
     return o;

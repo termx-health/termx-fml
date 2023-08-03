@@ -42,36 +42,34 @@ export class FMLStructureMapper {
     }));
 
 
-    /*
-        const x = (targetObject: string) => {
-          const targetRules = fml.rules.filter(r => r.targetObject === targetObject)
+    const x = (targetObject: string) => {
+      // const targetRules = fml.rules.filter(r => r.targetObject === targetObject);
 
-          targetRules.forEach(r => {
-            const fhirRule: StructureMapGroupRule = {
-              name: r.name.slice(0, r.name.lastIndexOf("#")),
-              source: [{
-                context: r.sourceObject,
-                element: r.sourceField
-              }],
-              target: [{
-                context: r.targetObject,
-                element: r.targetField,
-                transform: r.action as StructureMapGroupRuleTarget['transform'],
-                parameter: (r.parameters ?? []).map(p => ({
-                  valueString: p
-                }))
-              }]
-            }
+      // targetRules.forEach(r => {
+      // const fhirRule: StructureMapGroupRule = {
+      //   name: r.name.slice(0, r.name.lastIndexOf("#")),
+      //   source: [{
+      //     context: r.sourceObject,
+      //     element: r.sourceField
+      //   }],
+      //   target: [{
+      //     context: r.targetObject,
+      //     element: r.targetField,
+      //     transform: r.action as StructureMapGroupRuleTarget['transform'],
+      //     parameter: (r.parameters ?? []).map(p => ({
+      //       valueString: p
+      //     }))
+      //   }]
+      // };
 
-            // todo: recursion
-            //  find objects where $obj.target = $rule.source, for each $obj execute x($obj.name)
+      // todo: recursion
+      //  find objects where $obj.target = $rule.source, for each $obj execute x($obj.name)
 
-            smGroup.rule.push(fhirRule);
-          })
-        }
-    */
+      // smGroup.rule.push(fhirRule);
+      // });
+    };
 
-    // targets.forEach(({name}) => x(name))
+    targets.forEach(({name}) => x(name));
     return sm;
   }
 
@@ -118,6 +116,9 @@ export class FMLStructureMapper {
 
       // hoisting
       function _parseRule(fhirRule: StructureMapGroupRule, variables: FMLRuleParserVariables) {
+        fhirRule.source ??= [];
+        fhirRule.target ??= [];
+
         [...fhirRule.source, ...fhirRule.target]
           .filter(r => isDefined(r.variable))
           .forEach(r => {

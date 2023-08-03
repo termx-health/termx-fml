@@ -86,33 +86,6 @@
               ]
             }
           ]
-        },
-        {
-          "name": "rule-value",
-          "source": [
-            {
-              "context": "src",
-              "element": "a1"
-            }
-          ],
-          "target": [
-            {
-              "context": "tgt",
-              "element": "jurisdiction",
-              "variable": "newCC",
-              "transform": "create",
-              "parameter": [
-                {
-                  "valueString": "CodeableConcept"
-                }
-              ]
-            },
-            {
-              "context": "newCC",
-              "element": "text",
-              "transform": "copy"
-            }
-          ]
         }
       ]
     }
