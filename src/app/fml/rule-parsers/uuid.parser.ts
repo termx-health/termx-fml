@@ -12,7 +12,7 @@ export class FMLUuidRuleParser extends FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
-    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
+    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget, variables);
     const conn = this.connectTarget(fml, rule, fhirRuleTarget, variables);
     return {rule, connections: conn};
   }

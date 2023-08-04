@@ -34,20 +34,16 @@ export abstract class FMLRuleParser {
     ruleName: string,
     fhirRuleSource: StructureMapGroupRuleSource,
     fhirRuleTarget: StructureMapGroupRuleTarget,
+    variables: FMLRuleParserVariables
   ): FMLStructureRule {
     const rule = new FMLStructureRule();
     rule.name = `${ruleName}#${RULE_ID.next()}`;
     rule.alias = fhirRuleTarget.variable;
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
-      p.valueId ??
-      p.valueString ??
-      p.valueBoolean ??
-      p.valueInteger ??
-      p.valueDecimal ??
-      p.valueDate ??
-      p.valueTime ??
-      p.valueDateTime
+      p.valueId
+        ? {type: 'var', value: variables[p.valueId] ?? p.valueId}
+        : {type: 'const', value: p.valueString ?? p.valueBoolean ?? p.valueInteger ?? p.valueDecimal ?? p.valueDate ?? p.valueTime ?? p.valueDateTime}
     );
     rule.condition = fhirRuleSource.condition;
     return rule;

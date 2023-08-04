@@ -29,6 +29,17 @@ export abstract class FMLRuleRenderer {
       source.name, sourcePort - 1,
       node.name, nodePort - 1,
     ));
+
+    const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+    const paramIdx = node.data.rule.parameters.findIndex(p => p.value === paramName);
+    editor._updateRule(node.id, node.name, rule => {
+      rule.parameters.push({
+        type: 'var',
+        value: paramName
+      });
+    });
+
+    editor._rerenderNodes();
   }
 
   public onOutputConnectionCreate(
@@ -53,6 +64,17 @@ export abstract class FMLRuleRenderer {
     sourcePort: number
   ): void {
     editor._fml.removeConnection(source.name, sourcePort - 1, node.name, nodePort - 1);
+
+
+    // removes parameter if exists
+    const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+    const paramIdx = node.data.rule.parameters.findIndex(p => p.value === paramName);
+    if (paramIdx !== -1) {
+      editor._updateRule(node.id, node.name, rule => {
+        rule.parameters.splice(paramIdx, 1);
+      });
+      editor._rerenderNodes();
+    }
   }
 
   public onOutputConnectionRemove(
@@ -62,6 +84,6 @@ export abstract class FMLRuleRenderer {
     target: FMLDrawflowNode,
     targetPort: number
   ): void {
-    editor._fml.removeConnection(node.name, nodePort - 1, target.name, targetPort - 1)
+    editor._fml.removeConnection(node.name, nodePort - 1, target.name, targetPort - 1);
   }
 }

@@ -76,7 +76,7 @@ export class FMLStructureRule extends FMLStructureEntity {
   /** @example copy, create, append etc. */
   action: string;
   /** Action parameters */
-  parameters?: any[];
+  parameters?: {type: 'const' | 'var', value: string | any}[];
   condition?: string;
 }
 

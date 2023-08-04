@@ -107,9 +107,7 @@ export class FmlStructureGenerator {
           element: isTargetRule ? undefined : this.fieldName(fml, con.targetObject, con.targetFieldIdx),
           variable: rule.alias,
           transform: rule.action as StructureMapGroupRuleTarget['transform'],
-          parameter: (rule.parameters ?? []).map(p => ({
-            valueString: p
-          }))
+          parameter: (rule.parameters ?? []).map(p => p.type === 'const' ? {valueId: p.value} : {valueString: p.value})
         }],
         rule: []
       });
@@ -140,7 +138,7 @@ export class FmlStructureGenerator {
         element: this.fieldName(fml, con.targetObject, con.targetFieldIdx),
         transform: `${action}`,
         parameter: [
-          action === 'create' ? {valueString: obj.resource} : undefined
+          action === 'create' ?? obj.resource ? {valueString: obj.resource} : undefined
         ]
       }],
       rule: []

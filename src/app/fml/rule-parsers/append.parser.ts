@@ -13,7 +13,7 @@ export class FMLAppendRuleParser extends FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
-    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
+    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget, variables);
 
     // fixme: multiple sources could be in the parameters
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);

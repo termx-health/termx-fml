@@ -13,11 +13,11 @@ export class FMLCopyRuleParser extends FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
-    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
+    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget, variables);
     const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
 
     fhirRuleTarget.parameter.filter(p => isDefined(p.valueId)).forEach(p => {
-      rule.parameters = remove(rule.parameters, p.valueId);
+      rule.parameters = remove(rule.parameters, rule.parameters.find(r => r.value === p.valueId));
     });
 
     return {rule, connections};

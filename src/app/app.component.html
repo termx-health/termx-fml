@@ -158,7 +158,10 @@
           <m-form-item mLabel="Parameters">
             <span *ngIf="!rule.parameters?.length">-</span>
             <ul>
-              <li *ngFor="let p of rule.parameters">{{p}}</li>
+              <li *ngFor="let p of rule.parameters">
+                <kbd *ngIf="p.type === 'var'; else lbl" class="description">{{p.value}}</kbd>
+                <ng-template #lbl><code>{{p.value}}</code></ng-template>
+              </li>
             </ul>
           </m-form-item>
         </div>

@@ -13,7 +13,7 @@ export class FMLCreateRuleParser extends FMLRuleParser {
     fhirRuleTarget: StructureMapGroupRuleTarget,
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
-    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget);
+    const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget, variables);
 
     const objectName = variables[fhirRuleTarget.variable];
     const objectResource = fhirRuleTarget.parameter?.find(p => isDefined(p.valueString))?.valueString ?? objectName;
