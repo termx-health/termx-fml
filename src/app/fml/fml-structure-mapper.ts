@@ -1,8 +1,17 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
-import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
+import {
+  Bundle,
+  StructureDefinition,
+  StructureMap,
+  StructureMapGroup,
+  StructureMapGroupInput,
+  StructureMapGroupRule,
+  StructureMapGroupRuleTarget,
+  StructureMapStructure
+} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
-import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
@@ -11,6 +20,16 @@ import {FMLDefaultRuleParser} from './rule-parsers/default.parser';
 
 export class FMLStructureMapper {
   public static compose(fml: FMLStructure): StructureMap {
+    const ruleNames = fml.rules.map(r => r.name).filter(unique);
+
+
+    const fieldName = (name, idx): string => {
+      if (fml.objects[name]) {
+        return fml.objects[name].fields[idx]?.name;
+      }
+    };
+
+
     const sm: StructureMap = {
       resourceType: 'StructureMap',
       url: 'http://termx.health/fhir/StructureMap/fml-compose',
@@ -26,6 +45,7 @@ export class FMLStructureMapper {
     };
 
 
+    // structure inputs
     const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
     const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
     sm.structure = [...sources, ...targets].map<StructureMapStructure>(o => ({
@@ -34,6 +54,7 @@ export class FMLStructureMapper {
       alias: o.resource
     }));
 
+    // group inputs
     const smGroup = sm.group[0];
     smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>(o => ({
       name: o.name,
@@ -42,34 +63,116 @@ export class FMLStructureMapper {
     }));
 
 
-    const x = (targetObject: string) => {
-      // const targetRules = fml.rules.filter(r => r.targetObject === targetObject);
+    const ruleHandler = (con: FMLStructureConnection, group: StructureMapGroup, rule: FMLStructureRule): {rule: StructureMapGroupRule, next: string}[] => {
+      const res: StructureMapGroupRule[] = [];
 
-      // targetRules.forEach(r => {
-      // const fhirRule: StructureMapGroupRule = {
-      //   name: r.name.slice(0, r.name.lastIndexOf("#")),
-      //   source: [{
-      //     context: r.sourceObject,
-      //     element: r.sourceField
-      //   }],
-      //   target: [{
-      //     context: r.targetObject,
-      //     element: r.targetField,
-      //     transform: r.action as StructureMapGroupRuleTarget['transform'],
-      //     parameter: (r.parameters ?? []).map(p => ({
-      //       valueString: p
-      //     }))
-      //   }]
-      // };
+      // x -> rule (con.source) -> target object, find all x
+
+      const ruleSources = fml.getSources(con.sourceObject);
+      if (ruleSources.length === 0) {
+        // constant or unconnected rule
+        ruleSources.push({
+          object: group.input.find(i => i.mode === 'source')?.name
+        });
+      }
+
+
+      ruleSources.forEach(src => {
+        res.push({
+          name: rule.name.slice(0, rule.name.lastIndexOf("#")),
+          source: [{
+            context: src.object,
+            element: src.field
+          }],
+          target: [{
+            context: con.targetObject,
+            element: fieldName(con.targetObject, con.targetFieldIdx),
+            transform: rule.action as StructureMapGroupRuleTarget['transform'],
+            parameter: (rule.parameters ?? []).map(p => ({
+              valueString: p
+            }))
+          }],
+          rule: []
+        });
+      });
+
+
+      return res.map(rule => ({
+        rule,
+        next: con.sourceObject
+      }));
+    };
+
+    const objectHandler = (con: FMLStructureConnection, group: StructureMapGroup, obj: FMLStructureObject): {rule: StructureMapGroupRule, next: string}[] => {
+      const res: StructureMapGroupRule[] = []
+
+      if (obj.mode === 'object') {
+        console.group('RULE create');
+        console.log(
+          `${con.sourceObject} -> ${con.targetObject}:${fieldName(con.targetObject, con.targetFieldIdx)}`
+        );
+
+        res.push({
+          name: `create-${con.sourceObject}:${fieldName(con.sourceObject, con.sourceFieldIdx)}`,
+          source: [{
+            context: con.sourceObject,
+            element: fieldName(con.sourceObject, con.sourceFieldIdx)
+          }],
+          target: [{
+            context: con.targetObject,
+            element: fieldName(con.targetObject, con.targetFieldIdx),
+            transform: 'create',
+            parameter: [{
+              valueString: obj.resource
+            }]
+          }],
+          rule: []
+        });
+      } else {
+
+        console.group('OBJECT', obj.mode);
+        console.log(
+          `${con.sourceObject}:${fieldName(con.sourceObject, con.sourceFieldIdx)} -> ${con.targetObject}:${fieldName(con.targetObject, con.targetFieldIdx)}`
+        );
+      }
+
+      console.groupEnd();
+
+      return res.map(rule => ({
+        rule,
+        next: con.sourceObject
+      }));
+    };
+
+    const x = (_targetObject: string, out: StructureMapGroupRule[]) => {
+      // find connections where target is provided object
+      const ruleConnections = fml.connections.filter(con => con.targetObject === _targetObject);
+
+
+      ruleConnections.forEach(con => {
+        const isRule = ruleNames.includes(con.sourceObject);
+
+        let smRules: {rule: StructureMapGroupRule, next: string}[];
+        if (isRule) {
+          smRules = ruleHandler(con, smGroup, fml.rules.find(r => r.name === con.sourceObject));
+        } else {
+          smRules = objectHandler(con, smGroup, fml.objects[con.sourceObject]);
+        }
+
+        smRules.forEach(r => {
+          out.push(r.rule);
+          // x(r.next, out); // x(r.next, r.rule.rule);
+          x(r.next, r.rule.rule);
+        });
+      });
 
       // todo: recursion
       //  find objects where $obj.target = $rule.source, for each $obj execute x($obj.name)
 
-      // smGroup.rule.push(fhirRule);
       // });
     };
 
-    targets.forEach(({name}) => x(name));
+    targets.forEach(({name}) => x(name, smGroup.rule));
     return sm;
   }
 

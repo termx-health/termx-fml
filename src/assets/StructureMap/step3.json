@@ -39,7 +39,7 @@
       ],
       "rule": [
         {
-          "name": "r1",
+          "name": "truncate-rule",
           "source": [
             {
               "context": "src",
@@ -63,7 +63,7 @@
           ],
           "rule": [
             {
-              "name": "r2",
+              "name": "append-rule",
               "source": [
                 {
                   "context": "src"
