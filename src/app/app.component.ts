@@ -12,6 +12,7 @@ import {createCustomElement} from '@angular/elements';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
+import {FmlStructureGenerator} from './fml/fml-structure-generator';
 
 let ID = 69;
 
@@ -116,7 +117,7 @@ export class AppComponent implements OnInit {
       el.pos_y = y;
     });
 
-    console.log(FMLStructureMapper.compose(this.fml));
+    console.log(FmlStructureGenerator.generate(this.fml).group[0].rule);
   }
 
 
@@ -124,7 +125,7 @@ export class AppComponent implements OnInit {
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
-    element.innerHTML = ''
+    element.innerHTML = '';
 
     const editor = this.editor = new FMLEditor(fml, element);
     editor.start();
