@@ -19,8 +19,12 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     node: FMLDrawflowRuleNode, nodePort: number,
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
-    super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);
-    editor.addNodeInput(node.id);
+    if (editor._getNodeInputConnections(node.id, nodePort).length > 1) {
+      editor.removeSingleConnection(source.id, node.id, `output_${sourcePort}`, `input_${nodePort}`);
+    } else {
+      super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);
+      editor.addNodeInput(node.id);
+    }
   }
 
   public override onInputConnectionRemove(
@@ -28,7 +32,9 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     node: FMLDrawflowRuleNode, nodePort: number,
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
-    super.onInputConnectionRemove(editor, node, nodePort, source, sourcePort);
-    editor.removeNodeInput(node.id, `input_${nodePort}`);
+    if (editor._getNodeInputConnections(node.id, nodePort).length === 0) {
+      super.onInputConnectionRemove(editor, node, nodePort, source, sourcePort);
+      editor.removeNodeInput(node.id, `input_${nodePort}`);
+    }
   }
 }

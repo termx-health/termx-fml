@@ -89,6 +89,10 @@ export class FMLStructureMapper {
             if (isDefined(connections)) {
               connections.forEach(c => struc.putConnection(c));
             }
+
+            if (isNil(fhirRuleTarget.context)) {
+              variables[fhirRuleTarget.variable] = `${rule.name}`;
+            }
           } catch (e) {
             console.error(e);
           }

@@ -1,5 +1,6 @@
-import {FMLStructureRule} from '../fml-structure';
+import {FMLStructureRule, FMLStructureRuleParameter} from '../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {isNil} from '@kodality-web/core-util';
 
 export abstract class FMLRuleRenderer {
   abstract action: string;
@@ -30,13 +31,15 @@ export abstract class FMLRuleRenderer {
       node.name, nodePort - 1,
     ));
 
-    const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
-    const paramIdx = node.data.rule.parameters.findIndex(p => p.value === paramName);
+
     editor._updateRule(node.id, node.name, rule => {
-      rule.parameters.push({
-        type: 'var',
-        value: paramName
-      });
+      const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+      const uninitializedParam = rule.parameters.find(p => p.value === paramName && isNil(p['_initialized']));
+      if (uninitializedParam) {
+        uninitializedParam['_initialized'] = true;
+      } else {
+        rule.parameters.push({type: 'var', value: paramName, '_initialized': true} as FMLStructureRuleParameter & {_initialized: boolean});
+      }
     });
 
     editor._rerenderNodes();

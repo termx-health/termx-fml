@@ -1,4 +1,4 @@
-import Drawflow, {DrawflowNode} from 'drawflow';
+import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
@@ -321,7 +321,15 @@ export class FMLEditor extends Drawflow {
 
   /* Utils */
 
-  private _getNodeElementByName(name: string) {
+  public _getNodeInputConnections(id: number, port: number): DrawflowConnectionDetail[] {
+    return this.getNodeFromId(id).inputs[`input_${port}`]?.connections ?? [];
+  }
+
+  public _getNodeOutputConnections(id: number, port: number): DrawflowConnectionDetail[] {
+    return this.getNodeFromId(id).outputs[`output_${port}`]?.connections ?? [];
+  }
+
+  public _getNodeElementByName(name: string) {
     const nodeId = this._getNodeId(name);
     return {el: document.getElementById(`node-${nodeId}`), nodeId};
   }
