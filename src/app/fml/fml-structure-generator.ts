@@ -117,7 +117,7 @@ export class FmlStructureGenerator {
             let data;
 
             if (rule) {
-              data = this.ruleHandler(fml, con, variables)?.data;
+              data = this.ruleHandler(fml, con, smGroup.input.find(i => i.mode === 'source')?.name, variables)?.data;
             } else if (object && level > 0 || object.mode === 'object' || path.length <= 2) {
               data = this.objectHandler(fml, con, variables)?.data;
             } else {
@@ -150,6 +150,7 @@ export class FmlStructureGenerator {
   private static ruleHandler = (
     fml: FMLStructure,
     con: FMLStructureConnection,
+    sourceName: string,
     variables: {[name: string]: string}
   ): {
     data: StructureMapGroupRule[],
@@ -166,7 +167,7 @@ export class FmlStructureGenerator {
       const sourceElement = this.fieldName(fml, con.sourceObject, con.sourceFieldIdx);
 
       const source = {
-        context: sourceContext,
+        context: sourceElement ? sourceContext : sourceName, // set group source if current source is rule
         element: sourceElement, // undefined if source is rule
         variable: sourceElement ? toVariable(variables, con.sourceObject, sourceElement) : undefined,
         condition: rule.condition
@@ -227,17 +228,17 @@ export class FmlStructureGenerator {
     if (action === 'create') {
       const target = fml.getTargets(con.targetObject) [0];
 
-      const varib = toVariable(variables, target.object, target.field);
+      const sourceVar = toVariable(variables, target.object, target.field);
       targets.push({
         context: target.object,
         element: target.field,
         transform: `${action}` as StructureMapGroupRuleTarget['transform'],
-        variable: varib,
+        variable: sourceVar,
         parameter: action === 'create' ?? obj.resource ? [{valueString: obj.resource}] : []
       });
 
       targets.push({
-        context: varib,
+        context: sourceVar,
         element: this.fieldName(fml, con.targetObject, con.targetFieldIdx),
         transform: 'copy',
         parameter: [{
