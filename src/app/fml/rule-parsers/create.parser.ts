@@ -22,18 +22,15 @@ export class FMLCreateRuleParser extends FMLRuleParser {
       'object'
     );
 
-    const sourceConnection = fml.newFMLConnection(
+    const tgt = this.connectTarget(fml, rule, fhirRuleTarget, variables)?.[0];
+    const connection = fml.newFMLConnection(
       object.name, 0,
-      rule.name, 0
+      tgt.targetObject, tgt.targetFieldIdx
     );
 
     return {
-      rule,
       object,
-      connections: [
-        sourceConnection,
-        ...this.connectTarget(fml, rule, fhirRuleTarget, variables)
-      ]
+      connections: [connection]
     };
   }
 }

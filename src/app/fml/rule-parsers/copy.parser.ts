@@ -20,6 +20,23 @@ export class FMLCopyRuleParser extends FMLRuleParser {
       rule.parameters = remove(rule.parameters, rule.parameters.find(r => r.value === p.valueId));
     });
 
-    return {rule, connections};
+    if (rule.condition) {
+      return {rule, connections};
+    }
+
+    if (connections.length == 2) {
+      // remove rule, creates direct link from source to target
+      const [src, tgt] = connections;
+      return {
+        connections: [{
+          sourceObject: src.sourceObject,
+          sourceFieldIdx: src.sourceFieldIdx,
+          targetObject: tgt.targetObject,
+          targetFieldIdx: tgt.targetFieldIdx
+        }]
+      };
+    }
+
+    throw Error(`Too many connections for the ${this.action} transformation!`);
   }
 }

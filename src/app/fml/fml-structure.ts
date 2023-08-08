@@ -73,8 +73,7 @@ export class FMLStructureObject extends FMLStructureEntity {
 export type FMLStructureRuleParameter = {type: 'const' | 'var', value: string | any};
 
 export class FMLStructureRule extends FMLStructureEntity {
-  /** Variable name */
-  alias?: string;
+
   /** @example copy, create, append etc. */
   action: string;
   /** Action parameters */

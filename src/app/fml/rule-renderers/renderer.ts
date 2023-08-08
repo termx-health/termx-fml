@@ -31,7 +31,6 @@ export abstract class FMLRuleRenderer {
       node.name, nodePort - 1,
     ));
 
-
     editor._updateRule(node.id, node.name, rule => {
       const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
       const uninitializedParam = rule.parameters.find(p => p.value === paramName && isNil(p['_initialized']));

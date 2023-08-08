@@ -38,7 +38,7 @@ export abstract class FMLRuleParser {
   ): FMLStructureRule {
     const rule = new FMLStructureRule();
     rule.name = `${ruleName}#${RULE_ID.next()}`;
-    rule.alias = fhirRuleTarget.variable;
+    // rule.alias = fhirRuleTarget.variable;
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
       p.valueId
