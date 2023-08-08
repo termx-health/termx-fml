@@ -11,10 +11,10 @@
     </div>
 
     <div class="m-items-middle" style="justify-self: center">
-      <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)" mSize="small">
-        <label m-radio-button [mValue]="true">Expanded</label>
-        <label m-radio-button [mValue]="false">Collapsed</label>
-      </m-radio-group>
+<!--      <m-radio-group [(ngModel)]="isExpanded" (ngModelChange)="setExpand($event)" mSize="small">-->
+<!--        <label m-radio-button [mValue]="true">Expanded</label>-->
+<!--        <label m-radio-button [mValue]="false">Collapsed</label>-->
+<!--      </m-radio-group>-->
       <!--    <m-button (mClick)="isAnimated = !isAnimated" mSize="small">Animation {{isAnimated ? 'OFF' : 'ON'}}</m-button>-->
     </div>
 
@@ -33,10 +33,10 @@
         <tr *ngFor="let o of fml.objects | values ">
           <td>
             <div class="m-justify-between">
-              <div>{{o.resource}} ({{o.fields.length}})</div>
+              <div>{{o.name}} ({{o.fields.length}})</div>
               <span class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
             </div>
-            <div class="description">{{o.name}}</div>
+            <div class="description">{{o.resource}}</div>
           </td>
         </tr>
       </m-table>

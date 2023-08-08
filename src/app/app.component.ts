@@ -117,7 +117,7 @@ export class AppComponent implements OnInit {
       el.pos_y = y;
     });
 
-    console.log(FmlStructureGenerator.generate(this.fml).group[0].rule);
+    FmlStructureGenerator.generate(this.fml);
   }
 
 
@@ -167,6 +167,9 @@ export class AppComponent implements OnInit {
 
     // rerender nodes
     editor._rerenderNodes();
+
+    // notify readiness
+    editor._ready();
   }
 
 

@@ -1,5 +1,5 @@
 import {group, isNil, unique} from '@kodality-web/core-util';
-import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
+import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
 
 const alpha = Array.from(Array(26)).map((e, i) => i + 65);
@@ -11,17 +11,18 @@ const nextVal = () => {
   const times = Math.floor(v / 26);
   return [...Array.from({length: times - 1}).fill(0), v % 26].map(i => alphabet[i as number]).join('');
 };
-const nextVar = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVal();
+const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVal();
 
 
 export class FmlStructureGenerator {
   public static generate(fml: FMLStructure): StructureMap {
+    v = -1;
     console.log({
       objects: group(Object.values(fml.objects), o => o.name, o => ({...o, element: undefined})),
       rules: fml.rules,
       connections: fml.connections
     });
-    const ruleNames = fml.rules.map(r => r.name).filter(unique);
+
 
     // structure map base
     const sm: StructureMap = {
@@ -38,37 +39,50 @@ export class FmlStructureGenerator {
       ]
     };
 
+
     // structure inputs
-    const objects = Object.values(fml.objects);
-    const sources = objects.filter(o => o.mode === 'source');
-    const targets = objects.filter(o => o.mode === 'target');
+    const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
+    const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
     sm.structure = [...sources, ...targets].map<StructureMapStructure>(o => ({
       url: `http://termx.health/fhir/StructureDefinition/${o.resource}`,
       mode: o.mode as StructureMapStructure['mode'],
-      alias: o.resource
+      alias: o.name
     }));
+
 
     // group inputs
     const smGroup = sm.group[0];
-    smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>(o => ({
+    smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>((o, i) => ({
       name: o.name,
       type: o.resource,
       mode: o.mode as StructureMapGroupInput['mode'],
     }));
 
 
-    const findPath = (object: string, field: string, res: any[]) => {
-      res.unshift({object, field});
-      const fieldSources = fml.getSources(object, field);
+    const findPath = (targetObject: string, targetField: string): {object: string, field: string}[] => {
+      const fieldSources = fml.getSources(targetObject, targetField);
       if (fieldSources.length > 1) {
-        throw new Error(`Хуйня какая-то, с хуя ли у него несколько сорсов!`);
+        throw new Error(`с хуя ли у него несколько сорсов!`);
       }
 
-      if (!fieldSources.length) {
-        return;
-      }
+      if (fieldSources.length) {
+        const first = fieldSources[0];
+        if (fml.objects[first.object]?.mode === 'object') {
+          const subSources = fml.getSources(first.object);
+          return [
+            ...findPath(subSources[0].object, subSources[0].field),
+            {object: first.object, field: first.field},
+            {object: targetObject, field: targetField},
+          ];
+        }
 
-      findPath(fieldSources[0].object, fieldSources[0].field, res);
+        return [
+          ...findPath(first.object, first.field),
+          {object: targetObject, field: targetField},
+        ];
+      } else {
+        return [{object: targetObject, field: targetField}];
+      }
     };
 
 
@@ -77,18 +91,12 @@ export class FmlStructureGenerator {
         .filter(c => c.targetObject === name)
         .map(c => fields[c.targetFieldIdx].name)
         .filter(unique)
-        .forEach(f => {
+        .forEach(field => {
           // find the path of objects/rules from source field to target
-          const path: {object: string, field: string}[] = [];
-          findPath(name, f, path);
-
-          // determine endpoints
-          const source = path.at(0);
-          const target = path.at(-1);
-
+          const path = findPath(name, field);
 
           let latestRule: StructureMapGroupRule;
-          const variables = group(smGroup.input, i => i.type, i => i.type);
+          const variables = group(smGroup.input, i => i.name, i => i.name);
 
           // for each element in the path
           // find what type is it and what has to be done with it
@@ -97,6 +105,7 @@ export class FmlStructureGenerator {
               const fieldName = this.fieldName(fml, c.sourceObject, c.sourceFieldIdx);
               return c.sourceObject === d.object && fieldName === d.field;
             });
+
             if (isNil(con)) {
               // fixme: should not exit like that
               return;
@@ -105,8 +114,18 @@ export class FmlStructureGenerator {
             const object = fml.objects[con.targetObject];
             const rule = fml.rules.find(({name}) => name === con.targetObject);
 
+            let data;
+
             if (rule) {
-              const {data} = this.ruleHandler(fml, con, smGroup, variables);
+              data = this.ruleHandler(fml, con, variables)?.data;
+            } else if (object && level > 0 || object.mode === 'object' || path.length <= 2) {
+              data = this.objectHandler(fml, con, variables)?.data;
+            } else {
+              throw Error("Как так блять?");
+            }
+
+
+            if (data) {
               if (latestRule) {
                 latestRule.rule = data;
                 latestRule = data[0];
@@ -114,14 +133,12 @@ export class FmlStructureGenerator {
                 latestRule = data[0];
                 smGroup.rule.push(latestRule);
               }
-            } else if (object && level > 0) {
-              console.log(object)
-              // console.log(variables, this.objectHandler(fml, con, smGroup, variables).data[0]);
             }
-
           });
         });
 
+
+      console.log("#### STRUCTURE MAP ####");
       console.log(sm);
       // traverse(name, smGroup.rule);
     });
@@ -133,7 +150,6 @@ export class FmlStructureGenerator {
   private static ruleHandler = (
     fml: FMLStructure,
     con: FMLStructureConnection,
-    group: StructureMapGroup,
     variables: {[name: string]: string}
   ): {
     data: StructureMapGroupRule[],
@@ -146,11 +162,13 @@ export class FmlStructureGenerator {
     //                                          ^^^ have to find that
 
     const data = fml.getTargets(ruleName).map(tgt => {
-      const sourceField = this.fieldName(fml, con.sourceObject, con.sourceFieldIdx);
+      const sourceContext = variables[con.sourceObject];
+      const sourceElement = this.fieldName(fml, con.sourceObject, con.sourceFieldIdx);
+
       const source = {
-        context: variables[con.sourceObject],
-        element: sourceField,
-        variable: sourceField ? nextVar(variables, con.sourceObject, sourceField) : undefined,
+        context: sourceContext,
+        element: sourceElement, // undefined if source is rule
+        variable: sourceElement ? toVariable(variables, con.sourceObject, sourceElement) : undefined,
         condition: rule.condition
       };
 
@@ -159,14 +177,11 @@ export class FmlStructureGenerator {
         // if target is rule, then do not add context and element
         context: isTargetRule ? undefined : variables[tgt.object],
         element: isTargetRule ? undefined : tgt.field,
-        variable: isTargetRule ? nextVar(variables, ruleName) : nextVar(variables, tgt.object, tgt.field),
+        variable: isTargetRule ? toVariable(variables, ruleName) : toVariable(variables, tgt.object, tgt.field),
         transform: rule.action as StructureMapGroupRuleTarget['transform'],
         parameter: (rule.parameters ?? []).map(p => {
           if (p.type === 'var') {
-            if (Object.keys(variables).includes(p.value)) {
-              return {valueId: variables[p.value]}
-            }
-            return {valueId: p.value};
+            return {valueId: variables[p.value] ?? p.value};
           } else {
             return {valueString: p.value};
           }
@@ -189,27 +204,62 @@ export class FmlStructureGenerator {
   private static objectHandler = (
     fml: FMLStructure,
     con: FMLStructureConnection,
-    _group: StructureMapGroup,
     variables: {[name: string]: string}
   ): {
     data: StructureMapGroupRule[],
     obj: FMLStructureObject
   } => {
-    const obj = fml.objects[con.sourceObject];
+    const obj = fml.objects[con.targetObject];
     const action = obj.mode === 'object' ? 'create' : 'copy';
+
+    const source = {
+      context: con.sourceObject,
+      element: this.fieldName(fml, con.sourceObject, con.sourceFieldIdx),
+      variable: toVariable(variables, con.sourceObject, this.fieldName(fml, con.sourceObject, con.sourceFieldIdx))
+    };
+
+    const targets = [];
+    const isSourceRule = !(con.sourceObject in fml.objects);
+    if (isSourceRule) {
+      return undefined;
+    }
+
+    if (action === 'create') {
+      const target = fml.getTargets(con.targetObject) [0];
+
+      const varib = toVariable(variables, target.object, target.field);
+      targets.push({
+        context: target.object,
+        element: target.field,
+        transform: `${action}` as StructureMapGroupRuleTarget['transform'],
+        variable: varib,
+        parameter: action === 'create' ?? obj.resource ? [{valueString: obj.resource}] : []
+      });
+
+      targets.push({
+        context: varib,
+        element: this.fieldName(fml, con.targetObject, con.targetFieldIdx),
+        transform: 'copy',
+        parameter: [{
+          valueId: source.variable
+        }]
+      });
+    } else if (action === 'copy') {
+      targets.push({
+        context: variables[con.targetObject],
+        element: this.fieldName(fml, con.targetObject, con.targetFieldIdx),
+        transform: 'copy',
+        parameter: [{
+          valueId: source.variable
+        }]
+      });
+
+    }
 
     const data: StructureMapGroupRule[] = [{
       name: `${action}-${con.sourceObject}:${this.fieldName(fml, con.sourceObject, con.sourceFieldIdx)}`,
-      source: [{
-        context: con.sourceObject,
-        element: this.fieldName(fml, con.sourceObject, con.sourceFieldIdx)
-      }],
-      target: [{
-        context: con.targetObject,
-        element: this.fieldName(fml, con.targetObject, con.targetFieldIdx),
-        transform: `${action}`,
-        parameter: action === 'create' ?? obj.resource ? [{valueString: obj.resource}] : []
-      }],
+      source: [source],
+      target: targets,
       rule: []
     }];
 
@@ -221,32 +271,4 @@ export class FmlStructureGenerator {
       return fml.objects[name].fields[idx]?.name;
     }
   };
-
-
-  /*
-      const traverse = (_targetObject: string, acc: StructureMapGroupRule[]): void => {
-        // find connections where target is provided object
-        const ruleConnections = fml.connections.filter(con => con.targetObject === _targetObject);
-
-
-        ruleConnections.forEach(con => {
-          let smRules: {smRule: StructureMapGroupRule, key: string}[];
-
-          const isRule = ruleNames.includes(con.sourceObject);
-          if (isRule) {
-            const {data, rule} = this.ruleHandler(fml, con, smGroup);
-            smRules = data.map(r => ({smRule: r, key: rule.name}));
-          } else {
-            const {data, obj} = this.objectHandler(fml, con, smGroup);
-            smRules = data.map(r => ({smRule: r, key: obj.name}));
-          }
-
-          smRules.forEach(({key, smRule}) => {
-            acc.push(smRule);
-            // traverse(key, acc);
-            traverse(key, smRule.rule);
-          });
-        });
-      };
-  */
 }

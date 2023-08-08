@@ -51,6 +51,11 @@ export class FMLEditor extends Drawflow {
     new FMLAppendRuleRenderer()
   ];
 
+  public _initialized = false;
+
+  public _ready(): void {
+    this._initialized = true;
+  }
 
   constructor(public _fml: FMLStructure, public element: HTMLElement, options?: {
     render?: object,
