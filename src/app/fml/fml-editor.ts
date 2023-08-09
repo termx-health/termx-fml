@@ -31,17 +31,27 @@ export class FMLEditor extends Drawflow {
   public _isRule = (n: DrawflowNode): n is FMLDrawflowRuleNode => 'rule' in n.data;
 
   // object
-  public _updateObject = (nodeId: number, name: string, fn: (obj: FMLStructureObject) => void): void => {
+  public _updateObject = (nodeId: number, name: string, fn: FMLStructureObject | ((obj: FMLStructureObject) => void)): void => {
     const obj = this._fml.objects[name];
-    fn(obj);
-    this.updateNodeDataFromId(nodeId, {obj});
+    if (typeof fn === 'function') {
+      fn(obj);
+      this.updateNodeDataFromId(nodeId, {obj});
+    } else {
+      this.updateNodeDataFromId(nodeId, {obj: fn});
+      this._fml.objects[name] = fn;
+    }
   };
 
   // rule
-  public _updateRule = (nodeId: number, name: string, fn: (rule: FMLStructureRule) => void): void => {
+  public _updateRule = (nodeId: number, name: string, fn: FMLStructureRule | ((rule: FMLStructureRule) => void)): void => {
     const rule = this._fml.rules.find(r => r.name === name);
-    fn(rule);
-    this.updateNodeDataFromId(nodeId, {rule});
+    if (typeof fn === 'function') {
+      fn(rule);
+      this.updateNodeDataFromId(nodeId, {rule});
+    } else {
+      this.updateNodeDataFromId(nodeId, {rule: fn});
+      this._fml.rules.splice(this._fml.rules.indexOf(rule), 1, fn);
+    }
   };
 
 

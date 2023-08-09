@@ -117,7 +117,7 @@ export class FmlStructureGenerator {
             let data;
 
             if (rule) {
-              data = this.ruleHandler(fml, con, smGroup.input.find(i => i.mode === 'source')?.name, variables)?.data;
+              data = this.ruleHandler(fml, con, path[0].object, variables)?.data;
             } else if (object && level > 0 || object.mode === 'object' || path.length <= 2) {
               data = this.objectHandler(fml, con, variables)?.data;
             } else {

@@ -1,6 +1,14 @@
 import {Component, EnvironmentInjector, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureObjectField, FMLStructureRule} from './fml/fml-structure';
+import {
+  FMLStructure,
+  FMLStructureConnection,
+  FMLStructureEntityMode,
+  FMLStructureObject,
+  FMLStructureObjectField,
+  FMLStructureRule,
+  FMLStructureRuleParameter
+} from './fml/fml-structure';
 import {forkJoin, map, mergeMap, Observable} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
@@ -9,7 +17,7 @@ import {setExpand} from './fml/fml.utils';
 import {group, isDefined} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
-import {MuiIconComponent} from '@kodality-web/marina-ui';
+import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
@@ -71,6 +79,7 @@ export class AppComponent implements OnInit {
   protected fml: FMLStructure;
   private editor: FMLEditor;
   protected nodeSelected: DrawflowNode;
+  protected _nodeSelected: DrawflowNode;
 
   // component
   protected ruleDescriptions = RULES;
@@ -240,6 +249,54 @@ export class AppComponent implements OnInit {
   }
 
 
+  /* Edit */
+
+  protected editStart(m: MuiModalContainerComponent): void {
+    this._nodeSelected = structuredClone(this.nodeSelected);
+    m.open();
+  }
+
+  protected editCancel(m: MuiModalContainerComponent): void {
+    m.close();
+    this._nodeSelected = undefined;
+  }
+
+  protected editApply(m: MuiModalContainerComponent): void {
+    m.close();
+    this.nodeSelected = this._nodeSelected;
+    this._nodeSelected = undefined;
+
+    if ('rule' in this.nodeSelected.data) {
+      this.editor._updateRule(this.nodeSelected.id, this.nodeSelected.name, this.nodeSelected.data.rule);
+    } else if ('obj' in this.nodeSelected.data) {
+      this.editor._updateObject(this.nodeSelected.id, this.nodeSelected.name, this.nodeSelected.data.obj);
+    }
+
+    this.editor._rerenderNodes();
+  }
+
+  protected moveParameter(params: FMLStructureRuleParameter[], p: FMLStructureRuleParameter, direction: 'up' | 'down'): void {
+    const idx = params.indexOf(p);
+    if (idx !== -1) {
+      params.splice(idx, 1);
+      params.splice((direction === 'up' ? Math.max(0, idx - 1) : Math.min(idx + 1, params.length + 1)), 0, p);
+    }
+  }
+
+  protected removeParameter(params: FMLStructureRuleParameter[], p: FMLStructureRuleParameter): void {
+    const idx = params.indexOf(p);
+    if (idx !== -1) {
+      params.splice(idx, 1);
+    }
+  }
+
+  protected addParameter(params: FMLStructureRuleParameter[]): void {
+    params.push({
+      type: 'const',
+      value: undefined
+    });
+  }
+
   /* Utils */
 
 
@@ -271,4 +328,5 @@ export class AppComponent implements OnInit {
     return [object, field].filter(isDefined).join(':');
   };
   protected readonly localStorage = localStorage;
+
 }
