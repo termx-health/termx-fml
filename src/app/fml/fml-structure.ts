@@ -1,25 +1,10 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {isNil, remove} from '@kodality-web/core-util';
 
-export interface FMLStructureObjectField {
-  name: string;
-  types: string[];
-  multiple: boolean;
-  required: boolean;
-  part: boolean; // BackboneElement sub element
-}
 
 export interface FMLPosition {
   x: number,
   y: number
-}
-
-
-export class FMLStructureConnection {
-  sourceObject: string;
-  sourceFieldIdx: number;
-  targetObject: string;
-  targetFieldIdx: number;
 }
 
 export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule';
@@ -29,6 +14,19 @@ export class FMLStructureEntity {
   name: string;
   mode: FMLStructureEntityMode | string;
   position?: FMLPosition;
+}
+
+
+/* Object */
+
+export interface FMLStructureObjectField {
+  name: string;
+  types: string[];
+
+  // meta-data
+  multiple: boolean;
+  required: boolean;
+  part: boolean; // BackboneElement sub element
 }
 
 export class FMLStructureObject extends FMLStructureEntity {
@@ -70,6 +68,9 @@ export class FMLStructureObject extends FMLStructureEntity {
   }
 }
 
+
+/* Rule */
+
 export type FMLStructureRuleParameter = {type: 'const' | 'var', value: string | any};
 
 export class FMLStructureRule extends FMLStructureEntity {
@@ -82,6 +83,16 @@ export class FMLStructureRule extends FMLStructureEntity {
 }
 
 
+/* Connection */
+export class FMLStructureConnection {
+  sourceObject: string;
+  sourceFieldIdx: number;
+  targetObject: string;
+  targetFieldIdx: number;
+}
+
+
+/* Main */
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};

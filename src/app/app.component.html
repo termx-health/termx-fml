@@ -1,6 +1,7 @@
 <div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; border-bottom: 1px solid var(--color-borders);">
   <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
     <div class="m-items-middle">
+      <m-button (mClick)="_setupWizard = true" mSize="small">New</m-button>
       <m-button (mClick)="export()" mSize="small">Export</m-button>
       <m-button (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
       <m-dropdown [mHideIfEmpty]="false">
@@ -98,9 +99,7 @@
     </div>
 
 
-    <div
-      *ngIf="nodeSelected as node"
-    >
+    <div *ngIf="nodeSelected as node">
       <!-- Resource -->
       <div *ngIf="node.data.obj as obj">
         <div style="padding: 1rem; border-bottom: var(--border-table);">
@@ -196,6 +195,7 @@
 </div>
 
 
+<!-- RULE parameters modal -->
 <m-modal #parameterModal (mClose)="editCancel(parameterModal)">
   <div *m-modal-header>
     Parameters
@@ -235,6 +235,7 @@
   </div>
 </m-modal>
 
+<!-- RULE condition modal -->
 <m-modal #conditionModal (mClose)="editCancel(conditionModal)">
   <div *m-modal-header>
     Condition
@@ -264,9 +265,41 @@
   </div>
 </m-modal>
 
-
-<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="_fmlText = undefined">
+<!-- FML preview modal -->
+<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="_fmlResult = undefined">
   <div *m-modal-content>
-    <pre>{{_fmlText}}</pre>
+    <pre>{{_fmlResult}}</pre>
   </div>
 </m-modal>
+
+<!-- Setup wizard -->
+<m-modal #wizard [mVisible]="_setupWizard" mPlacement="top" [mClosable]="false" (mClose)="_setupWizard = false">
+  <ng-container *ngIf="{sources: [], targets:[]} as data">
+    <div *m-modal-header>
+      Setup wizard
+    </div>
+
+    <div *m-modal-content>
+      <m-form-row>
+        <m-form-item *m-form-col mLabel="Sources">
+          <m-select [(ngModel)]="data.sources" multiple>
+            <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
+          </m-select>
+        </m-form-item>
+        <m-form-item *m-form-col mLabel="Target">
+          <m-select [(ngModel)]="data.targets" multiple>
+            <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
+          </m-select>
+        </m-form-item>
+      </m-form-row>
+    </div>
+
+
+    <div *m-modal-footer>
+      <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)">
+        Let's Go
+      </m-button>
+    </div>
+  </ng-container>
+</m-modal>
+

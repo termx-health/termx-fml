@@ -1,4 +1,4 @@
-import {Component, EnvironmentInjector, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {
   FMLStructure,
@@ -9,15 +9,13 @@ import {
   FMLStructureRule,
   FMLStructureRuleParameter
 } from './fml/fml-structure';
-import {forkJoin, map, mergeMap, Observable} from 'rxjs';
+import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {setExpand} from './fml/fml.utils';
 import {group, isDefined, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
-import {createCustomElement} from '@angular/elements';
-import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
+import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
@@ -35,6 +33,9 @@ const RULES: RuleDescription[] = [
     code: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase). No Parameters'
+  }, {
+    code: 'copy',
+    name: 'copy'
   },
   {
     code: 'append',
@@ -56,13 +57,23 @@ const RULES: RuleDescription[] = [
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
+  host: {
+    '[style.filter]': `_setupWizard ? 'blur(5px) grayscale(1)' : 'initial'`
+  }
 })
 export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
-    const name = localStorage.getItem('selected_structure_map') ?? "step3";
+    const name = localStorage.getItem('selected_structure_map');
     const url = `assets/StructureMap/${name}.json`;
+
+    const _maps = localStorage.getItem('structure_maps') ?? '{}';
+    const maps = JSON.parse(_maps);
+    if (isDefined(name) && name in maps) {
+      return of(maps[name]);
+    }
+
     return this.structureMapService.getStructureMap(url).pipe(map(resp => this.structureMap = resp));
   };
 
@@ -98,19 +109,15 @@ export class AppComponent implements OnInit {
 
   protected maps: string[];
   protected localstorage = localStorage;
-  protected _fmlText: string;
+  protected _fmlResult: string;
+  protected _setupWizard = true;
 
 
   constructor(
     private http: HttpClient,
     private structureMapService: StructureMapService,
     private notificationService: MuiNotificationService,
-    injector: EnvironmentInjector
-  ) {
-    if (!customElements.get('ce-icon')) {
-      customElements.define('ce-icon', createCustomElement(MuiIconComponent, {injector}));
-    }
-  }
+  ) { }
 
 
   public ngOnInit(): void {
@@ -121,6 +128,8 @@ export class AppComponent implements OnInit {
   }
 
   protected init(): void {
+    this.localstorage.setItem('selected_structure_map', localStorage.getItem('selected_structure_map') ?? "step3");
+
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = this.fml = FMLStructureMapper.map(bundle, resp);
@@ -130,15 +139,12 @@ export class AppComponent implements OnInit {
     });
   }
 
+
+  /* Export */
+
   protected export(): void {
     try {
-      const exp = this.editor.export();
-      Object.values(exp.drawflow.Home.data).forEach(el => {
-        const {x, y} = (el.data.obj ?? el.data.rule).position;
-        el.pos_x = x;
-        el.pos_y = y;
-      });
-
+      this.prepareExportData();
       FmlStructureGenerator.generate(this.fml);
     } catch (e) {
       this.notificationService.error('Export failed', e);
@@ -147,16 +153,10 @@ export class AppComponent implements OnInit {
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
     try {
-      const exp = this.editor.export();
-      Object.values(exp.drawflow.Home.data).forEach(el => {
-        const {x, y} = (el.data.obj ?? el.data.rule).position;
-        el.pos_x = x;
-        el.pos_y = y;
-      });
-
-      const sm = FmlStructureGenerator.generate(this.fml)
+      this.prepareExportData();
+      const sm = FmlStructureGenerator.generate(this.fml);
       this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(sm)}, {responseType: 'text'}).subscribe(resp => {
-        this._fmlText = resp;
+        this._fmlResult = resp;
         m.open();
       });
     } catch (e) {
@@ -164,12 +164,21 @@ export class AppComponent implements OnInit {
     }
   }
 
+  private prepareExportData(): void {
+    const exp = this.editor.export();
+    Object.values(exp.drawflow.Home.data).forEach(el => {
+      const {x, y} = (el.data.obj ?? el.data.rule).position;
+      el.pos_x = x;
+      el.pos_y = y;
+    });
+  }
 
   /* Editor */
 
   private initEditor(fml: FMLStructure): void {
     const element = document.getElementById("drawflow");
     element.innerHTML = '';
+
 
     const editor = this.editor = new FMLEditor(fml, element);
     editor.start();
@@ -273,16 +282,60 @@ export class AppComponent implements OnInit {
   }
 
 
-  /* Expand */
+  /* Setup wizard */
 
-  protected setExpand(isExpanded: boolean): void {
-    this.isExpanded = isExpanded;
+  protected initFromWizard(data: {sources: string[], targets: string[]}): void {
+    const sources = data.sources.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
+      url: r.url,
+      mode: 'source' as any,
+      alias: r.id
+    }));
+    const targets = data.targets.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
+      url: r.url,
+      mode: 'target' as any,
+      alias: r.id
+    }));
 
-    Object.keys(this.fml.objects).forEach(k => {
-      setExpand(this.editor, k, isExpanded);
-    });
+    const id = "new";
+    const map: StructureMap = {
+      "resourceType": "StructureMap",
+      "id": id,
+      "url": `http://hl7.org/fhir/StructureMap/${id}`,
+      "name": id,
+      "status": "draft",
+      "structure": [
+        ...sources,
+        ...targets
+      ],
+      "group": [
+        {
+          "name": "main",
+          "input": [
+            ...sources.map(s => ({
+              name: s.alias,
+              type: s.alias,
+              mode: 'source' as any
+            })),
+            ...targets.map(s => ({
+              name: s.alias,
+              type: s.alias,
+              mode: 'source' as any
+            }))
+          ],
+          "rule": []
+        }
+      ]
+    };
+
+    const _maps = localStorage.getItem('structure_maps') ?? '{}';
+    const maps = JSON.parse(_maps);
+    maps[id] = map;
+    localStorage.setItem('selected_structure_map', id);
+    localStorage.setItem('structure_maps', JSON.stringify(maps));
+
+    this.init();
+    this._setupWizard = false;
   }
-
 
   /* Edit */
 
@@ -332,8 +385,8 @@ export class AppComponent implements OnInit {
     });
   }
 
-  /* Utils */
 
+  /* Utils */
 
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
     return f.types?.some(t => FMLStructure.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
@@ -369,6 +422,8 @@ export class AppComponent implements OnInit {
       .map(s => s.object)
       .flatMap(sn => [sn, ...this.ctxVariables(sn)])
       .filter(unique)
-    // .filter(n => this.fml.objects[n]);
+      .filter(n => this.fml.objects[n]);
   };
+  protected readonly localStorage = localStorage;
+  protected readonly unique = unique;
 }

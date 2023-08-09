@@ -116,10 +116,10 @@ export class FmlStructureGenerator {
 
             if (rule) {
               data = this.ruleHandler(fml, con, path[0].object, variables)?.data;
-            } else if (object && level > 0 || object.mode === 'object' || path.length <= 2) {
+            } else if (object.mode === 'object' || object.mode === 'target') {
               data = this.objectHandler(fml, con, variables)?.data;
             } else {
-              throw Error("Unknown type encountered when traversing rule path");
+              throw Error("Unknown type encountered when traversing the rule path");
             }
 
 
@@ -138,7 +138,6 @@ export class FmlStructureGenerator {
 
       console.log("#### STRUCTURE MAP ####");
       console.log(sm);
-      // traverse(name, smGroup.rule);
     });
 
 
