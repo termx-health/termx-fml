@@ -318,18 +318,20 @@ export class FMLEditor extends Drawflow {
     // fixme: performance issue
 
     Object.keys(this._fml.objects).forEach(name => {
-      const {el} = this._getNodeElementByName(name);
+      const {el, nodeId} = this._getNodeElementByName(name);
       if (isDefined(el)) {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
         content.innerHTML = this._fml.objects[name].html();
+        this.updateConnectionNodes(`node-${nodeId}`);
       }
     });
 
     this._fml.rules.forEach(rule => {
-      const {el} = this._getNodeElementByName(rule.name);
+      const {el, nodeId} = this._getNodeElementByName(rule.name);
       if (isDefined(el)) {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
         content.innerHTML = this._getRuleRenderer(rule.action).render(rule);
+        this.updateConnectionNodes(`node-${nodeId}`);
       }
     });
   }

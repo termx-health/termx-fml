@@ -147,7 +147,12 @@
             {{rule.action}}
           </m-form-item>
 
-          <m-form-item mLabel="Condition">
+          <m-form-item [mLabel]="clbl">
+            <ng-template #clbl>
+              Condition
+              <m-icon-button mIcon="edit" (mClick)="editStart(conditionModal)"/>
+            </ng-template>
+
             {{rule.condition ?? '-'}}
           </m-form-item>
 
@@ -156,6 +161,7 @@
               Parameters
               <m-icon-button mIcon="edit" (mClick)="editStart(parameterModal)"/>
             </ng-template>
+
             <span *ngIf="!rule.parameters?.length">-</span>
             <ul>
               <li *ngFor="let p of rule.parameters">
@@ -195,27 +201,27 @@
   </div>
 
   <div *m-modal-content>
-    <ng-container *ngIf="_nodeSelected">
-      <m-table>
-        <tr *ngFor="let param of _nodeSelected.data.rule.parameters; let first = first; let last = last">
+    <ng-container *ngIf="_nodeSelected?.data?.rule as rule">
+      <m-table mSize="small">
+        <tr *ngFor="let param of rule.parameters; let first = first; let last = last">
           <td>
             <m-input *ngIf="param.type === 'const'" [(ngModel)]="param.value"></m-input>
             <kbd *ngIf="param.type === 'var'" class="description">{{param.value}}</kbd>
           </td>
-          <td style="width: 0">
-            <m-icon-button *ngIf="!first" mIcon="up" (mClick)="moveParameter(_nodeSelected.data.rule.parameters, param, 'up')"/>
+          <td style="width: 0; padding: 0">
+            <m-icon-button mIcon="up" [disabled]="first" (mClick)="moveParameter(rule.parameters, param, 'up')"/>
+          </td>
+          <td style="width: 0; padding: 0">
+            <m-icon-button mIcon="down" [disabled]="last" (mClick)="moveParameter(rule.parameters, param, 'down')"/>
           </td>
           <td style="width: 0">
-            <m-icon-button *ngIf="!last" mIcon="down" (mClick)="moveParameter(_nodeSelected.data.rule.parameters, param, 'down')"/>
-          </td>
-          <td style="width: 0">
-            <m-icon-button *ngIf="param.type === 'const'" mIcon="delete" (mClick)="removeParameter(_nodeSelected.data.rule.parameters, param)"/>
+            <m-icon-button *ngIf="param.type === 'const'" mIcon="delete" (mClick)="removeParameter(rule.parameters, param)"/>
           </td>
         </tr>
 
         <tr>
-          <td colspan="100%">
-            <m-button style="width: 100%" (mClick)="addParameter(_nodeSelected.data.rule.parameters)">Add parameter</m-button>
+          <td colspan="100%" style="padding: 0">
+            <m-button style="width: 100%" mDisplay="text" mSize="small" (mClick)="addParameter(rule.parameters)">Add parameter</m-button>
           </td>
         </tr>
       </m-table>
@@ -225,5 +231,34 @@
   <div *m-modal-footer class="m-justify-right">
     <m-button mDisplay="text" (mClick)="editCancel(parameterModal)">Cancel</m-button>
     <m-button mDisplay="primary" (mClick)="editApply(parameterModal)">Apply</m-button>
+  </div>
+</m-modal>
+
+<m-modal #conditionModal (mClose)="editCancel(conditionModal)">
+  <div *m-modal-header>
+    Condition
+  </div>
+
+  <div *m-modal-content>
+    <ng-container *ngIf="_nodeSelected?.data?.rule  as rule">
+      <m-form-item mLabel="Expression">
+        <m-input [(ngModel)]="rule.condition"></m-input>
+      </m-form-item>
+
+      <ng-container *ngIf="rule.name | apply: ctxVariables as ctxVars">
+        <m-form-item mLabel="Context variables"
+          *ngIf="ctxVars.length"
+        >
+          <div class="m-items-middle">
+            <kbd *ngFor="let v of ctxVars | reverse" class="description">{{v}}</kbd>
+          </div>
+        </m-form-item>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <div *m-modal-footer class="m-justify-right">
+    <m-button mDisplay="text" (mClick)="editCancel(conditionModal)">Cancel</m-button>
+    <m-button mDisplay="primary" (mClick)="editApply(conditionModal)">Apply</m-button>
   </div>
 </m-modal>

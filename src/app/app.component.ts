@@ -14,7 +14,7 @@ import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {setExpand} from './fml/fml.utils';
-import {group, isDefined} from '@kodality-web/core-util';
+import {group, isDefined, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
 import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
@@ -40,6 +40,16 @@ const RULES: RuleDescription[] = [
     code: 'append',
     name: 'append',
     description: 'Element or string - just append them all together'
+  },
+  {
+    code: 'evaluate',
+    name: 'evaluate',
+    description: 'Execute the supplied FHIRPath expression and use the value returned by that'
+  },
+  {
+    code: 'truncate',
+    name: 'truncate',
+    description: 'Source must be some stringy type that has some meaningful length property'
   }
 ];
 
@@ -327,6 +337,13 @@ export class AppComponent implements OnInit {
   protected toObjectFieldPath = ({object, field}) => {
     return [object, field].filter(isDefined).join(':');
   };
-  protected readonly localStorage = localStorage;
 
+
+  protected ctxVariables = (name: string): string[] => {
+    return this.fml.getSources(name)
+      .map(s => s.object)
+      .flatMap(sn => [sn, ...this.ctxVariables(sn)])
+      .filter(unique)
+    // .filter(n => this.fml.objects[n]);
+  };
 }

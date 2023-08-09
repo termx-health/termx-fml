@@ -62,7 +62,7 @@ export class FmlStructureGenerator {
     const findPath = (targetObject: string, targetField: string): {object: string, field: string}[] => {
       const fieldSources = fml.getSources(targetObject, targetField);
       if (fieldSources.length > 1) {
-        throw new Error(`с хуя ли у него несколько сорсов!`);
+        throw new Error(`${targetObject}:${targetField} has multiple sources, aborting!`);
       }
 
       if (fieldSources.length) {
@@ -98,12 +98,10 @@ export class FmlStructureGenerator {
           let latestRule: StructureMapGroupRule;
           const variables = group(smGroup.input, i => i.name, i => i.name);
 
-          // for each element in the path
-          // find what type is it and what has to be done with it
-          path.forEach((d, level) => {
+          path.forEach((el, level) => {
             const con = fml.connections.find(c => {
               const fieldName = this.fieldName(fml, c.sourceObject, c.sourceFieldIdx);
-              return c.sourceObject === d.object && fieldName === d.field;
+              return c.sourceObject === el.object && fieldName === el.field;
             });
 
             if (isNil(con)) {
@@ -121,7 +119,7 @@ export class FmlStructureGenerator {
             } else if (object && level > 0 || object.mode === 'object' || path.length <= 2) {
               data = this.objectHandler(fml, con, variables)?.data;
             } else {
-              throw Error("Как так блять?");
+              throw Error("Unknown type encountered when traversing rule path");
             }
 
 
