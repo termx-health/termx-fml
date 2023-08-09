@@ -17,7 +17,7 @@ import {setExpand} from './fml/fml.utils';
 import {group, isDefined, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {createCustomElement} from '@angular/elements';
-import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
+import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
@@ -98,11 +98,13 @@ export class AppComponent implements OnInit {
 
   protected maps: string[];
   protected localstorage = localStorage;
+  protected _fmlText: string;
 
 
   constructor(
     private http: HttpClient,
     private structureMapService: StructureMapService,
+    private notificationService: MuiNotificationService,
     injector: EnvironmentInjector
   ) {
     if (!customElements.get('ce-icon')) {
@@ -129,14 +131,37 @@ export class AppComponent implements OnInit {
   }
 
   protected export(): void {
-    const exp = this.editor.export();
-    Object.values(exp.drawflow.Home.data).forEach(el => {
-      const {x, y} = (el.data.obj ?? el.data.rule).position;
-      el.pos_x = x;
-      el.pos_y = y;
-    });
+    try {
+      const exp = this.editor.export();
+      Object.values(exp.drawflow.Home.data).forEach(el => {
+        const {x, y} = (el.data.obj ?? el.data.rule).position;
+        el.pos_x = x;
+        el.pos_y = y;
+      });
 
-    FmlStructureGenerator.generate(this.fml);
+      FmlStructureGenerator.generate(this.fml);
+    } catch (e) {
+      this.notificationService.error('Export failed', e);
+    }
+  }
+
+  protected exportAsFML(m: MuiModalContainerComponent): void {
+    try {
+      const exp = this.editor.export();
+      Object.values(exp.drawflow.Home.data).forEach(el => {
+        const {x, y} = (el.data.obj ?? el.data.rule).position;
+        el.pos_x = x;
+        el.pos_y = y;
+      });
+
+      const sm = FmlStructureGenerator.generate(this.fml)
+      this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(sm)}, {responseType: 'text'}).subscribe(resp => {
+        this._fmlText = resp;
+        m.open();
+      });
+    } catch (e) {
+      this.notificationService.error('Export failed', e);
+    }
   }
 
 

@@ -2,6 +2,7 @@
   <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
     <div class="m-items-middle">
       <m-button (mClick)="export()" mSize="small">Export</m-button>
+      <m-button (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
       <m-dropdown [mHideIfEmpty]="false">
         <div *m-dropdown-container>{{localstorage.getItem('selected_structure_map')}}.json</div>
         <ng-container *ngFor="let m of maps">
@@ -260,5 +261,12 @@
   <div *m-modal-footer class="m-justify-right">
     <m-button mDisplay="text" (mClick)="editCancel(conditionModal)">Cancel</m-button>
     <m-button mDisplay="primary" (mClick)="editApply(conditionModal)">Apply</m-button>
+  </div>
+</m-modal>
+
+
+<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="_fmlText = undefined">
+  <div *m-modal-content>
+    <pre>{{_fmlText}}</pre>
   </div>
 </m-modal>
