@@ -12,8 +12,8 @@ import {
 import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
-import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {group, isDefined, unique} from '@kodality-web/core-util';
+import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
+import {group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
@@ -58,7 +58,7 @@ const RULES: RuleDescription[] = [
   selector: 'app-root',
   templateUrl: 'app.component.html',
   host: {
-    '[style.filter]': `_setupWizard ? 'blur(5px) grayscale(1)' : 'initial'`
+    '[style.filter]': `_setupWizard ? 'blur(5px)' : 'initial'`
   }
 })
 export class AppComponent implements OnInit {
@@ -68,10 +68,8 @@ export class AppComponent implements OnInit {
     const name = localStorage.getItem('selected_structure_map');
     const url = `assets/StructureMap/${name}.json`;
 
-    const _maps = localStorage.getItem('structure_maps') ?? '{}';
-    const maps = JSON.parse(_maps);
-    if (isDefined(name) && name in maps) {
-      return of(maps[name]);
+    if (isDefined(name) && name in this.localMaps) {
+      return of(this.localMaps[name]);
     }
 
     return this.structureMapService.getStructureMap(url).pipe(map(resp => this.structureMap = resp));
@@ -97,20 +95,19 @@ export class AppComponent implements OnInit {
   };
 
   // FML editor
-  protected fml: FMLStructure;
   private editor: FMLEditor;
+  protected fml: FMLStructure;
   protected nodeSelected: DrawflowNode;
-  protected _nodeSelected: DrawflowNode;
+  protected _nodeSelected: DrawflowNode; // copy for edit
 
   // component
   protected ruleDescriptions = RULES;
-  protected isExpanded = true;
   protected isAnimated = true;
 
   protected maps: string[];
   protected localstorage = localStorage;
   protected _fmlResult: string;
-  protected _setupWizard = true;
+  protected _setupWizard: boolean;
 
 
   constructor(
@@ -122,7 +119,8 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
-      this.maps = maps.sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+      const local = Object.values(this.localMaps).map(m => m.name);
+      this.maps = [...maps, ...local].sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
       this.init();
     });
   }
@@ -141,30 +139,36 @@ export class AppComponent implements OnInit {
 
 
   /* Export */
-
-  protected export(): void {
+  private _export(): StructureMap {
+    this.prepareExportData();
     try {
-      this.prepareExportData();
-      FmlStructureGenerator.generate(this.fml);
+      return FmlStructureGenerator.generate(this.fml, {name: localStorage.getItem('selected_structure_map')});
     } catch (e) {
       this.notificationService.error('Export failed', e);
     }
+  }
+
+  protected save(): void {
+    const sm = this._export();
+
+    const maps = this.localMaps;
+    maps[sm.name] = sm;
+    localStorage.setItem('structure_maps', JSON.stringify(maps));
+  }
+
+  protected export(): void {
+    this._export();
   }
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
-    try {
-      this.prepareExportData();
-      const sm = FmlStructureGenerator.generate(this.fml);
-      this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(sm)}, {responseType: 'text'}).subscribe(resp => {
-        this._fmlResult = resp;
-        m.open();
-      });
-    } catch (e) {
-      this.notificationService.error('Export failed', e);
-    }
+    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this._export())}, {responseType: 'text'}).subscribe(resp => {
+      this._fmlResult = resp;
+      m.open();
+    });
   }
 
   private prepareExportData(): void {
+    this.editor._rerenderNodes();
     const exp = this.editor.export();
     Object.values(exp.drawflow.Home.data).forEach(el => {
       const {x, y} = (el.data.obj ?? el.data.rule).position;
@@ -176,8 +180,13 @@ export class AppComponent implements OnInit {
   /* Editor */
 
   private initEditor(fml: FMLStructure): void {
-    const element = document.getElementById("drawflow");
-    element.innerHTML = '';
+    this.editor?.element.remove();
+
+    const parent = document.getElementById("drawflow-parent");
+    const element = document.createElement('div');
+    element.setAttribute("id", "drawflow");
+    element.setAttribute("style", "height: 100%; width: 100%; outline: none");
+    parent.appendChild(element);
 
 
     const editor = this.editor = new FMLEditor(fml, element);
@@ -190,8 +199,6 @@ export class AppComponent implements OnInit {
         this.nodeSelected = editor.getNodeFromId(selectedNodeId);
       }
     });
-
-    // fixme (objects & rules): currently x, y are undefined! they should be stored in StrcutureMap somewhere and restored on load
 
     // render objects
     Object.values(fml.objects).forEach(obj => {
@@ -216,7 +223,9 @@ export class AppComponent implements OnInit {
     });
 
     // auto layout
-    editor._autoLayout();
+    if (Object.values(fml.objects).some(o => isNil(o.position))) {
+      editor._autoLayout();
+    }
 
     // rerender nodes
     editor._rerenderNodes();
@@ -296,12 +305,12 @@ export class AppComponent implements OnInit {
       alias: r.id
     }));
 
-    const id = "new";
+    const name = "new";
     const map: StructureMap = {
       "resourceType": "StructureMap",
-      "id": id,
-      "url": `http://hl7.org/fhir/StructureMap/${id}`,
-      "name": id,
+      "id": name,
+      "url": `http://hl7.org/fhir/StructureMap/${name}`,
+      "name": name,
       "status": "draft",
       "structure": [
         ...sources,
@@ -314,12 +323,12 @@ export class AppComponent implements OnInit {
             ...sources.map(s => ({
               name: s.alias,
               type: s.alias,
-              mode: 'source' as any
+              mode: 'source' as StructureMapGroupInput['mode']
             })),
             ...targets.map(s => ({
               name: s.alias,
               type: s.alias,
-              mode: 'source' as any
+              mode: 'source' as StructureMapGroupInput['mode']
             }))
           ],
           "rule": []
@@ -327,10 +336,9 @@ export class AppComponent implements OnInit {
       ]
     };
 
-    const _maps = localStorage.getItem('structure_maps') ?? '{}';
-    const maps = JSON.parse(_maps);
-    maps[id] = map;
-    localStorage.setItem('selected_structure_map', id);
+    const maps = this.localMaps;
+    maps[name] = map;
+    localStorage.setItem('selected_structure_map', name);
     localStorage.setItem('structure_maps', JSON.stringify(maps));
 
     this.init();
@@ -424,6 +432,9 @@ export class AppComponent implements OnInit {
       .filter(unique)
       .filter(n => this.fml.objects[n]);
   };
-  protected readonly localStorage = localStorage;
-  protected readonly unique = unique;
+
+  protected get localMaps(): {[k: string]: StructureMap} {
+    const _maps = localStorage.getItem('structure_maps') ?? '{}';
+    return JSON.parse(_maps);
+  }
 }

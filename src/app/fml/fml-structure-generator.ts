@@ -11,24 +11,21 @@ const nextVal = () => {
   const times = Math.floor(v / 26);
   return [...Array.from({length: times - 1}).fill(0), v % 26].map(i => alphabet[i as number]).join('');
 };
+
 const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVal();
 
 
 export class FmlStructureGenerator {
-  public static generate(fml: FMLStructure): StructureMap {
+  public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
     v = -1;
-    console.log({
-      objects: group(Object.values(fml.objects), o => o.name, o => ({...o, element: undefined})),
-      rules: fml.rules,
-      connections: fml.connections
-    });
 
+    const name = options?.name ?? 'fml-compose';
 
     // structure map base
     const sm: StructureMap = {
       resourceType: 'StructureMap',
-      url: 'http://termx.health/fhir/StructureMap/fml-compose',
-      name: 'fml-compose',
+      url: `http://termx.health/fhir/StructureMap/${name}`,
+      name: `${name}`,
       status: 'draft',
       group: [
         {
@@ -40,11 +37,22 @@ export class FmlStructureGenerator {
     };
 
 
+    // fml as extension
+    sm.extension = [{
+      url: 'fml-export',
+      valueString: JSON.stringify({
+        objects: fml.objects,
+        rules: fml.rules,
+        connections: fml.connections
+      })
+    }];
+
+
     // structure inputs
     const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
     const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
     sm.structure = [...sources, ...targets].map<StructureMapStructure>(o => ({
-      url: `http://termx.health/fhir/StructureDefinition/${o.resource}`,
+      url: o.url,
       mode: o.mode as StructureMapStructure['mode'],
       alias: o.name
     }));
@@ -85,62 +93,63 @@ export class FmlStructureGenerator {
       }
     };
 
+    try {
+      targets.forEach(({name, fields}) => {
+        fml.connections
+          .filter(c => c.targetObject === name)
+          .map(c => fields[c.targetFieldIdx].name)
+          .filter(unique)
+          .forEach(field => {
+            // find the path of objects/rules from source field to target
+            const path = findPath(name, field);
 
-    targets.forEach(({name, fields}) => {
-      fml.connections
-        .filter(c => c.targetObject === name)
-        .map(c => fields[c.targetFieldIdx].name)
-        .filter(unique)
-        .forEach(field => {
-          // find the path of objects/rules from source field to target
-          const path = findPath(name, field);
+            let latestRule: StructureMapGroupRule;
+            const variables = group(smGroup.input, i => i.name, i => i.name);
 
-          let latestRule: StructureMapGroupRule;
-          const variables = group(smGroup.input, i => i.name, i => i.name);
+            path.forEach((el, level) => {
+              const con = fml.connections.find(c => {
+                const fieldName = this.fieldName(fml, c.sourceObject, c.sourceFieldIdx);
+                return c.sourceObject === el.object && fieldName === el.field;
+              });
 
-          path.forEach((el, level) => {
-            const con = fml.connections.find(c => {
-              const fieldName = this.fieldName(fml, c.sourceObject, c.sourceFieldIdx);
-              return c.sourceObject === el.object && fieldName === el.field;
-            });
-
-            if (isNil(con)) {
-              // fixme: should not exit like that
-              return;
-            }
-
-            const object = fml.objects[con.targetObject];
-            const rule = fml.rules.find(({name}) => name === con.targetObject);
-
-            let data;
-
-            if (rule) {
-              data = this.ruleHandler(fml, con, path[0].object, variables)?.data;
-            } else if (object.mode === 'object' || object.mode === 'target') {
-              data = this.objectHandler(fml, con, variables)?.data;
-            } else {
-              throw Error("Unknown type encountered when traversing the rule path");
-            }
-
-
-            if (data) {
-              if (latestRule) {
-                latestRule.rule = data;
-                latestRule = data[0];
-              } else {
-                latestRule = data[0];
-                smGroup.rule.push(latestRule);
+              if (isNil(con)) {
+                // fixme: should not exit like that
+                return;
               }
-            }
+
+              const object = fml.objects[con.targetObject];
+              const rule = fml.rules.find(({name}) => name === con.targetObject);
+
+              let data;
+
+              if (rule) {
+                data = this.ruleHandler(fml, con, path[0].object, variables)?.data;
+              } else if (object.mode === 'object' || object.mode === 'target') {
+                data = this.objectHandler(fml, con, variables)?.data;
+              } else {
+                throw Error("Unknown type encountered when traversing the rule path");
+              }
+
+
+              if (data) {
+                if (latestRule) {
+                  latestRule.rule = data;
+                  latestRule = data[0];
+                } else {
+                  latestRule = data[0];
+                  smGroup.rule.push(latestRule);
+                }
+              }
+            });
           });
-        });
+      });
+    } catch (e) {
+      console.error(e);
+    }
 
 
-      console.log("#### STRUCTURE MAP ####");
-      console.log(sm);
-    });
-
-
+    console.log("#### STRUCTURE MAP ####");
+    console.log(sm);
     return sm;
   }
 
@@ -251,7 +260,6 @@ export class FmlStructureGenerator {
           valueId: source.variable
         }]
       });
-
     }
 
     const data: StructureMapGroupRule[] = [{

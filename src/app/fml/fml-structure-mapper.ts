@@ -2,31 +2,36 @@ import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-uti
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
-import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
 import {FMLDefaultRuleParser} from './rule-parsers/default.parser';
+import {plainToInstance} from 'class-transformer';
+
+const RULE_PARSERS: FMLRuleParser[] = [
+  new FMLCopyRuleParser(),
+  new FMLCreateRuleParser(),
+  new FMLUuidRuleParser(),
+  new FMLAppendRuleParser(),
+];
+
+const getRuleParser = (transform): FMLRuleParser => {
+  const parser = RULE_PARSERS.find(p => p.action === transform);
+  if (isNil(parser)) {
+    console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
+    return new FMLDefaultRuleParser();
+  }
+  return parser;
+};
 
 
 export class FMLStructureMapper {
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
-    const ruleParsers: FMLRuleParser[] = [
-      new FMLCopyRuleParser(),
-      new FMLCreateRuleParser(),
-      new FMLUuidRuleParser(),
-      new FMLAppendRuleParser(),
-    ];
-
-
-    const getRuleParser = (transform) => {
-      const parser = ruleParsers.find(p => p.action === transform);
-      if (isNil(parser)) {
-        console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
-        return new FMLDefaultRuleParser();
-      }
-      return parser;
-    };
+    const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
+    if (exported) {
+      return this.fromObj(JSON.parse(exported));
+    }
 
 
     // finds the correct resource type based on URL
@@ -105,6 +110,12 @@ export class FMLStructureMapper {
 
 
     // validate
+    this.validate(struc, fhir);
+
+    return struc;
+  }
+
+  private static validate(struc: FMLStructure, fhir: StructureMap): void {
     const merged = {
       ...struc.objects,
       ...group(struc.rules, r => r.name)
@@ -142,7 +153,20 @@ export class FMLStructureMapper {
         console.warn(`Structure Map's group ${fhirGroup.name} has duplicate rules`, duplicates.filter(unique));
       }
     });
+  }
 
-    return struc;
+  private static fromObj(d: {objects: {[name: string]: FMLStructureObject}, rules: FMLStructureRule[], connections: FMLStructureConnection[]}): FMLStructure {
+    const fml = new FMLStructure();
+    Object.keys(d.objects).forEach(k => {
+      fml.objects[k] = plainToInstance(FMLStructureObject, d.objects[k]);
+    });
+
+    fml.rules = plainToInstance(FMLStructureRule, d.rules);
+    fml._connections = plainToInstance(FMLStructureConnection, d.connections);
+
+
+    console.warn(fml);
+
+    return fml;
   }
 }

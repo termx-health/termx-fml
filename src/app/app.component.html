@@ -2,6 +2,7 @@
   <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
     <div class="m-items-middle">
       <m-button (mClick)="_setupWizard = true" mSize="small">New</m-button>
+      <m-button (mClick)="save()" mSize="small">Save</m-button>
       <m-button (mClick)="export()" mSize="small">Export</m-button>
       <m-button (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
       <m-dropdown [mHideIfEmpty]="false">
@@ -75,8 +76,8 @@
     </div>
   </div>
 
-  <div [class.drawflow--animated]="isAnimated">
-    <div id="drawflow" style="height: 100%; width: 100%; outline: none" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+  <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+    <!--<div id="drawflow" style="height: 100%; width: 100%; outline: none"></div>-->
   </div>
 
   <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">

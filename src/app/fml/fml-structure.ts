@@ -33,8 +33,10 @@ export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
+  url: string;
   /** @example code, category, status etc. */
   rawFields: FMLStructureObjectField[] = [];
+
 
   get fields(): FMLStructureObjectField[] {
     return this.rawFields.filter(f => !f.part);
@@ -190,6 +192,7 @@ export class FMLStructure {
     const o = new FMLStructureObject();
     o.element = selfDefinition;
     o.resource = selfResourceType;
+    o.url = structureDefinition.url;
     o.name = path;
     o.mode = mode;
     o.rawFields = selfFields.map(e => ({

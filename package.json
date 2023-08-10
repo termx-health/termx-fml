@@ -23,6 +23,7 @@
     "@kodality-web/core-util": "^15.0.0-snapshot",
     "@kodality-web/marina-ui": "^15.0.0-snapshot",
     "@kodality-web/marina-util": "^15.0.0-snapshot",
+    "class-transformer": "^0.5.1",
     "dagre": "^0.8.5",
     "drawflow": "^0.0.59",
     "rxjs": "~7.8.0",
