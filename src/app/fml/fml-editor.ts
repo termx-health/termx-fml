@@ -54,18 +54,19 @@ export class FMLEditor extends Drawflow {
     }
   };
 
-
   // rule renderer
   private _getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
     new FMLAppendRuleRenderer()
   ];
 
+  // meta
   public _initialized = false;
 
   public _ready(): void {
     this._initialized = true;
   }
+
 
   constructor(public _fml: FMLStructure, public element: HTMLElement, options?: {
     render?: object,
@@ -315,8 +316,6 @@ export class FMLEditor extends Drawflow {
   }
 
   public _rerenderNodes(): void {
-    // fixme: performance issue
-
     Object.keys(this._fml.objects).forEach(name => {
       const {el, nodeId} = this._getNodeElementByName(name);
       if (isDefined(el)) {

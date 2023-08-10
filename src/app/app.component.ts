@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, isDevMode, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {
   FMLStructure,
@@ -13,7 +13,7 @@ import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
-import {group, isDefined, isNil, unique} from '@kodality-web/core-util';
+import {group, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
@@ -88,7 +88,7 @@ export class AppComponent implements OnInit {
         return this.resourceBundle = {
           resourceType: 'Bundle',
           type: 'collection',
-          entry: definitions.map(def => ({resource: def}))
+          entry: uniqueBy(definitions.map(def => ({resource: def})), e=> e.resource.url)
         };
       }));
     }));
@@ -108,6 +108,7 @@ export class AppComponent implements OnInit {
   protected localstorage = localStorage;
   protected _fmlResult: string;
   protected _setupWizard: boolean;
+  protected _dev = isDevMode();
 
 
   constructor(
@@ -120,7 +121,7 @@ export class AppComponent implements OnInit {
   public ngOnInit(): void {
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
       const local = Object.values(this.localMaps).map(m => m.name);
-      this.maps = [...maps, ...local].sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+      this.maps = [...maps, ...local].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
       this.init();
     });
   }
@@ -293,7 +294,7 @@ export class AppComponent implements OnInit {
 
   /* Setup wizard */
 
-  protected initFromWizard(data: {sources: string[], targets: string[]}): void {
+  protected initFromWizard(data: {name:string, sources: string[], targets: string[]}): void {
     const sources = data.sources.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
       url: r.url,
       mode: 'source' as any,
@@ -305,13 +306,12 @@ export class AppComponent implements OnInit {
       alias: r.id
     }));
 
-    const name = "new";
     const map: StructureMap = {
+      "id": data.name,
       "resourceType": "StructureMap",
-      "id": name,
-      "url": `http://hl7.org/fhir/StructureMap/${name}`,
-      "name": name,
       "status": "draft",
+      "name": data.name,
+      "url": `http://hl7.org/fhir/StructureMap/${data.name}`,
       "structure": [
         ...sources,
         ...targets
@@ -337,8 +337,8 @@ export class AppComponent implements OnInit {
     };
 
     const maps = this.localMaps;
-    maps[name] = map;
-    localStorage.setItem('selected_structure_map', name);
+    maps[data.name] = map;
+    localStorage.setItem('selected_structure_map', data.name);
     localStorage.setItem('structure_maps', JSON.stringify(maps));
 
     this.init();

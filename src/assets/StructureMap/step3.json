@@ -1,15 +1,9 @@
 {
+  "id": "step3",
   "resourceType": "StructureMap",
-  "id": "tutorial-step3a",
-  "text": {
-    "status": "generated",
-    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><pre>map &quot;http://hl7.org/fhir/StructureMap/tutorial-step3a&quot; = &quot;tutorial-step3a&quot;\r\n\r\n// Tutorial Step 3s\r\n\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-left&quot; alias TLeft as source\r\nuses &quot;http://hl7.org/fhir/StructureDefinition/step3-right&quot; alias TRight as target\r\n\r\ngroup tutorial(source src : TLeft, target tgt : TRight) {\r\n  src.a2 as v -&gt; truncate(v, 20) as trunc then {\r\n    src -&gt; tgt.b2 = append('test=', trunc) &quot;r2&quot;;\r\n  } &quot;r1&quot;;\r\n  src.a2 as v -&gt; tgt.b3 = truncate(v, 20) &quot;r3&quot;;\r\n}\r\n\r\n</pre></div>"
-  },
-  "url": "http://hl7.org/fhir/StructureMap/tutorial-step3a",
-  "name": "tutorial-step3a",
-  "title": "Tutorial Step 3s",
   "status": "draft",
-  "description": "Tutorial Step 3s",
+  "name": "step3",
+  "url": "http://hl7.org/fhir/StructureMap/step3",
   "structure": [
     {
       "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
@@ -24,66 +18,68 @@
   ],
   "group": [
     {
-      "name": "tutorial",
+      "name": "main",
       "input": [
         {
-          "name": "src",
+          "name": "TLeft",
           "type": "TLeft",
           "mode": "source"
         },
         {
-          "name": "tgt",
+          "name": "TRight",
           "type": "TRight",
           "mode": "target"
         }
       ],
       "rule": [
         {
-          "name": "truncate-rule",
+          "name": "truncate",
           "source": [
             {
-              "context": "src",
+              "context": "TLeft",
               "element": "a2",
-              "variable": "v"
+              "variable": "A"
             }
           ],
           "target": [
             {
-              "variable": "trunc",
+              "variable": "B",
               "transform": "truncate",
               "parameter": [
                 {
-                  "valueId": "v"
+                  "valueId": "A"
                 },
                 {
-                  "valueInteger": 20
+                  "valueString": "20"
                 }
               ]
             }
           ],
           "rule": [
             {
-              "name": "append-rule",
+              "name": "evaluate",
               "source": [
                 {
-                  "context": "src"
+                  "context": "TLeft"
                 }
               ],
               "target": [
                 {
-                  "context": "tgt",
-                  "element": "b2",
-                  "transform": "append",
+                  "context": "TRight",
+                  "element": "b3",
+                  "variable": "C",
+                  "transform": "evaluate",
                   "parameter": [
                     {
-                      "valueString": "test="
+                      "valueId": "B"
                     },
                     {
-                      "valueId": "trunc"
+                      "valueString": "$this & \"--\" & $this"
                     }
                   ]
                 }
-              ]
+              ],
+              "rule": []
             }
           ]
         }

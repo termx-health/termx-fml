@@ -37,18 +37,17 @@ export class FMLStructureObject extends FMLStructureEntity {
   /** @example code, category, status etc. */
   rawFields: FMLStructureObjectField[] = [];
 
-
-  get fields(): FMLStructureObjectField[] {
+  public get fields(): FMLStructureObjectField[] {
     return this.rawFields.filter(f => !f.part);
   }
 
-  getFieldIndex(field: string): number {
+  public getFieldIndex(field: string): number {
     return this.fields.findIndex(f => f.name === field);
   }
 
 
   /** @deprecated */
-  html(): string {
+  public html(): string {
     return `
       <div>
         <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
@@ -76,7 +75,6 @@ export class FMLStructureObject extends FMLStructureEntity {
 export type FMLStructureRuleParameter = {type: 'const' | 'var', value: string | any};
 
 export class FMLStructureRule extends FMLStructureEntity {
-
   /** @example copy, create, append etc. */
   action: string;
   /** Action parameters */
@@ -94,7 +92,7 @@ export class FMLStructureConnection {
 }
 
 
-/* Main */
+/* Structure */
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};

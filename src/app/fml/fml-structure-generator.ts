@@ -36,7 +36,6 @@ export class FmlStructureGenerator {
       ]
     };
 
-
     // fml as extension
     sm.extension = [{
       url: 'fml-export',
@@ -47,7 +46,6 @@ export class FmlStructureGenerator {
       })
     }];
 
-
     // structure inputs
     const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
     const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
@@ -56,7 +54,6 @@ export class FmlStructureGenerator {
       mode: o.mode as StructureMapStructure['mode'],
       alias: o.name
     }));
-
 
     // group inputs
     const smGroup = sm.group[0];

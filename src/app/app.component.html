@@ -6,9 +6,13 @@
       <m-button (mClick)="export()" mSize="small">Export</m-button>
       <m-button (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
       <m-dropdown [mHideIfEmpty]="false">
-        <div *m-dropdown-container>{{localstorage.getItem('selected_structure_map')}}.json</div>
+        <div *m-dropdown-container>{{localstorage.getItem('selected_structure_map')}}.json
+          <m-icon *ngIf="localMaps[localstorage.getItem('selected_structure_map')]" mCode="database"/>
+        </div>
         <ng-container *ngFor="let m of maps">
-          <a *m-dropdown-item (mClick)="localstorage.setItem('selected_structure_map', m); init()">{{m}}</a>
+          <a *m-dropdown-item (mClick)="localstorage.setItem('selected_structure_map', m); init()">{{m}}
+            <m-icon *ngIf="localMaps[m]" mCode="database"/>
+          </a>
         </ng-container>
       </m-dropdown>
     </div>
@@ -37,7 +41,7 @@
           <td>
             <div class="m-justify-between">
               <div>{{o.name}} ({{o.fields.length}})</div>
-              <span class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
+              <span *ngIf="_dev" class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
             </div>
             <div class="description">{{o.resource}}</div>
           </td>
@@ -59,7 +63,7 @@
         </tr>
       </m-table>
 
-      <m-table [mData]="fml.connections" mSize="small">
+      <m-table *ngIf="_dev" [mData]="fml.connections" mSize="small">
         <tr *mTableHead>
           <th>Source</th>
           <th>Idx</th>
@@ -275,12 +279,16 @@
 
 <!-- Setup wizard -->
 <m-modal #wizard [mVisible]="_setupWizard" mPlacement="top" [mClosable]="false" (mClose)="_setupWizard = false">
-  <ng-container *ngIf="{sources: [], targets:[]} as data">
+  <ng-container *ngIf="_setupWizard && {name: '', sources: [], targets:[]} as data">
     <div *m-modal-header>
       Setup wizard
     </div>
 
     <div *m-modal-content>
+      <m-form-item mLabel="Name">
+        <m-input [(ngModel)]="data.name"/>
+      </m-form-item>
+
       <m-form-row>
         <m-form-item *m-form-col mLabel="Sources">
           <m-select [(ngModel)]="data.sources" multiple>
