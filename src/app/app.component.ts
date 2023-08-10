@@ -1,16 +1,17 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
-import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
+import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
-import {group, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
+import {group, HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
+import {saveAs} from 'file-saver';
 
 let ID = 69;
 
@@ -72,9 +73,11 @@ export class AppComponent implements OnInit {
   private _resourceBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
       const mapResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
+
+      this.resourceLoader = {total: mapResources.length + resources.length, current: 0};
       const reqs$ = [
-        ...mapResources.map(k => this.structureMapService.getStructureDefinition(k)),
-        ...resources.map(r => this.structureMapService.getStructureDefinition(r))
+        ...mapResources.map(k => this.cache.put(k, this.structureMapService.getStructureDefinition(k)).pipe(tap(() => this.resourceLoader.current++))),
+        ...resources.map(r => this.cache.put(r, this.structureMapService.getStructureDefinition(r)).pipe(tap(() => this.resourceLoader.current++)))
       ];
       return forkJoin(reqs$).pipe(map(definitions => {
         return this.resourceBundle = {
@@ -82,7 +85,7 @@ export class AppComponent implements OnInit {
           type: 'collection',
           entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
         };
-      }));
+      }), finalize(() => this.resourceLoader = undefined));
     }));
   };
 
@@ -97,6 +100,7 @@ export class AppComponent implements OnInit {
 
   protected maps: string[];
   protected localstorage = localStorage;
+  protected resourceLoader: {total: number, current: number};
   protected _fmlResult: string;
   protected _setupWizard: boolean;
   protected _dev = isDevMode();
@@ -106,6 +110,7 @@ export class AppComponent implements OnInit {
     private http: HttpClient,
     private structureMapService: StructureMapService,
     private notificationService: MuiNotificationService,
+    private cache: HttpCacheService
   ) { }
 
 
@@ -155,7 +160,8 @@ export class AppComponent implements OnInit {
   }
 
   protected export(): void {
-    this._export();
+    const sm = this._export();
+    saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
   }
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
@@ -380,8 +386,11 @@ export class AppComponent implements OnInit {
     return [object, field].filter(isDefined).join(':');
   };
 
-
   protected get localMaps(): {[k: string]: StructureMap} {
     return JSON.parse(localStorage.getItem('structure_maps') ?? '{}');
+  }
+
+  protected splitUrl(url: string): [string, string] {
+    return [url.substring(0, url.lastIndexOf('/')), url.substring(url.lastIndexOf('/') + 1)]
   }
 }

@@ -20,7 +20,8 @@
             "allowedCommonJsDependencies": [
               "drawflow",
               "dagre",
-              "angular2-text-mask"
+              "angular2-text-mask",
+              "file-saver"
             ],
             "outputPath": "dist/fml",
             "index": "src/index.html",
@@ -58,7 +59,8 @@
                   "maximumError": "4kb"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "sourceMap": true
             },
             "development": {
               "buildOptimizer": false,

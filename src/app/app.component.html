@@ -21,6 +21,9 @@
     </div>
 
     <div class="m-items-middle" style="justify-self: center">
+      <ng-container *ngIf="resourceLoader">
+        <progress [value]="resourceLoader.current / resourceLoader.total * 100" max="100"></progress>
+      </ng-container>
     </div>
 
     <div style="justify-self: end">
@@ -33,48 +36,66 @@
 <div style="height: calc(100dvh - 2.5rem); display: grid; grid-template-columns: 2fr 8fr 2fr">
   <!-- LEFT PANEL -->
   <div style="border-right: var(--border-table); height: 100%; overflow: auto; background: var(--color-background-component);">
-    <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem">
-      <m-table mSize="small">
-        <tr *ngFor="let o of fml.objects | values ">
-          <td>
-            <div class="m-justify-between">
-              <div>{{o.name}} ({{o.fields.length}})</div>
-              <span *ngIf="_dev" class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
-            </div>
-            <div class="description">{{o.resource}}</div>
-          </td>
-        </tr>
-      </m-table>
+    <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column">
+      <m-form-item mLabel="Objects">
+        <m-table mSize="small">
+          <tr *ngFor="let o of fml.objects | values ">
+            <td>
+              <div class="m-justify-between">
+                <div>{{o.name}} ({{o.fields.length}})</div>
+                <span *ngIf="_dev" class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
+              </div>
+              <div class="description">{{o.resource}}</div>
+            </td>
+          </tr>
 
-      <m-table mSize="small">
-        <tr *ngFor="let r of fml.rules">
-          <td>
-            <div class="m-justify-between">
-              <div>{{r.name}}</div>
-              <span class="m-subtitle">{{r.action}}</span>
-            </div>
-            <div class="description">
-              <div>source: {{r.sources | join: ', '}}</div>
-              <div>target: {{r.targets | join: ', '}}</div>
-            </div>
-          </td>
-        </tr>
-      </m-table>
+          <tr *ngIf="!(fml.objects | values)?.length">
+            <td colspan="100%">
+              <m-no-data/>
+            </td>
+          </tr>
+        </m-table>
+      </m-form-item>
 
-      <m-table *ngIf="_dev" [mData]="fml.connections" mSize="small">
-        <tr *mTableHead>
-          <th>Source</th>
-          <th>Idx</th>
-          <th>Target</th>
-          <th>Idx</th>
-        </tr>
-        <tr *ngFor="let con of fml.connections">
-          <td>{{con.sourceObject}}</td>
-          <td>{{con.sourceFieldIdx}}</td>
-          <td>{{con.targetObject}}</td>
-          <td>{{con.targetFieldIdx}}</td>
-        </tr>
-      </m-table>
+      <m-form-item mLabel="Rules">
+        <m-table mSize="small">
+          <tr *ngFor="let r of fml.rules">
+            <td>
+              <div class="m-justify-between">
+                <div>{{r.name}}</div>
+                <span class="m-subtitle">{{r.action}}</span>
+              </div>
+              <div class="description">
+                <div>source: {{r.sources | join: ', '}}</div>
+                <div>target: {{r.targets | join: ', '}}</div>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!fml.rules?.length">
+            <td colspan="100%">
+              <m-no-data/>
+            </td>
+          </tr>
+        </m-table>
+      </m-form-item>
+
+      <m-form-item *ngIf="_dev" mLabel="Connections">
+        <m-table mSize="small">
+          <tr *ngFor="let con of fml.connections">
+            <td>{{con.sourceObject}}</td>
+            <td>{{con.sourceFieldIdx}}</td>
+            <td>{{con.targetObject}}</td>
+            <td>{{con.targetFieldIdx}}</td>
+          </tr>
+
+          <tr *ngIf="!fml.connections?.length">
+            <td colspan="100%">
+              <m-no-data/>
+            </td>
+          </tr>
+        </m-table>
+      </m-form-item>
     </div>
   </div>
 
@@ -127,35 +148,54 @@
 
 <!-- Setup wizard -->
 <m-modal #wizard [mVisible]="_setupWizard" mPlacement="top" (mClose)="_setupWizard = false">
-  <form #f="ngForm" *ngIf="_setupWizard && {name: '', sources: [], targets:[]} as data">
-    <div *m-modal-header>
-      Setup wizard
-    </div>
+  <ng-container *ngIf="_setupWizard">
+    <form #f="ngForm" *ngIf="{name: '', sources: [], targets:[]} as data">
+      <div *m-modal-header>
+        StructureMap setup
+      </div>
 
-    <div *m-modal-content>
-      <m-form-item mName="name" mLabel="Name" required>
-        <m-input name="name" [(ngModel)]="data.name" required/>
-      </m-form-item>
-
-      <m-form-row>
-        <m-form-item *m-form-col mName="sources" mLabel="Sources" required>
-          <m-select name="sources" [(ngModel)]="data.sources" multiple required>
-            <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
-          </m-select>
+      <div *m-modal-content>
+        <m-form-item mName="name" mLabel="Name" required>
+          <m-input name="name" [(ngModel)]="data.name" required/>
         </m-form-item>
-        <m-form-item *m-form-col mName="targets" mLabel="Target" required>
-          <m-select name="targets" [(ngModel)]="data.targets" multiple required>
-            <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
-          </m-select>
-        </m-form-item>
-      </m-form-row>
-    </div>
 
-    <div *m-modal-footer>
-      <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
-        Let's Go
-      </m-button>
-    </div>
-  </form>
+        <m-form-row>
+          <m-form-item *m-form-col mName="sources" mLabel="Sources" required>
+            <m-select name="sources" [(ngModel)]="data.sources" multiple required>
+              <m-option *ngFor="let res of resourceBundle?.entry"
+                [mValue]="res.resource.url"
+                [mLabel]="(res.resource.url | apply: splitUrl)[1]"
+                [mLabelTemplate]="tlbl"
+              >
+                <ng-template #tlbl>
+                  {{(res.resource.url | apply: splitUrl)[1]}} <span class="description">{{(res.resource.url | apply: splitUrl)[0]}}</span>
+                </ng-template>
+              </m-option>
+            </m-select>
+          </m-form-item>
+
+          <m-form-item *m-form-col mName="targets" mLabel="Target" required>
+            <m-select name="targets" [(ngModel)]="data.targets" multiple required>
+              <m-option *ngFor="let res of resourceBundle?.entry"
+                [mValue]="res.resource.url"
+                [mLabel]="(res.resource.url | apply: splitUrl)[1]"
+                [mLabelTemplate]="tlbl"
+              >
+                <ng-template #tlbl>
+                  {{(res.resource.url | apply: splitUrl)[1]}} <span class="description">{{(res.resource.url | apply: splitUrl)[0]}}</span>
+                </ng-template>
+              </m-option>
+            </m-select>
+          </m-form-item>
+        </m-form-row>
+      </div>
+
+      <div *m-modal-footer>
+        <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
+          Let's Go
+        </m-button>
+      </div>
+    </form>
+  </ng-container>
 </m-modal>
 

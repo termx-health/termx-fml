@@ -5,8 +5,7 @@ import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {HttpClientModule} from '@angular/common/http';
 import {MarinaUiModule} from '@kodality-web/marina-ui';
-import {CoreUtilModule} from '@kodality-web/core-util';
-import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
+import {CoreI18nService, CoreUtilModule} from '@kodality-web/core-util';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {FormsModule} from '@angular/forms';
 import {APP_BASE_HREF} from '@angular/common';
@@ -17,7 +16,6 @@ import {ObjectViewComponent} from './components/object-view.component';
 @NgModule({
   declarations: [
     AppComponent,
-    StructureDefinitionTreeComponent,
     RuleViewComponent,
     ObjectViewComponent
   ],
@@ -25,10 +23,11 @@ import {ObjectViewComponent} from './components/object-view.component';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
+    FormsModule,
     HttpClientModule,
-    CoreUtilModule,
+
     MarinaUiModule,
-    FormsModule
+    CoreUtilModule,
   ],
   providers: [
     {provide: APP_BASE_HREF, useFactory: () => environment.baseHref}
@@ -36,4 +35,7 @@ import {ObjectViewComponent} from './components/object-view.component';
   bootstrap: [AppComponent]
 })
 export class AppModule {
+  public constructor(muiTranslate: CoreI18nService) {
+    muiTranslate.use('en');
+  }
 }
