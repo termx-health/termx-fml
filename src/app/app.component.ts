@@ -141,11 +141,17 @@ export class AppComponent implements OnInit {
   }
 
   protected save(): void {
-    const sm = this._export();
+    try {
+      const sm = this._export();
 
-    const maps = this.localMaps;
-    maps[sm.name] = sm;
-    localStorage.setItem('structure_maps', JSON.stringify(maps));
+      const maps = this.localMaps;
+      maps[sm.name] = sm;
+      localStorage.setItem('structure_maps', JSON.stringify(maps));
+
+      this.notificationService.success("Saved into localstorage", 'Check console for any errors!', {placement: 'top'});
+    } catch (e) {
+      /* empty */
+    }
   }
 
   protected export(): void {
@@ -376,7 +382,6 @@ export class AppComponent implements OnInit {
 
 
   protected get localMaps(): {[k: string]: StructureMap} {
-    const _maps = localStorage.getItem('structure_maps') ?? '{}';
-    return JSON.parse(_maps);
+    return JSON.parse(localStorage.getItem('structure_maps') ?? '{}');
   }
 }

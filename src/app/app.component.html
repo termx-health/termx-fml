@@ -3,15 +3,11 @@
     <div class="m-items-middle">
       <m-button (mClick)="_setupWizard = true" mSize="small">New</m-button>
 
-      <m-divider mVertical/>
-
-      <m-button (mClick)="save()" mSize="small">Save</m-button>
-
-      <m-divider mVertical/>
       <m-button (mClick)="export()" mSize="small">Export</m-button>
-      <m-button (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
+      <m-button *ngIf="_dev" (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
 
       <m-divider mVertical/>
+      <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
       <m-dropdown [mHideIfEmpty]="false">
         <div *m-dropdown-container>{{localstorage.getItem('selected_structure_map')}}.json
           <m-icon *ngIf="localMaps[localstorage.getItem('selected_structure_map')]" mCode="database"/>
@@ -131,24 +127,24 @@
 
 <!-- Setup wizard -->
 <m-modal #wizard [mVisible]="_setupWizard" mPlacement="top" (mClose)="_setupWizard = false">
-  <ng-container *ngIf="_setupWizard && {name: '', sources: [], targets:[]} as data">
+  <form #f="ngForm" *ngIf="_setupWizard && {name: '', sources: [], targets:[]} as data">
     <div *m-modal-header>
       Setup wizard
     </div>
 
     <div *m-modal-content>
-      <m-form-item mLabel="Name">
-        <m-input [(ngModel)]="data.name"/>
+      <m-form-item mName="name" mLabel="Name" required>
+        <m-input name="name" [(ngModel)]="data.name" required/>
       </m-form-item>
 
       <m-form-row>
-        <m-form-item *m-form-col mLabel="Sources">
-          <m-select [(ngModel)]="data.sources" multiple>
+        <m-form-item *m-form-col mName="sources" mLabel="Sources" required>
+          <m-select name="sources" [(ngModel)]="data.sources" multiple required>
             <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
           </m-select>
         </m-form-item>
-        <m-form-item *m-form-col mLabel="Target">
-          <m-select [(ngModel)]="data.targets" multiple>
+        <m-form-item *m-form-col mName="targets" mLabel="Target" required>
+          <m-select name="targets" [(ngModel)]="data.targets" multiple required>
             <m-option *ngFor="let res of resourceBundle?.entry" [mLabel]="res.resource.url" [mValue]="res.resource.url"></m-option>
           </m-select>
         </m-form-item>
@@ -156,10 +152,10 @@
     </div>
 
     <div *m-modal-footer>
-      <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)">
+      <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
         Let's Go
       </m-button>
     </div>
-  </ng-container>
+  </form>
 </m-modal>
 
