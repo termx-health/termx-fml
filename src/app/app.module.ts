@@ -9,6 +9,8 @@ import {CoreUtilModule} from '@kodality-web/core-util';
 import {StructureDefinitionTreeComponent} from './fhir/components/structure-definition/structure-definition-tree.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {FormsModule} from '@angular/forms';
+import {APP_BASE_HREF} from '@angular/common';
+import {environment} from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -24,8 +26,9 @@ import {FormsModule} from '@angular/forms';
     MarinaUiModule,
     FormsModule
   ],
-
-  providers: [],
+  providers: [
+    {provide: APP_BASE_HREF, useFactory: () => environment.baseHref}
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {
