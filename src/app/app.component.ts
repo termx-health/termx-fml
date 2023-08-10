@@ -1,14 +1,6 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {
-  FMLStructure,
-  FMLStructureConnection,
-  FMLStructureEntityMode,
-  FMLStructureObject,
-  FMLStructureObjectField,
-  FMLStructureRule,
-  FMLStructureRuleParameter
-} from './fml/fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
@@ -58,7 +50,7 @@ const RULES: RuleDescription[] = [
   selector: 'app-root',
   templateUrl: 'app.component.html',
   host: {
-    '[style.filter]': `_setupWizard ? 'blur(5px)' : 'initial'`
+    '[style.filter]': `_setupWizard ? 'blur(3px)' : 'initial'`
   }
 })
 export class AppComponent implements OnInit {
@@ -88,7 +80,7 @@ export class AppComponent implements OnInit {
         return this.resourceBundle = {
           resourceType: 'Bundle',
           type: 'collection',
-          entry: uniqueBy(definitions.map(def => ({resource: def})), e=> e.resource.url)
+          entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
         };
       }));
     }));
@@ -98,7 +90,6 @@ export class AppComponent implements OnInit {
   private editor: FMLEditor;
   protected fml: FMLStructure;
   protected nodeSelected: DrawflowNode;
-  protected _nodeSelected: DrawflowNode; // copy for edit
 
   // component
   protected ruleDescriptions = RULES;
@@ -294,7 +285,7 @@ export class AppComponent implements OnInit {
 
   /* Setup wizard */
 
-  protected initFromWizard(data: {name:string, sources: string[], targets: string[]}): void {
+  protected initFromWizard(data: {name: string, sources: string[], targets: string[]}): void {
     const sources = data.sources.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
       url: r.url,
       mode: 'source' as any,
@@ -347,58 +338,17 @@ export class AppComponent implements OnInit {
 
   /* Edit */
 
-  protected editStart(m: MuiModalContainerComponent): void {
-    this._nodeSelected = structuredClone(this.nodeSelected);
-    m.open();
-  }
 
-  protected editCancel(m: MuiModalContainerComponent): void {
-    m.close();
-    this._nodeSelected = undefined;
-  }
-
-  protected editApply(m: MuiModalContainerComponent): void {
-    m.close();
-    this.nodeSelected = this._nodeSelected;
-    this._nodeSelected = undefined;
-
+  protected applyRule(rule: FMLStructureRule): void {
     if ('rule' in this.nodeSelected.data) {
-      this.editor._updateRule(this.nodeSelected.id, this.nodeSelected.name, this.nodeSelected.data.rule);
-    } else if ('obj' in this.nodeSelected.data) {
-      this.editor._updateObject(this.nodeSelected.id, this.nodeSelected.name, this.nodeSelected.data.obj);
+      this.editor._updateRule(this.nodeSelected.id, this.nodeSelected.name, rule);
     }
 
     this.editor._rerenderNodes();
   }
 
-  protected moveParameter(params: FMLStructureRuleParameter[], p: FMLStructureRuleParameter, direction: 'up' | 'down'): void {
-    const idx = params.indexOf(p);
-    if (idx !== -1) {
-      params.splice(idx, 1);
-      params.splice((direction === 'up' ? Math.max(0, idx - 1) : Math.min(idx + 1, params.length + 1)), 0, p);
-    }
-  }
-
-  protected removeParameter(params: FMLStructureRuleParameter[], p: FMLStructureRuleParameter): void {
-    const idx = params.indexOf(p);
-    if (idx !== -1) {
-      params.splice(idx, 1);
-    }
-  }
-
-  protected addParameter(params: FMLStructureRuleParameter[]): void {
-    params.push({
-      type: 'const',
-      value: undefined
-    });
-  }
-
 
   /* Utils */
-
-  protected isResourceSelectable = (f: FMLStructureObjectField) => {
-    return f.types?.some(t => FMLStructure.isBackboneElement(t)) || this.resourceBundle.entry.some(e => f.types?.includes(e.resource.type));
-  };
 
   protected get simpleFML(): {
     objects: {[name: string]: FMLStructureObject},
@@ -424,14 +374,6 @@ export class AppComponent implements OnInit {
     return [object, field].filter(isDefined).join(':');
   };
 
-
-  protected ctxVariables = (name: string): string[] => {
-    return this.fml.getSources(name)
-      .map(s => s.object)
-      .flatMap(sn => [sn, ...this.ctxVariables(sn)])
-      .filter(unique)
-      .filter(n => this.fml.objects[n]);
-  };
 
   protected get localMaps(): {[k: string]: StructureMap} {
     const _maps = localStorage.getItem('structure_maps') ?? '{}';

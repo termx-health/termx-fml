@@ -30,7 +30,7 @@ export class FMLStructureMapper {
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
     if (exported) {
-      return this.fromObj(JSON.parse(exported));
+      return this.fromObj(bundle, JSON.parse(exported));
     }
 
 
@@ -155,12 +155,17 @@ export class FMLStructureMapper {
     });
   }
 
-  private static fromObj(d: {objects: {[name: string]: FMLStructureObject}, rules: FMLStructureRule[], connections: FMLStructureConnection[]}): FMLStructure {
+  private static fromObj(bundle: Bundle<StructureDefinition>, d: {
+    objects: {[name: string]: FMLStructureObject},
+    rules: FMLStructureRule[],
+    connections: FMLStructureConnection[]
+  }): FMLStructure {
     const fml = new FMLStructure();
+    fml.bundle = bundle;
+
     Object.keys(d.objects).forEach(k => {
       fml.objects[k] = plainToInstance(FMLStructureObject, d.objects[k]);
     });
-
     fml.rules = plainToInstance(FMLStructureRule, d.rules);
     fml._connections = plainToInstance(FMLStructureConnection, d.connections);
 
