@@ -18,6 +18,10 @@ export abstract class FMLRuleRenderer {
   }
 
 
+  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): string {
+    return `, ${rule.action}(${rule.parameters.map(p => paramVals[p.value]??p.value).join(", ")}) as ${rule.name}`;
+  }
+
   public onInputConnectionCreate(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode,
@@ -40,6 +44,7 @@ export abstract class FMLRuleRenderer {
     editor._rerenderNodes();
   }
 
+
   public onOutputConnectionCreate(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode,
@@ -52,7 +57,6 @@ export abstract class FMLRuleRenderer {
       target.name, targetPort - 1
     ));
   }
-
 
   public onInputConnectionRemove(
     editor: FMLEditor,

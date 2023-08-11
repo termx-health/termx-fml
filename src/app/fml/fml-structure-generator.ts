@@ -2,6 +2,11 @@ import {group, isNil, unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getAlphabet} from './fml.utils';
+import {FMLGraph} from './fml-graph';
+import {FMLRuleRenderer} from './rule-renderers/renderer';
+import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
+import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
+import {FMLCopyRenderer} from './rule-renderers/copy.renderer';
 
 
 const alphabet = getAlphabet();
@@ -16,6 +21,14 @@ const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boo
 
 
 export class FmlStructureGenerator {
+  // rule renderer
+  private static _getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
+  private static ruleRenderers = [
+    new FMLAppendRuleRenderer(),
+    new FMLCopyRenderer()
+  ];
+
+
   public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
     varCnt = -1;
 
@@ -62,6 +75,60 @@ export class FmlStructureGenerator {
       type: o.resource,
       mode: o.mode as StructureMapGroupInput['mode'],
     }));
+
+
+    const sorted = FMLGraph.fromFML(fml).dfsTopSort();
+    const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
+
+
+    const paramVals = {}
+
+
+    let ctx;
+    order.forEach(name => {
+      const ctxName = ctx?.name ?? '_src'
+      const obj = fml.objects[name];
+      const rule = fml.rules.find(r => r.name === name);
+
+
+      if (rule) {
+
+
+        console.log(this._getRuleRenderer(rule.action).generate(rule, paramVals));
+      }
+
+      if (obj) {
+        ctx = obj;
+        if (obj.mode === 'source') {
+          console.log(`${obj.name} -> `)
+          fml.connections
+            .filter(c => c.sourceObject === obj.name)
+            .map(c => c.sourceFieldIdx)
+            .filter(unique)
+            .map(idx => obj.fields[idx])
+            .forEach(n => {
+              paramVals[`${obj.name}.${n.name}`] = nextVar();
+              console.log(`, evaluate(${obj.name}, ${n.name}) as ${paramVals[`${obj.name}.${n.name}`]}`)
+
+            })
+        }
+
+        if (obj.mode === 'target') {
+          fml.connections
+            .filter(c => c.targetObject === obj.name)
+            .map(c => c.targetFieldIdx)
+            .filter(unique)
+            .map(idx => obj.fields[idx])
+            .forEach(n => {
+
+              // paramVals[`${obj.name}.${n.name}`] = nextVar();
+              console.log(`, ${obj.name}.${n.name} = ?`)
+
+            })
+        }
+      }
+    })
+    console.log(order)
 
 
     const findPath = (targetObject: string, targetField: string): {object: string, field: string}[] => {

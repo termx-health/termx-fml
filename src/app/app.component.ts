@@ -11,7 +11,6 @@ import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
-import {saveAs} from 'file-saver';
 import {FMLGraph} from './fml/fml-graph';
 
 let ID = 69;
@@ -164,6 +163,7 @@ export class AppComponent implements OnInit {
       return FmlStructureGenerator.generate(this.fml, {name: localStorage.getItem('selected_structure_map')});
     } catch (e) {
       this.notificationService.error('Export failed', e);
+      throw e;
     }
   }
 
@@ -183,7 +183,8 @@ export class AppComponent implements OnInit {
 
   protected export(): void {
     const sm = this._export();
-    saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
+    // saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
+
   }
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
@@ -211,8 +212,7 @@ export class AppComponent implements OnInit {
 
 
   protected topology(): void {
-    const g = FMLGraph.fromFML(this.fml);
-    const sorted = g.dfsTopSort();
+    const sorted = FMLGraph.fromFML(this.fml).dfsTopSort();
     const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
 
     const nodeEls = Array.from(document.getElementsByClassName('node-meta'));

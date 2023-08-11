@@ -7,6 +7,7 @@ import {getPortNumber} from './fml.utils';
 import {RULE_ID} from './rule-parsers/parser';
 import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 import {FMLRuleRenderer} from './rule-renderers/renderer';
+import {FMLCopyRenderer} from './rule-renderers/copy.renderer';
 
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
@@ -57,7 +58,8 @@ export class FMLEditor extends Drawflow {
   // rule renderer
   private _getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
   private ruleRenderers = [
-    new FMLAppendRuleRenderer()
+    new FMLAppendRuleRenderer(),
+    new FMLCopyRenderer()
   ];
 
   // meta
