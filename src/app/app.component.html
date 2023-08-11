@@ -3,6 +3,7 @@
     <div class="m-items-middle">
       <m-button (mClick)="_setupWizard = true" mSize="small">New</m-button>
 
+      <m-button (mClick)="importer.open()" mSize="small">Import</m-button>
       <m-button (mClick)="export()" mSize="small">Export</m-button>
       <m-button *ngIf="_dev" (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
 
@@ -18,6 +19,9 @@
           </a>
         </ng-container>
       </m-dropdown>
+
+      <m-divider mVertical/>
+      <m-button *ngIf="_dev" (mClick)="topology()" mSize="small">Topology</m-button>
     </div>
 
     <div class="m-items-middle" style="justify-self: center">
@@ -36,67 +40,7 @@
 <div style="height: calc(100dvh - 2.5rem); display: grid; grid-template-columns: 2fr 8fr 2fr">
   <!-- LEFT PANEL -->
   <div style="border-right: var(--border-table); height: 100%; overflow: auto; background: var(--color-background-component);">
-    <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column">
-      <m-form-item mLabel="Objects">
-        <m-table mSize="small">
-          <tr *ngFor="let o of fml.objects | values ">
-            <td>
-              <div class="m-justify-between">
-                <div>{{o.name}} ({{o.fields.length}})</div>
-                <span *ngIf="_dev" class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
-              </div>
-              <div class="description">{{o.resource}}</div>
-            </td>
-          </tr>
-
-          <tr *ngIf="!(fml.objects | values)?.length">
-            <td colspan="100%">
-              <m-no-data/>
-            </td>
-          </tr>
-        </m-table>
-      </m-form-item>
-
-      <m-form-item mLabel="Rules">
-        <m-table mSize="small">
-          <tr *ngFor="let r of fml.rules">
-            <td>
-              <div class="m-justify-between">
-                <div>{{r.name}}</div>
-                <span class="m-subtitle">{{r.action}}</span>
-              </div>
-              <div class="description">
-                <div>source: {{r.sources | join: ', '}}</div>
-                <div>target: {{r.targets | join: ', '}}</div>
-              </div>
-            </td>
-          </tr>
-
-          <tr *ngIf="!fml.rules?.length">
-            <td colspan="100%">
-              <m-no-data/>
-            </td>
-          </tr>
-        </m-table>
-      </m-form-item>
-
-      <m-form-item *ngIf="_dev" mLabel="Connections">
-        <m-table mSize="small">
-          <tr *ngFor="let con of fml.connections">
-            <td>{{con.sourceObject}}</td>
-            <td>{{con.sourceFieldIdx}}</td>
-            <td>{{con.targetObject}}</td>
-            <td>{{con.targetFieldIdx}}</td>
-          </tr>
-
-          <tr *ngIf="!fml.connections?.length">
-            <td colspan="100%">
-              <m-no-data/>
-            </td>
-          </tr>
-        </m-table>
-      </m-form-item>
-    </div>
+    <app-fml-view [fml]="fml"/>
   </div>
 
 
@@ -143,6 +87,17 @@
 <m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="_fmlResult = undefined">
   <div *m-modal-content>
     <pre>{{_fmlResult}}</pre>
+  </div>
+</m-modal>
+
+
+<!-- FML preview modal -->
+<m-modal #importer mPlacement="top" (mClose)="importer.close()">
+  <div *m-modal-header>
+    Import FHIR StructureMap
+  </div>
+  <div *m-modal-content>
+    <m-textarea [autosize]="{minRows: 10}" (mChange)="importStructureMap(importer, $event)"></m-textarea>
   </div>
 </m-modal>
 

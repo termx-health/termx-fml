@@ -36,3 +36,8 @@ export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): v
 export function getPortNumber(str: string): number {
   return Number(str.split("_")[1]);
 }
+
+export function getAlphabet(): string[] {
+  const alpha = Array.from(Array(26)).map((e, i) => i + 65);
+  return alpha.map((x) => String.fromCharCode(x));
+}

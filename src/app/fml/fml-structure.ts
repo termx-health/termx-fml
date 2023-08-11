@@ -7,7 +7,6 @@ export interface FMLPosition {
   y: number
 }
 
-export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule';
 
 export class FMLStructureEntity {
   /** Unique name within FML structure */
@@ -16,18 +15,10 @@ export class FMLStructureEntity {
   position?: FMLPosition;
 }
 
+export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule';
+
 
 /* Object */
-
-export interface FMLStructureObjectField {
-  name: string;
-  types: string[];
-
-  // meta-data
-  multiple: boolean;
-  required: boolean;
-  part: boolean; // BackboneElement sub element
-}
 
 export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
@@ -53,7 +44,7 @@ export class FMLStructureObject extends FMLStructureEntity {
         <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
         ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
 
-        <div style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
+        <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
           ${this.name}
         </div>
       </div>
@@ -69,10 +60,18 @@ export class FMLStructureObject extends FMLStructureEntity {
   }
 }
 
+export interface FMLStructureObjectField {
+  name: string;
+  types: string[];
+
+  // meta-data
+  multiple: boolean;
+  required: boolean;
+  part: boolean; // BackboneElement sub element
+}
+
 
 /* Rule */
-
-export type FMLStructureRuleParameter = {type: 'const' | 'var', value: string | any};
 
 export class FMLStructureRule extends FMLStructureEntity {
   /** @example copy, create, append etc. */
@@ -82,8 +81,14 @@ export class FMLStructureRule extends FMLStructureEntity {
   condition?: string;
 }
 
+export interface FMLStructureRuleParameter {
+  type: 'const' | 'var',
+  value: string | any
+}
+
 
 /* Connection */
+
 export class FMLStructureConnection {
   sourceObject: string;
   sourceFieldIdx: number;
@@ -93,6 +98,7 @@ export class FMLStructureConnection {
 
 
 /* Structure */
+
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};

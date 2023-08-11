@@ -1,23 +1,23 @@
 import {group, isNil, unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {getAlphabet} from './fml.utils';
 
-const alpha = Array.from(Array(26)).map((e, i) => i + 65);
-const alphabet = alpha.map((x) => String.fromCharCode(x));
 
-let v = -1;
-const nextVal = () => {
-  v++;
-  const times = Math.floor(v / 26);
-  return [...Array.from({length: times - 1}).fill(0), v % 26].map(i => alphabet[i as number]).join('');
+const alphabet = getAlphabet();
+let varCnt = -1;
+const nextVar = (): string => {
+  varCnt++;
+  const times = Math.floor(varCnt / 26);
+  return [...Array.from({length: times - 1}).fill(0), varCnt % 26].map(i => alphabet[i as number]).join('');
 };
 
-const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVal();
+const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVar();
 
 
 export class FmlStructureGenerator {
   public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
-    v = -1;
+    varCnt = -1;
 
     const name = options?.name ?? 'fml-compose';
 

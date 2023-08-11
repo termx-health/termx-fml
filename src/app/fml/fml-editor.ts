@@ -74,7 +74,7 @@ export class FMLEditor extends Drawflow {
   }) {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
-
+    this.on('nodeCreated', event => event)
 
     this.on('nodeMoved', nodeId => {
       const el = document.getElementById(`node-${nodeId}`);

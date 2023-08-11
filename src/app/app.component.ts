@@ -1,17 +1,18 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
-import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
+import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
-import {group, HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
+import {HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {saveAs} from 'file-saver';
+import {FMLGraph} from './fml/fml-graph';
 
 let ID = 69;
 
@@ -136,6 +137,17 @@ export class AppComponent implements OnInit {
 
 
   /* Export */
+
+  private prepareExportData(): void {
+    this.editor._rerenderNodes();
+    const exp = this.editor.export();
+    Object.values(exp.drawflow.Home.data).forEach(el => {
+      const {x, y} = (el.data.obj ?? el.data.rule).position;
+      el.pos_x = x;
+      el.pos_y = y;
+    });
+  }
+
   private _export(): StructureMap {
     this.prepareExportData();
     try {
@@ -171,15 +183,40 @@ export class AppComponent implements OnInit {
     });
   }
 
-  private prepareExportData(): void {
-    this.editor._rerenderNodes();
-    const exp = this.editor.export();
-    Object.values(exp.drawflow.Home.data).forEach(el => {
-      const {x, y} = (el.data.obj ?? el.data.rule).position;
-      el.pos_x = x;
-      el.pos_y = y;
-    });
+  protected importStructureMap(m: MuiModalContainerComponent, json: string): void {
+    if (isNil(json)) {
+      return;
+    }
+
+    const sm = JSON.parse(json);
+    const maps = this.localMaps;
+    maps[sm.name] = sm;
+
+    localStorage.setItem('selected_structure_map', sm.name);
+    localStorage.setItem('structure_maps', JSON.stringify(maps));
+
+    this.init();
+    m.close();
   }
+
+
+  protected topology(): void {
+    const g = FMLGraph.fromFML(this.fml);
+    const sorted = g.dfsTopSort();
+    const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
+
+    const nodeEls = Array.from(document.getElementsByClassName('node-meta'));
+    const timeout = 500;
+
+    order.forEach((o, i) => {
+      nodeEls.filter(e => e.textContent.trim() === o).forEach(e => {
+        setTimeout(() => e.parentElement.parentElement.style.backgroundColor = 'var(--color-primary-2)', (i + 1) * timeout);
+      });
+    });
+
+    setTimeout(() => nodeEls.forEach(e => e.parentElement.parentElement.style.backgroundColor = ''), (order.length + 1) * timeout);
+  }
+
 
   /* Editor */
 
@@ -251,6 +288,7 @@ export class AppComponent implements OnInit {
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
+
     let fieldType = fieldElement.type?.[0]?.code; // fixme: ACHTUNG! the first type is selected!
     if (FMLStructure.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
@@ -280,18 +318,21 @@ export class AppComponent implements OnInit {
   }
 
   protected onDrop(ev: DragEvent): void {
+    const {top, left} = this.editor._getOffsets();
+
+
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
     rule.name = `${data.code}#${RULE_ID.next()}`;
     rule.action = data.code;
     rule.parameters = [];
-    this.fml.rules.push(rule);
-
-    const {top, left} = this.editor._getOffsets();
-    this.editor._createRuleNode(rule, {
+    rule.position = {
       y: ev.y - top,
       x: ev.x - left
-    });
+    };
+    this.fml.rules.push(rule);
+
+    this.editor._createRuleNode(rule, {...rule.position});
   }
 
 
@@ -348,49 +389,24 @@ export class AppComponent implements OnInit {
     this._setupWizard = false;
   }
 
-  /* Edit */
 
+  /* Edit */
 
   protected applyRule(rule: FMLStructureRule): void {
     if ('rule' in this.nodeSelected.data) {
       this.editor._updateRule(this.nodeSelected.id, this.nodeSelected.name, rule);
     }
-
     this.editor._rerenderNodes();
   }
 
 
   /* Utils */
 
-  protected get simpleFML(): {
-    objects: {[name: string]: FMLStructureObject},
-    rules: (FMLStructureRule & {sources: string[], targets: string[]})[],
-    connections: FMLStructureConnection[]
-  } {
-    return {
-      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
-        ...o,
-        fields: o.fields,
-        html: undefined
-      }) as FMLStructureObject),
-      rules: this.fml?.rules.map(r => ({
-        ...r,
-        sources: this.fml.getSources(r.name).map(this.toObjectFieldPath),
-        targets: this.fml.getTargets(r.name).map(this.toObjectFieldPath),
-      })),
-      connections: this.fml?.connections as any
-    };
-  }
-
-  protected toObjectFieldPath = ({object, field}) => {
-    return [object, field].filter(isDefined).join(':');
-  };
-
   protected get localMaps(): {[k: string]: StructureMap} {
     return JSON.parse(localStorage.getItem('structure_maps') ?? '{}');
   }
 
   protected splitUrl(url: string): [string, string] {
-    return [url.substring(0, url.lastIndexOf('/')), url.substring(url.lastIndexOf('/') + 1)]
+    return [url.substring(0, url.lastIndexOf('/')), url.substring(url.lastIndexOf('/') + 1)];
   }
 }

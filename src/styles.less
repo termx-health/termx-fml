@@ -98,8 +98,8 @@ li {
   }
 
   .connection .main-path {
-    stroke-width: 2px;
-    stroke: @mui-text-color;
+    stroke-width: 1px;
+    stroke: @mui-text-color-disabled;
 
     &:hover {
       stroke: @mui-primary-color;
@@ -109,6 +109,7 @@ li {
 
   &--animated {
     .connection .main-path {
+      stroke-width: 2px;
       stroke-dasharray: 5;
       animation: dashdraw .5s linear infinite;
       stroke: @mui-text-color-disabled;

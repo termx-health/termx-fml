@@ -9,24 +9,17 @@ import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
 import {FMLDefaultRuleParser} from './rule-parsers/default.parser';
 import {plainToInstance} from 'class-transformer';
 
-const RULE_PARSERS: FMLRuleParser[] = [
-  new FMLCopyRuleParser(),
-  new FMLCreateRuleParser(),
-  new FMLUuidRuleParser(),
-  new FMLAppendRuleParser(),
-];
-
-const getRuleParser = (transform): FMLRuleParser => {
-  const parser = RULE_PARSERS.find(p => p.action === transform);
-  if (isNil(parser)) {
-    console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
-    return new FMLDefaultRuleParser();
-  }
-  return parser;
-};
-
 
 export class FMLStructureMapper {
+  private static RULE_PARSERS: FMLRuleParser[] = [
+    new FMLCopyRuleParser(),
+    new FMLCreateRuleParser(),
+    new FMLUuidRuleParser(),
+    new FMLAppendRuleParser(),
+    new FMLDefaultRuleParser()
+  ];
+
+
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
     if (exported) {
@@ -83,7 +76,7 @@ export class FMLStructureMapper {
               rule,
               object,
               connections
-            } = getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
+            } = FMLStructureMapper.getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
 
             if (isDefined(object)) {
               struc.objects[object.name] = object;
@@ -162,16 +155,19 @@ export class FMLStructureMapper {
   }): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
-
-    Object.keys(d.objects).forEach(k => {
-      fml.objects[k] = plainToInstance(FMLStructureObject, d.objects[k]);
-    });
+    Object.keys(d.objects).forEach(k => fml.objects[k] = plainToInstance(FMLStructureObject, d.objects[k]));
     fml.rules = plainToInstance(FMLStructureRule, d.rules);
     fml._connections = plainToInstance(FMLStructureConnection, d.connections);
-
-
-    console.warn(fml);
-
     return fml;
   }
+
+
+  private static getRuleParser = (transform): FMLRuleParser => {
+    const parser = this.RULE_PARSERS.find(p => p.action === transform);
+    if (isNil(parser)) {
+      console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
+      return this.RULE_PARSERS.find(p => p.action === 'default');
+    }
+    return parser;
+  };
 }

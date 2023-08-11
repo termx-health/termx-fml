@@ -12,12 +12,14 @@ import {APP_BASE_HREF} from '@angular/common';
 import {environment} from '../environments/environment';
 import {RuleViewComponent} from './components/rule-view.component';
 import {ObjectViewComponent} from './components/object-view.component';
+import {FmlViewComponent} from './components/fml-view.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     RuleViewComponent,
-    ObjectViewComponent
+    ObjectViewComponent,
+    FmlViewComponent
   ],
   imports: [
     BrowserModule,
