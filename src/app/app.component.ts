@@ -1,7 +1,7 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
-import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
+import {finalize, forkJoin, interval, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
@@ -112,7 +112,17 @@ export class AppComponent implements OnInit {
     private structureMapService: StructureMapService,
     private notificationService: MuiNotificationService,
     private cache: HttpCacheService
-  ) { }
+  ) {
+    interval(5000).subscribe(val => {
+      this.http.get('./assets/env.js', {responseType: 'text'}).subscribe(resp => {
+        if (val === 0) {
+          localStorage.setItem('env', resp);
+        } else if (localStorage.getItem('env') !== resp) {
+          this.notificationService.warning("New version", "Save changes and refresh browser", {duration: 0, messageKey: 'update-version'});
+        }
+      });
+    });
+  }
 
 
   public ngOnInit(): void {

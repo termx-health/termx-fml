@@ -1,3 +1,4 @@
 fmlConfig = {
-  "baseHref": "${BASE_HREF}"
+  "baseHref": "${BASE_HREF}",
+  "buildTime": "${BUILD_TIME}"
 }
