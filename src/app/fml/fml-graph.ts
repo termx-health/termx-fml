@@ -26,7 +26,7 @@ export  class FMLGraph {
   }
 
 
-  public dfsTopSort(): {[name: string]: number} {
+  public topologySort(): {[name: string]: number} {
     const vertices = Object.keys(this.adjacencyList);
     const visited = {};
     const topNums = {};

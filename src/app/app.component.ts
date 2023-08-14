@@ -217,7 +217,7 @@ export class AppComponent implements OnInit {
 
 
   protected topology(): void {
-    const sorted = FMLGraph.fromFML(this.fml).dfsTopSort();
+    const sorted = FMLGraph.fromFML(this.fml).topologySort();
     const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
 
     const nodeEls = Array.from(document.getElementsByClassName('node-meta'));

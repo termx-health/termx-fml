@@ -80,7 +80,7 @@ export class FmlStructureGenerator {
       .forEach(([target, field]) => {
         const _fml = fml.subFML(target, field);
 
-        const topology = FMLGraph.fromFML(_fml).dfsTopSort();
+        const topology = FMLGraph.fromFML(_fml).topologySort();
         const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
         let smRule: StructureMapGroupRule;
@@ -145,12 +145,13 @@ export class FmlStructureGenerator {
                   console.warn("Has multiple sources");
                 }
 
+                const {object, field} = fieldSources[0];
                 smRule.target.push({
                   context: vars[obj.name] ?? obj.name,
                   element: n.name,
                   transform: 'copy',
                   parameter: [
-                    {valueId: vars[fieldSources[0].object] ?? fieldSources[0].object}
+                    {valueId: vars[object] ?? vars[`${object}.${field}`] ?? object}
                   ]
                 });
               });
