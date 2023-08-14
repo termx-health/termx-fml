@@ -2,7 +2,7 @@ import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-uti
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
 import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
-import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {FMLAppendRuleParser} from './rule-parsers/append.parser';
 import {FMLCreateRuleParser} from './rule-parsers/create.parser';
 import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
@@ -36,7 +36,7 @@ export class FMLStructureMapper {
     // [alias | resource] -> FMLStructureObject
     struc.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
       const resource = getKey(s);
-      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode);
+      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode as FMLStructureEntityMode);
     });
 
 

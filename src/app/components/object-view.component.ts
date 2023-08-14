@@ -14,16 +14,29 @@ import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/
           <td>
             <div class="m-items-top m-justify-between">
               <div>
-                <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onFieldClick(object, f.name)">{{f.name}}</a>
+                <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onFieldClick(object, f.name)">
+                  <ng-container *ngTemplateOutlet="name"></ng-container>
+                </a>
                 <div class="description">{{f.types | join: ', '}}</div>
               </div>
-              <ng-template #name>{{f.name}}</ng-template>
+              <ng-template #name>
+                <span [mPopover]="f | apply: isBackboneElement" [mTitle]="raw" [mTitleContext]="{base: f.name}" mPosition="left">{{f.name}}</span>
+              </ng-template>
 
               <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
             </div>
           </td>
         </tr>
       </m-table>
+
+      <ng-template #raw let-base="base">
+        <div *ngFor="let f of object.rawFields | apply: backboneFields: base">
+          <div class="m-items-top m-justify-between">
+            {{f.name}}
+            <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
+          </div>
+        </div>
+      </ng-template>
 
 
       <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
@@ -55,4 +68,12 @@ export class ObjectViewComponent {
   protected isResourceSelectable = (f: FMLStructureObjectField) => {
     return f.types?.some(t => FMLStructure.isBackboneElement(t)) || this.fml?.bundle?.entry.some(e => f.types?.includes(e.resource.type));
   };
+
+  protected isBackboneElement = (f: FMLStructureObjectField): boolean => {
+    return f.types?.some(t => FMLStructure.isBackboneElement(t))
+  };
+
+  protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
+    return fields.filter(f => f.name.startsWith(base));
+  }
 }

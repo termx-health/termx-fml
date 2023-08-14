@@ -179,13 +179,13 @@ export class FMLStructure {
 
   /* Builders */
 
-  public newFMLObject(resource: string, path: string, mode: string): FMLStructureObject {
+  public newFMLObject(resource: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
     if (isNil(resource)) {
       throw Error(`Resource name is missing for the "${path}"`);
     }
 
     // true => assume resource's definition is described within the structure definition
-    const inlineDefinition = mode === 'object' && path === resource;
+    const inlineDefinition = ['object', 'element'].includes(mode) && path === resource;
 
     // try to find resource's structure definition
     const structureDefinition = this.findStructureDefinition(this.bundle, resource);
