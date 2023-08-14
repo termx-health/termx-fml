@@ -12,6 +12,7 @@ import {HttpClient} from '@angular/common/http';
 import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
+import {saveAs} from 'file-saver';
 
 let ID = 69;
 
@@ -183,8 +184,9 @@ export class AppComponent implements OnInit {
 
   protected export(): void {
     const sm = this._export();
-    // saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
-
+    if (!this._dev) {
+      saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
+    }
   }
 
   protected exportAsFML(m: MuiModalContainerComponent): void {

@@ -1,6 +1,5 @@
 import {FMLStructureRule} from '../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
-import {StructureMapGroupRuleTarget} from 'fhir/r5';
 
 export abstract class FMLRuleRenderer {
   abstract action: string;
@@ -16,17 +15,6 @@ export abstract class FMLRuleRenderer {
           ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
         </h5>
     `;
-  }
-
-
-  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): StructureMapGroupRuleTarget {
-    return {
-      transform: rule.action as any,
-      variable: rule.name,
-      parameter: rule.parameters.map(p => {
-        return p.type === 'var' ? ({valueId: paramVals[p.value] ?? p.value}) : ({valueString: p.value});
-      })
-    };
   }
 
   public onInputConnectionCreate(

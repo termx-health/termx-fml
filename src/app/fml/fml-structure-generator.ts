@@ -1,12 +1,11 @@
 import {unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
-import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
 import {getAlphabet} from './fml.utils';
 import {FMLGraph} from './fml-graph';
-import {FMLRuleRenderer} from './rule-renderers/renderer';
-import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
-import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
-import {FMLCopyRenderer} from './rule-renderers/copy.renderer';
+import {FMLCopyRuleGenerator} from './rule-generators/copy.generator';
+import {FMLRuleGenerator} from './rule-generators/generator';
+import {FMLDefaultRuleGenerator} from './rule-generators/default.generator';
 
 
 const alphabet = getAlphabet().map(el => el.toLowerCase());
@@ -17,15 +16,13 @@ const nextVar = (): string => {
   return [...Array.from({length: times - 1}).fill(0), varCnt % 26].map(i => alphabet[i as number]).join('');
 };
 
-const toVariable = (variables, obj, f?): string => variables[[obj, f].filter(Boolean).join('.')] = nextVar();
-
 
 export class FmlStructureGenerator {
   // rule renderer
-  private static _getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
-  private static ruleRenderers = [
-    new FMLAppendRuleRenderer(),
-    new FMLCopyRenderer()
+  private static _getRuleGenerator = (action: string): FMLRuleGenerator => this.ruleGenerators.find(rr => rr.action === action) ??
+    new FMLDefaultRuleGenerator();
+  private static ruleGenerators = [
+    new FMLCopyRuleGenerator()
   ];
 
 
@@ -86,8 +83,8 @@ export class FmlStructureGenerator {
         const topology = FMLGraph.fromFML(_fml).dfsTopSort();
         const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
-
         let smRule: StructureMapGroupRule;
+        let ctx: FMLStructureObject;
         const vars = {};
 
         topologicalOrder.forEach(name => {
@@ -96,21 +93,36 @@ export class FmlStructureGenerator {
 
           if (rule) {
             smRule.target.push(
-              this._getRuleRenderer(rule.action).generate(rule, vars)
+              this._getRuleGenerator(rule.action).generate(rule, ctx, vars)
             );
           }
 
           if (obj) {
-            if (['source', 'element'].includes(obj.mode)) {
-              if ('source' === obj.mode) {
-                smGroup.rule.push(smRule = {
-                  name: new Date().getTime().toString(),
-                  source: [{context: obj.name}],
-                  rule: [],
-                  target: []
-                });
-              }
+            ctx = obj;
+            if ('source' === obj.mode) {
+              // create new rule inside of group
+              smGroup.rule.push(smRule = {
+                name: new Date().getTime().toString(),
+                source: [{context: obj.name}],
+                rule: [],
+                target: []
+              });
+            }
 
+            if ('object' === obj.mode) {
+              // create sub element
+              smRule.target.push({
+                variable: vars[`${obj.name}`] = nextVar(),
+                transform: 'create',
+                parameter: [
+                  {valueString: obj.resource}
+                ]
+              });
+            }
+
+
+            if (['source', 'element'].includes(obj.mode)) {
+              // initialize object's fields into variables
               this.outputs(_fml, obj).forEach(n => {
                 const base = obj.name.split("#")[0];
                 const v = vars[`${obj.name}.${n.name}`] = nextVar();
@@ -127,18 +139,6 @@ export class FmlStructureGenerator {
             }
 
             if (['target', 'object'].includes(obj.mode)) {
-              if ('object' === obj.mode) {
-                const v = vars[`${obj.name}`] = nextVar();
-
-                smRule.target.push({
-                  variable: v,
-                  transform: 'create',
-                  parameter: [
-                    {valueString: obj.resource}
-                  ]
-                });
-              }
-
               this.inputs(_fml, obj).forEach(n => {
                 const fieldSources = _fml.getSources(obj.name, n.name);
                 if (fieldSources.length >= 2) {
@@ -168,14 +168,14 @@ export class FmlStructureGenerator {
   }
 
 
-  protected static inputs = (fml: FMLStructure, obj: FMLStructureObject) => {
+  protected static inputs = (fml: FMLStructure, obj: FMLStructureObject): FMLStructureObjectField[] => {
     return fml.connections
       .filter(c => c.targetObject === obj.name)
       .map(c => obj.fields[c.targetFieldIdx])
       .filter(unique);
   };
 
-  protected static outputs = (fml: FMLStructure, obj: FMLStructureObject) => {
+  protected static outputs = (fml: FMLStructure, obj: FMLStructureObject): FMLStructureObjectField[] => {
     return fml.connections
       .filter(c => c.sourceObject === obj.name)
       .map(c => obj.fields[c.sourceFieldIdx])
