@@ -21,7 +21,11 @@
         "max": "1",
         "path": "TLeft.a1",
         "id": "TLeft.a1",
-        "min": 1
+        "min": 1,
+        "type": [
+          {
+            "code": "string"
+          }]
       },
       {
         "max": "1",

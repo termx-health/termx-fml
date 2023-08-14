@@ -76,27 +76,19 @@ export class FmlStructureGenerator {
     }));
 
 
+    // group rules
     Object.values(fml.objects)
       .filter(o => o.mode === 'target')
       .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
       .forEach(([target, field]) => {
         const _fml = fml.subFML(target, field);
+
         const topology = FMLGraph.fromFML(_fml).dfsTopSort();
         const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
-        const inputs = (obj: FMLStructureObject) => _fml.connections
-          .filter(c => c.targetObject === obj.name)
-          .map(c => obj.fields[c.targetFieldIdx])
-          .filter(unique);
-        const outputs = (obj: FMLStructureObject) => _fml.connections
-          .filter(c => c.sourceObject === obj.name)
-          .map(c => obj.fields[c.sourceFieldIdx])
-          .filter(unique);
 
-
-        const vars = {};
-        let ctx;
         let smRule: StructureMapGroupRule;
+        const vars = {};
 
         topologicalOrder.forEach(name => {
           const obj = _fml.objects[name];
@@ -109,7 +101,6 @@ export class FmlStructureGenerator {
           }
 
           if (obj) {
-            ctx = obj;
             if (['source', 'element'].includes(obj.mode)) {
               if ('source' === obj.mode) {
                 smGroup.rule.push(smRule = {
@@ -120,7 +111,7 @@ export class FmlStructureGenerator {
                 });
               }
 
-              outputs(obj).forEach(n => {
+              this.outputs(_fml, obj).forEach(n => {
                 const base = obj.name.split("#")[0];
                 const v = vars[`${obj.name}.${n.name}`] = nextVar();
 
@@ -148,7 +139,7 @@ export class FmlStructureGenerator {
                 });
               }
 
-              inputs(obj).forEach(n => {
+              this.inputs(_fml, obj).forEach(n => {
                 const fieldSources = _fml.getSources(obj.name, n.name);
                 if (fieldSources.length >= 2) {
                   console.warn("Has multiple sources");
@@ -175,4 +166,19 @@ export class FmlStructureGenerator {
     console.log(sm);
     return sm;
   }
+
+
+  protected static inputs = (fml: FMLStructure, obj: FMLStructureObject) => {
+    return fml.connections
+      .filter(c => c.targetObject === obj.name)
+      .map(c => obj.fields[c.targetFieldIdx])
+      .filter(unique);
+  };
+
+  protected static outputs = (fml: FMLStructure, obj: FMLStructureObject) => {
+    return fml.connections
+      .filter(c => c.sourceObject === obj.name)
+      .map(c => obj.fields[c.sourceFieldIdx])
+      .filter(unique);
+  };
 }

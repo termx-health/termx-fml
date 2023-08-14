@@ -12,7 +12,7 @@ export class FMLCopyRenderer extends FMLRuleRenderer {
       variable: rule.name,
       parameter: [
         {valueId: paramVals[rule.parameters[0].value]},
-        {valueId: paramVals[rule.parameters[0].value]}
+        {valueString: paramVals[rule.parameters[0].value]}
       ]
     };
   }
