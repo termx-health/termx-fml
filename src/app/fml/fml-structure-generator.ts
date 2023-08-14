@@ -1,4 +1,4 @@
-import {group, isNil, unique} from '@kodality-web/core-util';
+import {unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getAlphabet} from './fml.utils';
@@ -9,7 +9,7 @@ import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 import {FMLCopyRenderer} from './rule-renderers/copy.renderer';
 
 
-const alphabet = getAlphabet();
+const alphabet = getAlphabet().map(el => el.toLowerCase());
 let varCnt = -1;
 const nextVar = (): string => {
   varCnt++;
@@ -31,7 +31,6 @@ export class FmlStructureGenerator {
 
   public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
     varCnt = -1;
-
     const name = options?.name ?? 'fml-compose';
 
     // structure map base
@@ -77,139 +76,117 @@ export class FmlStructureGenerator {
     }));
 
 
-    const sorted = FMLGraph.fromFML(fml).dfsTopSort();
-    const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
+    const targetFields = Object.values(fml.objects)
+      .filter(o => o.mode === 'target')
+      .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
+
+    console.log(targetFields)
 
 
-    const paramVals = {}
+    targetFields.forEach(([object, field]) => {
+      const _fml = fml.subFML(object, field);
+      const topology = FMLGraph.fromFML(_fml).dfsTopSort();
+      const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
-
-    let ctx;
-    order.forEach(name => {
-      const ctxName = ctx?.name ?? '_src'
-      const obj = fml.objects[name];
-      const rule = fml.rules.find(r => r.name === name);
-
-
-      if (rule) {
-
-
-        console.log(this._getRuleRenderer(rule.action).generate(rule, paramVals));
-      }
-
-      if (obj) {
-        ctx = obj;
-        if (obj.mode === 'source') {
-          console.log(`${obj.name} -> `)
-          fml.connections
-            .filter(c => c.sourceObject === obj.name)
-            .map(c => c.sourceFieldIdx)
-            .filter(unique)
-            .map(idx => obj.fields[idx])
-            .forEach(n => {
-              paramVals[`${obj.name}.${n.name}`] = nextVar();
-              console.log(`, evaluate(${obj.name}, ${n.name}) as ${paramVals[`${obj.name}.${n.name}`]}`)
-
-            })
-        }
-
-        if (obj.mode === 'target') {
-          fml.connections
-            .filter(c => c.targetObject === obj.name)
-            .map(c => c.targetFieldIdx)
-            .filter(unique)
-            .map(idx => obj.fields[idx])
-            .forEach(n => {
-
-              // paramVals[`${obj.name}.${n.name}`] = nextVar();
-              console.log(`, ${obj.name}.${n.name} = ?`)
-
-            })
-        }
-      }
-    })
-    console.log(order)
-
-
-    const findPath = (targetObject: string, targetField: string): {object: string, field: string}[] => {
-      const fieldSources = fml.getSources(targetObject, targetField);
-      if (fieldSources.length > 1) {
-        throw new Error(`${targetObject}:${targetField} has multiple sources, aborting!`);
-      }
-
-      if (fieldSources.length) {
-        const first = fieldSources[0];
-        if (fml.objects[first.object]?.mode === 'object') {
-          const subSources = fml.getSources(first.object);
-          return [
-            ...findPath(subSources[0].object, subSources[0].field),
-            {object: first.object, field: first.field},
-            {object: targetObject, field: targetField},
-          ];
-        }
-
-        return [
-          ...findPath(first.object, first.field),
-          {object: targetObject, field: targetField},
-        ];
-      } else {
-        return [{object: targetObject, field: targetField}];
-      }
-    };
-
-    try {
-      targets.forEach(({name, fields}) => {
-        fml.connections
-          .filter(c => c.targetObject === name)
-          .map(c => fields[c.targetFieldIdx].name)
+      const inputs = (obj: FMLStructureObject) => {
+        return _fml.connections
+          .filter(c => c.targetObject === obj.name)
+          .map(c => c.targetFieldIdx)
           .filter(unique)
-          .forEach(field => {
-            // find the path of objects/rules from source field to target
-            const path = findPath(name, field);
+          .map(idx => obj.fields[idx]);
+      };
 
-            let latestRule: StructureMapGroupRule;
-            const variables = group(smGroup.input, i => i.name, i => i.name);
+      const outputs = (obj: FMLStructureObject) => {
+        return _fml.connections
+          .filter(c => c.sourceObject === obj.name)
+          .map(c => c.sourceFieldIdx)
+          .filter(unique)
+          .map(idx => obj.fields[idx]);
+      };
 
-            path.forEach((el, level) => {
-              const con = fml.connections.find(c => {
-                const fieldName = this.fieldName(fml, c.sourceObject, c.sourceFieldIdx);
-                return c.sourceObject === el.object && fieldName === el.field;
+
+      let smRule: StructureMapGroupRule;
+
+      const paramVals = {};
+      const res = [];
+
+      let ctx;
+      topologicalOrder.forEach(name => {
+        const ctxName = ctx?.name ?? '_src';
+        const obj = _fml.objects[name];
+        const rule = _fml.rules.find(r => r.name === name);
+
+        if (rule) {
+          const {str, fml} = this._getRuleRenderer(rule.action).generate(rule, paramVals);
+          res.push(str);
+          smRule.target.push(fml);
+        }
+
+        if (obj) {
+          ctx = obj;
+          if (['source', 'element'].includes(obj.mode)) {
+            if ('source' === obj.mode) {
+              res.push(`${obj.name} -> `);
+              smGroup.rule.push(smRule = {
+                source: [{context: obj.name}],
+                rule: [],
+                target: []
               });
+            }
 
-              if (isNil(con)) {
-                // fixme: should not exit like that
-                return;
-              }
+            outputs(obj).forEach(n => {
+              const base = obj.name.split("#")[0];
+              const v = paramVals[`${obj.name}.${n.name}`] = nextVar();
 
-              const object = fml.objects[con.targetObject];
-              const rule = fml.rules.find(({name}) => name === con.targetObject);
-
-              let data;
-
-              if (rule) {
-                data = this.ruleHandler(fml, con, path[0].object, variables)?.data;
-              } else if (object.mode === 'object' || object.mode === 'target') {
-                data = this.objectHandler(fml, con, variables)?.data;
-              } else {
-                throw Error("Unknown type encountered when traversing the rule path");
-              }
-
-
-              if (data) {
-                if (latestRule) {
-                  latestRule.rule = data;
-                  latestRule = data[0];
-                } else {
-                  latestRule = data[0];
-                  smGroup.rule.push(latestRule);
-                }
-              }
+              res.push(`, evaluate(${paramVals[base] ?? base}, ${n.name}) as ${v}`);
+              smRule.target.push({
+                variable: v,
+                transform: 'evaluate',
+                parameter: [
+                  {valueId: paramVals[base] ?? base},
+                  {valueString: n.name}
+                ]
+              });
             });
-          });
+          }
+
+          if (['target', 'object'].includes(obj.mode)) {
+            inputs(obj).forEach(n => {
+              if ('object' === obj.mode) {
+                const v = paramVals[`${obj.name}`] = nextVar();
+
+                res.push(`, create('${obj.resource}') as ${v}`);
+                smRule.target.push({
+                  variable: v,
+                  transform: 'create',
+                  parameter: [
+                    {valueString: obj.resource}
+                  ]
+                });
+              }
+
+              const fieldSources = _fml.getSources(obj.name, n.name);
+              if (fieldSources.length >= 2) {
+                console.warn("Has multiple sources")
+              }
+
+              res.push(`, ${paramVals[obj.name] ?? obj.name}.${n.name} = ${paramVals[fieldSources[0].object] ?? fieldSources[0].object}`);
+              smRule.target.push({
+                context: paramVals[obj.name] ?? obj.name,
+                element: n.name,
+                transform: 'copy',
+                parameter: [
+                  {valueId: paramVals[fieldSources[0].object] ?? fieldSources[0].object}
+                ]
+              });
+            });
+          }
+        }
       });
-    } catch (e) {
-      console.error(e);
-    }
+
+      console.log(res.join("\n").replaceAll("#", "_"));
+      console.log(paramVals);
+    })
 
 
     console.log("#### STRUCTURE MAP ####");

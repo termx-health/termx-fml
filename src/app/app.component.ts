@@ -189,7 +189,7 @@ export class AppComponent implements OnInit {
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
     this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this._export())}, {responseType: 'text'}).subscribe(resp => {
-      this._fmlResult = resp;
+      this._fmlResult = resp.replaceAll(',  ', ',\n    ');
       m.open();
     });
   }
@@ -289,6 +289,7 @@ export class AppComponent implements OnInit {
   /* Structure tree */
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
+    console.log(parentObj, field)
     let mode: FMLStructureEntityMode = 'object';
     if (['source', 'element'].includes(parentObj.mode)) {
       mode = 'element';
@@ -305,7 +306,7 @@ export class AppComponent implements OnInit {
     }
 
     const obj = this.fml.newFMLObject(fieldType, fieldPath, mode);
-    obj.name = `${fieldPath}#${ID++}`;
+    obj.name = `${parentObj.name}.${field}#${ID++}`;
     this.fml.objects[obj.name] = obj;
 
     this.editor._createObjectNode(obj);

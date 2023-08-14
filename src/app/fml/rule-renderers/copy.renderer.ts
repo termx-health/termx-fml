@@ -1,16 +1,29 @@
 import {FMLRuleRenderer} from './renderer';
 import {FMLStructureRule} from '../fml-structure';
 import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {StructureMapGroupRuleTarget} from 'fhir/r5';
 
 export class FMLCopyRenderer extends FMLRuleRenderer {
   public action = 'copy';
 
-  public override generate(rule: FMLStructureRule, paramVals: {[p: string]: string}): string {
+  public override generate(rule: FMLStructureRule, paramVals: {[p: string]: string}): {
+    str: string,
+    fml: StructureMapGroupRuleTarget
+  } {
     // return `, ${rule.action}(${rule.parameters.map(p => paramVals[p.value]).join(", ")}) as ${rule.name}`;
 
 
-    return `, evaluate(${rule.parameters[0].value}, ${rule.parameters[0].value}) as ${rule.name}`;
-
+    return {
+      str: `, evaluate(${paramVals[rule.parameters[0].value]}, ${paramVals[rule.parameters[0].value]}) as ${rule.name}`,
+      fml: {
+        transform: 'evaluate',
+        variable: rule.name,
+        parameter: [
+          {valueId: paramVals[rule.parameters[0].value]},
+          {valueId: paramVals[rule.parameters[0].value]}
+        ]
+      }
+    }
   }
 
   public override onInputConnectionCreate(

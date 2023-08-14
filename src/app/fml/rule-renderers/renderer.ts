@@ -1,5 +1,6 @@
 import {FMLStructureRule} from '../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {StructureMapGroupRuleTarget} from 'fhir/r5';
 
 export abstract class FMLRuleRenderer {
   abstract action: string;
@@ -18,8 +19,20 @@ export abstract class FMLRuleRenderer {
   }
 
 
-  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): string {
-    return `, ${rule.action}(${rule.parameters.map(p => paramVals[p.value]??p.value).join(", ")}) as ${rule.name}`;
+  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): {
+    str: string,
+    fml: StructureMapGroupRuleTarget
+  } {
+    return {
+      str: `, ${rule.action}(${rule.parameters.map(p => p.type === 'var' ? (paramVals[p.value] ?? p.value) : `"${p.value}"`).join(", ")}) as ${rule.name}`,
+      fml: {
+        transform: rule.action as any,
+        variable: rule.name,
+        parameter: rule.parameters.map(p => {
+          return p.type === 'var' ? ({valueId: paramVals[p.value] ?? p.value}) : ({valueString: p.value});
+        })
+      }
+    };
   }
 
   public onInputConnectionCreate(

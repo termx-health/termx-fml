@@ -1,5 +1,5 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {isNil, remove} from '@kodality-web/core-util';
+import {group, isNil, remove} from '@kodality-web/core-util';
 
 
 export interface FMLPosition {
@@ -55,7 +55,8 @@ export class FMLStructureObject extends FMLStructureEntity {
   toJSON(): any {
     return {
       ...this,
-      fields: this.fields
+      fields: this.fields,
+      html: undefined
     };
   }
 }
@@ -104,6 +105,32 @@ export class FMLStructure {
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
   _connections: FMLStructureConnection[] = [];
+
+
+  public subFML(target: string, field: string): FMLStructure {
+    const _fml = new FMLStructure();
+    _fml.bundle = structuredClone(this.bundle);
+
+    const _rules = group(this.rules, r => r.name);
+
+    const traverse = (o: string, f?) => {
+      if (this.objects[o]) {
+        _fml.objects[o] = this.objects[o];
+      } else if (_rules[o] && !_fml.rules.some(r => r.name === o)) {
+        _fml.rules.push(_rules[o]);
+      }
+
+      return this.connections
+        .filter(c => c.targetObject === o)
+        .filter(c => isNil(f) || f === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+        .forEach(e => {
+          _fml.putConnection(e);
+          traverse(e.sourceObject);
+        });
+    };
+    traverse(target, field);
+    return _fml;
+  }
 
 
   /* Connections */
