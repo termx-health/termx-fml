@@ -189,7 +189,10 @@ export class AppComponent implements OnInit {
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
     this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this._export())}, {responseType: 'text'}).subscribe(resp => {
-      this._fmlResult = resp.replaceAll(',  ', ',\n    ');
+      this._fmlResult = resp
+        .replaceAll(',  ', ',\n    ')
+        .replaceAll(' ->  ', ' ->\n    ')
+        .replaceAll("#", "_");
       m.open();
     });
   }

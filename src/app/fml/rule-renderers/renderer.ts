@@ -19,19 +19,13 @@ export abstract class FMLRuleRenderer {
   }
 
 
-  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): {
-    str: string,
-    fml: StructureMapGroupRuleTarget
-  } {
+  public generate(rule: FMLStructureRule, paramVals: {[value: string]: string}): StructureMapGroupRuleTarget {
     return {
-      str: `, ${rule.action}(${rule.parameters.map(p => p.type === 'var' ? (paramVals[p.value] ?? p.value) : `"${p.value}"`).join(", ")}) as ${rule.name}`,
-      fml: {
-        transform: rule.action as any,
-        variable: rule.name,
-        parameter: rule.parameters.map(p => {
-          return p.type === 'var' ? ({valueId: paramVals[p.value] ?? p.value}) : ({valueString: p.value});
-        })
-      }
+      transform: rule.action as any,
+      variable: rule.name,
+      parameter: rule.parameters.map(p => {
+        return p.type === 'var' ? ({valueId: paramVals[p.value] ?? p.value}) : ({valueString: p.value});
+      })
     };
   }
 

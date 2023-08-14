@@ -215,12 +215,11 @@ export class FMLEditor extends Drawflow {
       throw Error(`Rule node with name "${rule.name}" is already created`);
     }
 
-    const isConstant = ['uuid'].includes(rule.action);
     const htmlRenderer = this._getRuleRenderer(rule.action);
 
     const nodeId = this.addNode(
       rule.name,
-      isConstant ? 0 : 1, 1,
+      1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
