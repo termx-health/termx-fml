@@ -18,7 +18,7 @@ export class FMLConstantRuleRenderer extends FMLRuleRenderer {
 
     editor._updateRule(node.id, node.name, rule => {
       if (editor._initialized) {
-        rule.parameters = rule.parameters.filter(p => p.type === 'const')
+        rule.parameters = rule.parameters.filter(p => p.type === 'const');
         editor._rerenderNodes();
       }
     });

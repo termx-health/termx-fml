@@ -7,39 +7,43 @@ import {StructureDefinition} from 'fhir/r5';
   selector: 'app-object-view',
   template: `
     <div *ngIf="object">
-      <div style="padding: 1rem; border-bottom: var(--border-table);">
+      <div style="padding: 1rem; border-bottom: var(--border-table)">
+
         <h5>Resource | {{object.mode}}</h5>
-      </div>
 
-      <m-table mSize="small" style="padding: 1rem; border-bottom: var(--border-table); display: block">
-        <tr *ngFor="let f of object.fields">
-          <td>
-            <div class="m-items-top m-justify-between">
-              <div>
-                <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onFieldClick(object, f.name)">
-                  <ng-container *ngTemplateOutlet="name"></ng-container>
-                </a>
-                <div class="description">{{f.types | join: ', '}}</div>
+        <m-table mSize="small">
+          <tr *ngFor="let f of object.fields">
+            <td>
+              <div class="m-items-top m-justify-between">
+                <div>
+                  <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onFieldClick(object, f.name)">
+                    <ng-container *ngTemplateOutlet="name"></ng-container>
+                  </a>
+                  <div class="description">{{f.types | join: ', '}}</div>
+                </div>
+                <ng-template #name>
+                  <span [mPopover]="f | apply: isBackboneElement"
+                      [mTitle]="backboneRawFields"
+                      [mTitleContext]="{base: f.name}"
+                      mPosition="left"
+                  >{{f.name}}</span>
+                </ng-template>
+
+                <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
               </div>
-              <ng-template #name>
-                <span [mPopover]="f | apply: isBackboneElement" [mTitle]="backboneRawFields" [mTitleContext]="{base: f.name}" mPosition="left">{{f.name}}</span>
-              </ng-template>
+            </td>
+          </tr>
+        </m-table>
 
+        <ng-template #backboneRawFields let-base="base">
+          <div *ngFor="let f of object.rawFields | apply: backboneFields: base">
+            <div class="m-items-top m-justify-between">
+              {{f.name}}
               <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
             </div>
-          </td>
-        </tr>
-      </m-table>
-
-      <ng-template #backboneRawFields let-base="base">
-        <div *ngFor="let f of object.rawFields | apply: backboneFields: base">
-          <div class="m-items-top m-justify-between">
-            {{f.name}}
-            <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
           </div>
-        </div>
-      </ng-template>
-
+        </ng-template>
+      </div>
 
       <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
         <m-form-item mLabel="Source" *ngIf="object.name | apply: fml.getSources as srcs">
@@ -102,9 +106,10 @@ export class ObjectViewComponent {
     const types = object.fields.find(f => f.name === field).types;
     if (types.includes("Resource")) {
       this.resourceModal = {visible: true, field};
-    // } else if (types.length > 1) {
-      // this.notifications.warning("Multiple types are not supported yet", undefined, {placement: 'top'});
-    } else {
+    }  else {
+      if (types.length > 1) {
+        this.notifications.warning("Unknown type", "Selected the first one", {placement: 'top'});
+      }
       this.fieldSelect.emit({object, field});
     }
   }

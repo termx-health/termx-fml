@@ -39,14 +39,18 @@ export class FMLStructureObject extends FMLStructureEntity {
 
   /** @deprecated */
   public html(): string {
+    const meta = () => `
+      <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
+        ${this.name}
+      </div>
+    `;
+
     return `
       <div>
+        ${meta()}
+
         <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
         ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
-
-        <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
-          ${this.name}
-        </div>
       </div>
     `;
   }
@@ -201,7 +205,7 @@ export class FMLStructure {
     }
 
     const selfDefinition = elements[0];
-    // fixme: provide type as an argument? currently take the first one
+    // fixme: provide type as an argument? currently takes the first one
     const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
     const selfFields = elements.slice(1);
 
@@ -238,7 +242,7 @@ export class FMLStructure {
       name: "$this",
       types: [],
       multiple: false,
-      required: false,
+      required: true,
       part: false
     });
 

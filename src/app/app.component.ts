@@ -252,6 +252,10 @@ export class AppComponent implements OnInit {
     setTimeout(() => nodeEls.forEach(e => e.parentElement.parentElement.style.backgroundColor = ''), (order.length + 1) * timeout);
   }
 
+  protected autoLayout(): void {
+    this.editor._autoLayout();
+  }
+
 
   /* Editor */
 

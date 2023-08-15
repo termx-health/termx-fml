@@ -7,12 +7,9 @@ import {unique} from '@kodality-web/core-util';
   selector: 'app-rule-view',
   template: `
     <div *ngIf="rule">
-      <div style="padding: 1rem; border-bottom: var(--border-table);">
-        <h5>Rule</h5>
-        {{rule.name}}
-      </div>
-
       <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+        <h5>Rule</h5>
+
         <m-form-item mLabel="Action">
           {{rule.action}}
         </m-form-item>
