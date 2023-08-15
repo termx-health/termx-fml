@@ -26,9 +26,14 @@ const RULES: RuleDescription[] = [
     code: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase). No Parameters'
-  }, {
+  },
+  {
     code: 'copy',
     name: 'copy'
+  },
+  {
+    code: 'constant',
+    name: 'constant'
   },
   {
     code: 'append',

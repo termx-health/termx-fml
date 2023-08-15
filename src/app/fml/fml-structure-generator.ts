@@ -3,9 +3,7 @@ import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMa
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
 import {getAlphabet} from './fml.utils';
 import {FMLGraph} from './fml-graph';
-import {FMLCopyRuleGenerator} from './rule-generators/copy.generator';
-import {FMLRuleGenerator} from './rule-generators/generator';
-import {FMLDefaultRuleGenerator} from './rule-generators/default.generator';
+import {getRuleGenerator} from './rule-generators/_generators';
 
 
 const alphabet = getAlphabet().map(el => el.toLowerCase());
@@ -18,13 +16,6 @@ const nextVar = (): string => {
 
 
 export class FmlStructureGenerator {
-  // rule renderer
-  private static _getRuleGenerator = (action: string): FMLRuleGenerator => this.ruleGenerators.find(rr => rr.action === action) ??
-    new FMLDefaultRuleGenerator();
-  private static ruleGenerators = [
-    new FMLCopyRuleGenerator()
-  ];
-
 
   public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
     varCnt = -1;
@@ -93,7 +84,7 @@ export class FmlStructureGenerator {
 
           if (rule) {
             smRule.target.push(
-              this._getRuleGenerator(rule.action).generate(rule, ctx, vars)
+              getRuleGenerator(rule.action).generate(rule, ctx, vars)
             );
           }
 

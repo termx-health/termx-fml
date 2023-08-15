@@ -4,16 +4,24 @@ import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
 export abstract class FMLRuleRenderer {
   abstract action: string;
 
-  public render(rule: FMLStructureRule): string {
+  public render(
+    editor: FMLEditor,
+    rule: FMLStructureRule
+  ): string {
     return `
-        <div class="node-meta" style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem">
-          ${rule.name}
-        </div>
-
+        ${this.renderMeta(rule)}
         <h5 >
           <div>${rule.action}</div>
           ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
         </h5>
+    `;
+  }
+
+  public renderMeta(rule: FMLStructureRule): string {
+    return `
+      <div class="node-meta" style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
+        ${rule.name}
+      </div>
     `;
   }
 

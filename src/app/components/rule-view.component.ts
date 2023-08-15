@@ -83,7 +83,7 @@ import {unique} from '@kodality-web/core-util';
                 <m-icon-button mIcon="down" [disabled]="last" (mClick)="moveParameter(_cp.parameters, param, 'down')"/>
               </td>
               <td style="width: 0">
-                <m-icon-button *ngIf="param.type === 'const'" mIcon="delete" (mClick)="removeParameter(_cp.parameters, param)"/>
+                <m-icon-button mIcon="delete" (mClick)="removeParameter(_cp.parameters, param)"/>
               </td>
             </tr>
 

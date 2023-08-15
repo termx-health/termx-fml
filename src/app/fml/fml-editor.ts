@@ -2,11 +2,8 @@ import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
-import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
 import {getPortNumber, SEQUENCE} from './fml.utils';
-import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
-import {FMLRuleRenderer} from './rule-renderers/renderer';
-import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
+import {getRuleRenderer} from './rule-renderers/_renderers';
 
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
@@ -54,12 +51,6 @@ export class FMLEditor extends Drawflow {
     }
   };
 
-  // rule renderer
-  private _getRuleRenderer = (action: string): FMLRuleRenderer => this.ruleRenderers.find(rr => rr.action === action) ?? new FMLDefaultRuleRenderer();
-  private ruleRenderers = [
-    new FMLAppendRuleRenderer(),
-    new FMLCopyRuleRenderer()
-  ];
 
   // meta
   public _initialized = false;
@@ -115,13 +106,13 @@ export class FMLEditor extends Drawflow {
 
       // rule -> *
       if (this._isRule(source)) {
-        const renderer = this._getRuleRenderer(source.data.rule.action);
+        const renderer = getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionCreate(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
       }
 
       // * -> rule
       if (this._isRule(target)) {
-        const renderer = this._getRuleRenderer(target.data.rule.action);
+        const renderer = getRuleRenderer(target.data.rule.action);
         renderer.onInputConnectionCreate(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
       }
 
@@ -150,13 +141,13 @@ export class FMLEditor extends Drawflow {
 
       // rule -> *
       if (this._isRule(source)) {
-        const renderer = this._getRuleRenderer(source.data.rule.action);
+        const renderer = getRuleRenderer(source.data.rule.action);
         renderer.onOutputConnectionRemove(this, source, getPortNumber(e.output_class), target, getPortNumber(e.input_class));
       }
 
       // * -> rule
       if (this._isRule(target)) {
-        const renderer = this._getRuleRenderer(target.data.rule.action);
+        const renderer = getRuleRenderer(target.data.rule.action);
         renderer.onInputConnectionRemove(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
       }
 
@@ -214,7 +205,7 @@ export class FMLEditor extends Drawflow {
       throw Error(`Rule node with name "${rule.name}" is already created`);
     }
 
-    const htmlRenderer = this._getRuleRenderer(rule.action);
+    const htmlRenderer = getRuleRenderer(rule.action);
 
     const nodeId = this.addNode(
       rule.name,
@@ -222,7 +213,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
-      htmlRenderer.render(rule),
+      htmlRenderer.render(this, rule),
       false
     );
 
@@ -329,7 +320,7 @@ export class FMLEditor extends Drawflow {
       const {el, nodeId} = this._getNodeElementByName(rule.name);
       if (isDefined(el)) {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = this._getRuleRenderer(rule.action).render(rule);
+        content.innerHTML = getRuleRenderer(rule.action).render(this, rule);
         this.updateConnectionNodes(`node-${nodeId}`);
       }
     });

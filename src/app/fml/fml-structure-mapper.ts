@@ -1,25 +1,12 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
-import {FMLRuleParser, FMLRuleParserVariables} from './rule-parsers/parser';
-import {FMLCopyRuleParser} from './rule-parsers/copy.parser';
+import {FMLRuleParserVariables} from './rule-parsers/parser';
 import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {FMLAppendRuleParser} from './rule-parsers/append.parser';
-import {FMLCreateRuleParser} from './rule-parsers/create.parser';
-import {FMLUuidRuleParser} from './rule-parsers/uuid.parser';
-import {FMLDefaultRuleParser} from './rule-parsers/default.parser';
 import {plainToInstance} from 'class-transformer';
+import {getRuleParser} from './rule-parsers/_parsers';
 
 
 export class FMLStructureMapper {
-  private static RULE_PARSERS: FMLRuleParser[] = [
-    new FMLCopyRuleParser(),
-    new FMLCreateRuleParser(),
-    new FMLUuidRuleParser(),
-    new FMLAppendRuleParser(),
-    new FMLDefaultRuleParser()
-  ];
-
-
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
     if (exported) {
@@ -76,7 +63,7 @@ export class FMLStructureMapper {
               rule,
               object,
               connections
-            } = FMLStructureMapper.getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
+            } = getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
 
             if (isDefined(object)) {
               struc.objects[object.name] = object;
@@ -160,14 +147,4 @@ export class FMLStructureMapper {
     fml._connections = plainToInstance(FMLStructureConnection, d.connections);
     return fml;
   }
-
-
-  private static getRuleParser = (transform): FMLRuleParser => {
-    const parser = this.RULE_PARSERS.find(p => p.action === transform);
-    if (isNil(parser)) {
-      console.warn(`Parser for the "${transform}" transformation not found, fallback to default`);
-      return this.RULE_PARSERS.find(p => p.action === 'default');
-    }
-    return parser;
-  };
 }

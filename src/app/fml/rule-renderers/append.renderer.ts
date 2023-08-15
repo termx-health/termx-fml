@@ -5,9 +5,12 @@ import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-edit
 export class FMLAppendRuleRenderer extends FMLRuleRenderer {
   public action = 'append';
 
-  public override render(rule: FMLStructureRule): string {
+  public override render(editor: FMLEditor, rule: FMLStructureRule): string {
+    const {el} = editor._getNodeElementByName(rule.name)
+    el?.classList.add('node--rule--with-title');
+
     return `
-      ${super.render(rule)}
+      ${super.render(editor, rule)}
       <ul class="description">
         ${rule.parameters.map(p => `<li>${p.value}</li>`).join('\n')}
       </ul>
