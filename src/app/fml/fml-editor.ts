@@ -3,8 +3,7 @@ import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from '.
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {FMLDefaultRuleRenderer} from './rule-renderers/default.renderer';
-import {getPortNumber} from './fml.utils';
-import {RULE_ID} from './rule-parsers/parser';
+import {getPortNumber, SEQUENCE} from './fml.utils';
 import {FMLAppendRuleRenderer} from './rule-renderers/append.renderer';
 import {FMLRuleRenderer} from './rule-renderers/renderer';
 import {FMLCopyRuleRenderer} from './rule-renderers/copy.renderer';
@@ -76,7 +75,7 @@ export class FMLEditor extends Drawflow {
   }) {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
-    this.on('nodeCreated', event => event)
+    this.on('nodeCreated', event => event);
 
     this.on('nodeMoved', nodeId => {
       const el = document.getElementById(`node-${nodeId}`);
@@ -135,7 +134,7 @@ export class FMLEditor extends Drawflow {
         // build objects
         const action = source.data.obj.mode === 'object' ? 'create' : 'copy';
         const rule = new FMLStructureRule();
-        rule.name = `${action}#${RULE_ID.next()}`;
+        rule.name = `${action}#${SEQUENCE.next()}`;
         rule.action = action;
 
         const conn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);

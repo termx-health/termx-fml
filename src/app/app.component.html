@@ -71,7 +71,7 @@
     <div *ngIf="nodeSelected as node">
       <!-- Resource -->
       <div *ngIf="node.data.obj as obj">
-        <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field)"/>
+        <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
       </div>
 
       <!-- Rule -->
@@ -116,31 +116,11 @@
 
         <m-form-row>
           <m-form-item *m-form-col mName="sources" mLabel="Sources" required>
-            <m-select name="sources" [(ngModel)]="data.sources" multiple required>
-              <m-option *ngFor="let res of resourceBundle?.entry"
-                [mValue]="res.resource.url"
-                [mLabel]="(res.resource.url | apply: splitUrl)[1]"
-                [mLabelTemplate]="tlbl"
-              >
-                <ng-template #tlbl>
-                  {{(res.resource.url | apply: splitUrl)[1]}} <span class="description">{{(res.resource.url | apply: splitUrl)[0]}}</span>
-                </ng-template>
-              </m-option>
-            </m-select>
+            <app-structure-definition-select name="sources" [(ngModel)]="data.sources" [bundle]="fml.bundle" multiple required/>
           </m-form-item>
 
           <m-form-item *m-form-col mName="targets" mLabel="Target" required>
-            <m-select name="targets" [(ngModel)]="data.targets" multiple required>
-              <m-option *ngFor="let res of resourceBundle?.entry"
-                [mValue]="res.resource.url"
-                [mLabel]="(res.resource.url | apply: splitUrl)[1]"
-                [mLabelTemplate]="tlbl"
-              >
-                <ng-template #tlbl>
-                  {{(res.resource.url | apply: splitUrl)[1]}} <span class="description">{{(res.resource.url | apply: splitUrl)[0]}}</span>
-                </ng-template>
-              </m-option>
-            </m-select>
+            <app-structure-definition-select name="targets" [(ngModel)]="data.targets" [bundle]="fml.bundle" multiple required/>
           </m-form-item>
         </m-form-row>
       </div>

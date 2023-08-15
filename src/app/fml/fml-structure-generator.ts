@@ -1,4 +1,4 @@
-import {unique} from '@kodality-web/core-util';
+import {isNil, unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
 import {getAlphabet} from './fml.utils';
@@ -99,7 +99,7 @@ export class FmlStructureGenerator {
 
           if (obj) {
             ctx = obj;
-            if ('source' === obj.mode) {
+            if (isNil(smRule)) {
               // create new rule inside of group
               smGroup.rule.push(smRule = {
                 name: new Date().getTime().toString(),
@@ -111,6 +111,12 @@ export class FmlStructureGenerator {
 
             if ('object' === obj.mode) {
               // create sub element
+              if (FMLStructure.isBackboneElement(obj.resource)) {
+                  // "context" : "bundle",
+                  // "element" : "entry",
+                  // "variable" : "entry"
+              }
+
               smRule.target.push({
                 variable: vars[`${obj.name}`] = nextVar(),
                 transform: 'create',

@@ -1,5 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/fml-structure';
+import {MuiNotificationService} from '@kodality-web/marina-ui';
+import {StructureDefinition} from 'fhir/r5';
 
 @Component({
   selector: 'app-object-view',
@@ -20,7 +22,7 @@ import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/
                 <div class="description">{{f.types | join: ', '}}</div>
               </div>
               <ng-template #name>
-                <span [mPopover]="f | apply: isBackboneElement" [mTitle]="raw" [mTitleContext]="{base: f.name}" mPosition="left">{{f.name}}</span>
+                <span [mPopover]="f | apply: isBackboneElement" [mTitle]="backboneRawFields" [mTitleContext]="{base: f.name}" mPosition="left">{{f.name}}</span>
               </ng-template>
 
               <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
@@ -29,7 +31,7 @@ import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/
         </tr>
       </m-table>
 
-      <ng-template #raw let-base="base">
+      <ng-template #backboneRawFields let-base="base">
         <div *ngFor="let f of object.rawFields | apply: backboneFields: base">
           <div class="m-items-top m-justify-between">
             {{f.name}}
@@ -50,6 +52,32 @@ import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/
         </m-form-item>
       </div>
     </div>
+
+
+    <m-modal #wizard [mVisible]="resourceModal.visible" (mClose)="resourceModal = {visible: false}">
+      <ng-container *ngIf="resourceModal.visible">
+        <form #f="ngForm">
+          <div *m-modal-header>
+            Resource select
+          </div>
+
+          <div *m-modal-content>
+            <m-form-item mName="sources" required>
+              <app-structure-definition-select name="sources" [(ngModel)]="resourceModal.resource" [bundle]="fml.bundle" required/>
+            </m-form-item>
+          </div>
+
+          <div *m-modal-footer class="m-justify-right">
+            <m-button mDisplay="text" (mClick)="wizard.close()">
+              Cancel
+            </m-button>
+            <m-button mDisplay="primary" (mClick)="resourceConfirm(resourceModal.field, resourceModal.resource)" [disabled]="f.invalid">
+              Confirm
+            </m-button>
+          </div>
+        </form>
+      </ng-container>
+    </m-modal>
   `
 })
 export class ObjectViewComponent {
@@ -57,23 +85,50 @@ export class ObjectViewComponent {
   @Input() object: FMLStructureObject;
   @Output() fieldSelect = new EventEmitter<{
     object: FMLStructureObject,
-    field: string
+    field: string,
+    type?: string
   }>();
+
+  protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition} = {
+    visible: false
+  };
+
+  constructor(
+    private notifications: MuiNotificationService
+  ) { }
 
 
   protected onFieldClick(object: FMLStructureObject, field: string): void {
-    this.fieldSelect.emit({object, field});
+    const types = object.fields.find(f => f.name === field).types;
+    if (types.includes("Resource")) {
+      this.resourceModal = {visible: true, field};
+    // } else if (types.length > 1) {
+      // this.notifications.warning("Multiple types are not supported yet", undefined, {placement: 'top'});
+    } else {
+      this.fieldSelect.emit({object, field});
+    }
   }
 
-  protected isResourceSelectable = (f: FMLStructureObjectField) => {
-    return f.types?.some(t => FMLStructure.isBackboneElement(t)) || this.fml?.bundle?.entry.some(e => f.types?.includes(e.resource.type));
+
+  /* Resource modal */
+
+  protected resourceConfirm(field: string, sd: StructureDefinition): void {
+    this.fieldSelect.emit({object: this.object, field, type: sd.type});
+    this.resourceModal = {visible: false};
+  }
+
+
+  /* Utils */
+
+  protected isResourceSelectable = (f: FMLStructureObjectField): boolean => {
+    return this.isBackboneElement(f) || this.fml?.bundle?.entry.some(e => f.types?.includes(e.resource.type));
   };
 
   protected isBackboneElement = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => FMLStructure.isBackboneElement(t))
+    return f.types?.some(t => FMLStructure.isBackboneElement(t));
   };
 
   protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
     return fields.filter(f => f.name.startsWith(base));
-  }
+  };
 }

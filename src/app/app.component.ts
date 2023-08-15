@@ -9,12 +9,11 @@ import {HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-we
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
-import {RULE_ID} from './fml/rule-parsers/parser';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
+import {SEQUENCE} from './fml/fml.utils';
 
-let ID = 69;
 
 interface RuleDescription {
   code: string,
@@ -45,6 +44,11 @@ const RULES: RuleDescription[] = [
     code: 'truncate',
     name: 'truncate',
     description: 'Source must be some stringy type that has some meaningful length property'
+  },
+  {
+    code: 'cc',
+    name: 'cc',
+    description: 'Create a CodeableConcept from the parameters provided'
   }
 ];
 
@@ -140,6 +144,19 @@ export class AppComponent implements OnInit {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = this.fml = FMLStructureMapper.map(bundle, resp);
         console.log(fml);
+
+        const nums = fml.connections
+          .flatMap(c => [c.sourceObject, c.targetObject])
+          .filter(o => o.includes("#"))
+          .map(o => o.split("#")[1])
+          .map(Number)
+          .filter(unique);
+        const max = Math.max(...nums)
+        while (SEQUENCE.v <= max) {
+          SEQUENCE.next()
+        }
+
+
         this.initEditor(fml);
       });
     });
@@ -184,9 +201,7 @@ export class AppComponent implements OnInit {
 
   protected export(): void {
     const sm = this._export();
-    if (!this._dev) {
-      saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
-    }
+    saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
   }
 
   protected exportAsFML(m: MuiModalContainerComponent): void {
@@ -293,8 +308,7 @@ export class AppComponent implements OnInit {
 
   /* Structure tree */
 
-  protected onStructureItemSelect(parentObj: FMLStructureObject, field: string): void {
-    console.log(parentObj, field)
+  protected onStructureItemSelect(parentObj: FMLStructureObject, field: string, type?: string): void {
     let mode: FMLStructureEntityMode = 'object';
     if (['source', 'element'].includes(parentObj.mode)) {
       mode = 'element';
@@ -305,13 +319,13 @@ export class AppComponent implements OnInit {
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
 
-    let fieldType = fieldElement.type?.[0]?.code; // fixme: ACHTUNG! the first type is selected!
+    let fieldType = type ?? fieldElement.type?.[0]?.code; // fixme: ACHTUNG! the first type is selected!
     if (FMLStructure.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
 
     const obj = this.fml.newFMLObject(fieldType, fieldPath, mode);
-    obj.name = `${parentObj.name}.${field}#${ID++}`;
+    obj.name = `${parentObj.name}.${field}#${SEQUENCE.next()}`;
     this.fml.objects[obj.name] = obj;
 
     this.editor._createObjectNode(obj);
@@ -339,7 +353,7 @@ export class AppComponent implements OnInit {
 
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
-    rule.name = `${data.code}#${RULE_ID.next()}`;
+    rule.name = `${data.code}#${SEQUENCE.next()}`;
     rule.action = data.code;
     rule.parameters = [];
     rule.position = {
@@ -354,13 +368,13 @@ export class AppComponent implements OnInit {
 
   /* Setup wizard */
 
-  protected initFromWizard(data: {name: string, sources: string[], targets: string[]}): void {
-    const sources = data.sources.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
+  protected initFromWizard(data: {name: string, sources: StructureDefinition[], targets: StructureDefinition[]}): void {
+    const sources = data.sources.map(sd => this.resourceBundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
       url: r.url,
       mode: 'source' as any,
       alias: r.id
     }));
-    const targets = data.targets.map(url => this.resourceBundle.entry.find(e => e.resource.url === url).resource).map(r => ({
+    const targets = data.targets.map(sd => this.resourceBundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
       url: r.url,
       mode: 'target' as any,
       alias: r.id

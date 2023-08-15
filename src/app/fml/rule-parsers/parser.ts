@@ -1,13 +1,7 @@
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../fml-structure';
 import {isDefined, isNil} from '@kodality-web/core-util';
-
-export const RULE_ID = {
-  v: 420,
-  next: function () {
-    return this.v++;
-  }
-};
+import {SEQUENCE} from '../fml.utils';
 
 
 export interface FMLRuleParserResult {
@@ -37,7 +31,7 @@ export abstract class FMLRuleParser {
     variables: FMLRuleParserVariables
   ): FMLStructureRule {
     const rule = new FMLStructureRule();
-    rule.name = `${ruleName}#${RULE_ID.next()}`;
+    rule.name = `${ruleName}#${SEQUENCE.next()}`;
     // rule.alias = fhirRuleTarget.variable;
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
