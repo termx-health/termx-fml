@@ -1,4 +1,4 @@
-import {FMLStructureRule} from '../fml-structure';
+import {FMLStructureRule, FMLStructureRuleParameter} from '../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
 
 export abstract class FMLRuleRenderer {
@@ -23,6 +23,10 @@ export abstract class FMLRuleRenderer {
         ${rule.name}
       </div>
     `;
+  }
+
+  public renderParam(p: FMLStructureRuleParameter): string {
+    return p.type === 'const' ? `'${p.value}'` : `<kbd>${p.value}</kbd>`;
   }
 
   public onInputConnectionCreate(

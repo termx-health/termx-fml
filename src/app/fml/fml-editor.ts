@@ -131,6 +131,8 @@ export class FMLEditor extends Drawflow {
         const conn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
         _fml.putConnection(conn);
         this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
+
+        this._rerenderNodes();
       }
     });
 
@@ -313,6 +315,11 @@ export class FMLEditor extends Drawflow {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
         content.innerHTML = this._fml.objects[name].html();
         this.updateConnectionNodes(`node-${nodeId}`);
+
+
+        Array.from(document.getElementsByClassName(`node_out_node-${nodeId} output_1`)).forEach(svg => {
+          (svg.firstElementChild as SVGPathElement).style.setProperty('--stroke-color', 'var(--color-borders)');
+        });
       }
     });
 

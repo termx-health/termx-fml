@@ -12,7 +12,7 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     return `
       ${super.render(editor, rule)}
       <ul class="description">
-        ${rule.parameters.map(p => `<li>${p.value}</li>`).join('\n')}
+        ${rule.parameters.map(p => `<li>${this.renderParam(p)}</li>`).join('\n')}
       </ul>
     `;
   }

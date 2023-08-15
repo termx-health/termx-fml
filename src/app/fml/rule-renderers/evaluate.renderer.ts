@@ -9,7 +9,7 @@ export class FMLEvaluateRuleRenderer extends FMLRuleRenderer {
     return `
       ${super.render(editor, rule)}
       <div class="description">
-        ${rule.parameters.map(p => `<div>${p.value}</div>`).join('\n')}
+        ${rule.parameters.map(p => `<div>${this.renderParam(p)}</div>`).join('\n')}
       </div>
     `;
   }

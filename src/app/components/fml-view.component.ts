@@ -13,7 +13,6 @@ import {group, isDefined} from '@kodality-web/core-util';
             <td>
               <div class="m-justify-between">
                 <div>{{o.name}} ({{o.fields.length}})</div>
-                <span *ngIf="_dev" class="m-subtitle">x: {{o.position?.x ?? '-'}}; y:{{o.position?.y ?? '-'}}</span>
               </div>
               <div class="description">{{o.resource}}</div>
             </td>
@@ -37,12 +36,19 @@ import {group, isDefined} from '@kodality-web/core-util';
                 <div>{{r.name}}</div>
                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                   <div class="m-subtitle">{{r.action}}</div>
-                  <div *ngIf="_dev" class="m-subtitle">x: {{r.position?.x ?? '-'}}; y:{{r.position?.y ?? '-'}}</div>
                 </div>
               </div>
               <div class="description">
-                <div>source: {{r.sources | join: ', '}}</div>
-                <div>target: {{r.targets | join: ', '}}</div>
+                <div>
+                  <div *ngFor="let s of r.sources" style="color: var(--color-green-6)">
+                    {{s}}
+                  </div>
+                </div>
+                <div>
+                  <div *ngFor="let t of r.targets" >
+                    {{t}}
+                  </div>
+                </div>
               </div>
             </td>
           </tr>

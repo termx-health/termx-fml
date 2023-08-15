@@ -234,6 +234,14 @@ export class FMLStructure {
       part: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
     }));
 
+    o.rawFields.unshift({
+      name: "$this",
+      types: [],
+      multiple: false,
+      required: false,
+      part: false
+    });
+
     return o;
   }
 

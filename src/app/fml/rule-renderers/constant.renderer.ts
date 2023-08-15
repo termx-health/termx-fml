@@ -9,7 +9,7 @@ export class FMLConstantRuleRenderer extends FMLRuleRenderer {
     return `
       ${this.renderMeta(rule)}
 
-      <h5>const ${rule.parameters.map(p => `'${p.value}'`).join(',')}</h5>
+      <h5>const ${rule.parameters.map(p => this.renderParam(p)).join(',')}</h5>
     `;
   }
 
