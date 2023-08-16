@@ -36,7 +36,6 @@ export class FMLStructureMapper {
       });
 
 
-      // hoisting
       function _parseRule(fhirRule: StructureMapGroupRule, variables: FMLRuleParserVariables) {
         fhirRule.source ??= [];
         fhirRule.target ??= [];

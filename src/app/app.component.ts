@@ -81,7 +81,7 @@ export class AppComponent implements OnInit {
       const mapResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
 
       this.resourceLoader = {total: mapResources.length + resources.length, current: 0};
-      const reqs$ = [...mapResources, ...resources].map(k => {
+      const reqs$ = [...mapResources, ...resources].filter(unique).map(k => {
         return this.cache.put(k, this.http.get<StructureDefinition>(`assets/StructureDefinition/${k}.json`)).pipe(tap(() => this.resourceLoader.current++));
       });
 
@@ -236,11 +236,11 @@ export class AppComponent implements OnInit {
 
     order.forEach((o, i) => {
       nodeEls.filter(e => e.textContent.trim() === o).forEach(e => {
-        setTimeout(() => e.parentElement.parentElement.style.backgroundColor = 'var(--color-primary-2)', (i + 1) * timeout);
+        setTimeout(() => e.closest<HTMLElement>('.drawflow-node').style.backgroundColor = 'var(--color-primary-2)', (i + 1) * timeout);
       });
     });
 
-    setTimeout(() => nodeEls.forEach(e => e.parentElement.parentElement.style.backgroundColor = ''), (order.length + 1) * timeout);
+    setTimeout(() => nodeEls.forEach(e => e.closest<HTMLElement>('.drawflow-node').style.backgroundColor = ''), (order.length + 1) * timeout);
   }
 
   protected autoLayout(): void {

@@ -45,7 +45,7 @@ import {group, isDefined} from '@kodality-web/core-util';
                   </div>
                 </div>
                 <div>
-                  <div *ngFor="let t of r.targets" >
+                  <div *ngFor="let t of r.targets">
                     {{t}}
                   </div>
                 </div>
@@ -93,11 +93,10 @@ export class FmlViewComponent {
     connections: FMLStructureConnection[]
   } {
     return {
-      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => ({
+      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => (<FMLStructureObject>{
         ...o,
         fields: o.fields,
-        html: undefined
-      }) as FMLStructureObject),
+      })),
       rules: this.fml?.rules.map(r => ({
         ...r,
         sources: this.fml.getSources(r.name).map(this.toObjectFieldPath),

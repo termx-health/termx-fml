@@ -32,16 +32,16 @@ export class FMLStructureObject extends FMLStructureEntity {
     return this.rawFields.filter(f => !f.part);
   }
 
-  public getFieldIndex(field: string): number {
+  public fieldIndex(field: string): number {
     return this.fields.findIndex(f => f.name === field);
   }
 
 
   /** @deprecated */
-  public html(): string {
+  public static html(o: FMLStructureObject): string {
     const meta = () => `
       <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
-        ${this.name}
+        ${o.name}
       </div>
     `;
 
@@ -49,18 +49,20 @@ export class FMLStructureObject extends FMLStructureEntity {
       <div>
         ${meta()}
 
-        <h5 class="node-title">${this.mode === 'object' ? 'new' : this.mode} <b>${this.resource}</b></div>
-        ${this.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
+        <h5 class="node-title">${o.mode === 'object' ? 'new' : o.mode} <b>${o.resource}</b></div>
+        ${o.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
       </div>
     `;
   }
 
-  /** DO NOT REMOVE! Used in JSON.stringify(), because getters are not serialized automatically */
+  /**
+   * DO NOT REMOVE!
+   * Used by JSON.stringify(), because getters are not serialized automatically
+   */
   toJSON(): any {
     return {
       ...this,
-      fields: this.fields,
-      html: undefined
+      fields: this.fields
     };
   }
 }
@@ -112,10 +114,10 @@ export class FMLStructure {
 
 
   public subFML(target: string, field: string): FMLStructure {
+    const _rules = group(this.rules, r => r.name);
+
     const _fml = new FMLStructure();
     _fml.bundle = structuredClone(this.bundle);
-
-    const _rules = group(this.rules, r => r.name);
 
     const traverse = (o: string, f?) => {
       if (this.objects[o]) {
@@ -132,6 +134,7 @@ export class FMLStructure {
           traverse(e.sourceObject);
         });
     };
+
     traverse(target, field);
     return _fml;
   }
@@ -205,7 +208,7 @@ export class FMLStructure {
     }
 
     const selfDefinition = elements[0];
-    // fixme: provide type as an argument? currently takes the first one
+    // fixme: takes the first one! provide type as an argument?
     const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
     const selfFields = elements.slice(1);
 
@@ -262,7 +265,7 @@ export class FMLStructure {
   /* Utils */
 
   public findStructureDefinition(bundle: Bundle<StructureDefinition>, anyPath: string): StructureDefinition {
-    // Resource.whatever.element (anyPath) => Resource (base)
+    // MyResource.whatever.element (anyPath) => MyResource (base)
     const base = anyPath.includes('.')
       ? anyPath.slice(0, anyPath.indexOf('.'))
       : anyPath;

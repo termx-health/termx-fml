@@ -116,7 +116,6 @@ export class FMLEditor extends Drawflow {
         renderer.onInputConnectionCreate(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
       }
 
-
       // node -> node
       if (this._isObj(source) && this._isObj(target)) {
         const sourceFieldIdx = getPortNumber(e.output_class);
@@ -152,7 +151,6 @@ export class FMLEditor extends Drawflow {
         const renderer = getRuleRenderer(target.data.rule.action);
         renderer.onInputConnectionRemove(this, target, getPortNumber(e.input_class), source, getPortNumber(e.output_class));
       }
-
 
       // node -> node
       if (this._isObj(source) && this._isObj(target)) {
@@ -194,7 +192,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--with-title', {obj},
-      obj.html(),
+      FMLStructureObject.html(obj),
       false
     );
 
@@ -207,15 +205,13 @@ export class FMLEditor extends Drawflow {
       throw Error(`Rule node with name "${rule.name}" is already created`);
     }
 
-    const htmlRenderer = getRuleRenderer(rule.action);
-
     const nodeId = this.addNode(
       rule.name,
       1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
-      htmlRenderer.render(this, rule),
+      getRuleRenderer(rule.action).render(this, rule),
       false
     );
 
@@ -230,8 +226,8 @@ export class FMLEditor extends Drawflow {
     targetField: string | number
   ): void {
     // field name OR port number same as field index + 1
-    const oIdx = typeof sourceField === 'string' ? this._fml.objects[source].getFieldIndex(sourceField) + 1 : sourceField;
-    const iIdx = typeof targetField === 'string' ? this._fml.objects[target].getFieldIndex(targetField) + 1 : targetField;
+    const oIdx = typeof sourceField === 'string' ? this._fml.objects[source].fieldIndex(sourceField) + 1 : sourceField;
+    const iIdx = typeof targetField === 'string' ? this._fml.objects[target].fieldIndex(targetField) + 1 : targetField;
 
     try {
       this.addConnection(
@@ -313,7 +309,7 @@ export class FMLEditor extends Drawflow {
       const {el, nodeId} = this._getNodeElementByName(name);
       if (isDefined(el)) {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = this._fml.objects[name].html();
+        content.innerHTML = FMLStructureObject.html(this._fml.objects[name]);
         this.updateConnectionNodes(`node-${nodeId}`);
 
 

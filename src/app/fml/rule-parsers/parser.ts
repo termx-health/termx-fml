@@ -67,7 +67,7 @@ export abstract class FMLRuleParser {
       if (isDefined(fml.objects[source])) {
         // fml object
         const sourceField = variable.slice(source.length + (variable.includes(".") ? 1 : 0));
-        const sourceFieldIdx = fml.objects[source].getFieldIndex(sourceField);
+        const sourceFieldIdx = fml.objects[source].fieldIndex(sourceField);
         conns.push(fml.newFMLConnection(source, sourceFieldIdx, rule.name, 0));
       } else {
         // fml rule, using startsWith because variable has the StructureMap rule's raw name
@@ -103,7 +103,7 @@ export abstract class FMLRuleParser {
     }
     return [
       fml.newFMLConnection(
-        sourceObject, fml.objects[sourceObject].getFieldIndex(sourceField) ?? 0,
+        sourceObject, fml.objects[sourceObject].fieldIndex(sourceField) ?? 0,
         rule.name, 0
       )
     ];
@@ -125,7 +125,7 @@ export abstract class FMLRuleParser {
     return [
       fml.newFMLConnection(
         rule.name, 0,
-        targetObject, fml.objects[targetObject].getFieldIndex(targetField) ?? 0,
+        targetObject, fml.objects[targetObject].fieldIndex(targetField) ?? 0,
       )
     ];
   }
