@@ -1,20 +1,20 @@
 <div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; border-bottom: 1px solid var(--color-borders);">
   <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
     <div class="m-items-middle">
-      <m-button (mClick)="_setupWizard = true" mSize="small">New</m-button>
+      <m-button (mClick)="wizard.open()" mSize="small">New</m-button>
 
       <m-button (mClick)="importer.open()" mSize="small">Import</m-button>
-      <m-button (mClick)="export()" mSize="small">Export</m-button>
-      <m-button *ngIf="_dev" (mClick)="exportAsFML(fmlPreview)" mSize="small">FML</m-button>
+      <m-button (mClick)="exportStructureMap()" mSize="small">Export</m-button>
+      <m-button *ngIf="isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small">FML</m-button>
 
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
       <m-dropdown [mHideIfEmpty]="false">
-        <div *m-dropdown-container>{{localstorage.getItem('selected_structure_map')}}.json
-          <m-icon *ngIf="localMaps[localstorage.getItem('selected_structure_map')]" mCode="database"/>
+        <div *m-dropdown-container>{{localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)}}.json
+          <m-icon *ngIf="localMaps[localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)]" mCode="database"/>
         </div>
-        <ng-container *ngFor="let m of maps">
-          <a *m-dropdown-item (mClick)="localstorage.setItem('selected_structure_map', m); init()">{{m}}
+        <ng-container *ngFor="let m of structureMaps">
+          <a *m-dropdown-item (mClick)="localstorage.setItem(SELECTED_STRUCTURE_MAPS_KEY, m); init()">{{m}}
             <m-icon *ngIf="localMaps[m]" mCode="database"/>
           </a>
         </ng-container>
@@ -85,9 +85,9 @@
 
 
 <!-- FML preview modal -->
-<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="_fmlResult = undefined">
+<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="fmlResult = undefined">
   <div *m-modal-content>
-    <pre>{{_fmlResult}}</pre>
+    <pre>{{fmlResult}}</pre>
   </div>
 </m-modal>
 
@@ -103,35 +103,4 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<m-modal #wizard [mVisible]="_setupWizard" mPlacement="top" (mClose)="_setupWizard = false">
-  <ng-container *ngIf="_setupWizard">
-    <form #f="ngForm" *ngIf="{name: '', sources: [], targets:[]} as data">
-      <div *m-modal-header>
-        StructureMap setup
-      </div>
-
-      <div *m-modal-content>
-        <m-form-item mName="name" mLabel="Name" required>
-          <m-input name="name" [(ngModel)]="data.name" required/>
-        </m-form-item>
-
-        <m-form-row>
-          <m-form-item *m-form-col mName="sources" mLabel="Sources" required>
-            <app-structure-definition-select name="sources" [(ngModel)]="data.sources" [bundle]="fml.bundle" multiple required/>
-          </m-form-item>
-
-          <m-form-item *m-form-col mName="targets" mLabel="Target" required>
-            <app-structure-definition-select name="targets" [(ngModel)]="data.targets" [bundle]="fml.bundle" multiple required/>
-          </m-form-item>
-        </m-form-row>
-      </div>
-
-      <div *m-modal-footer>
-        <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
-          Let's Go
-        </m-button>
-      </div>
-    </form>
-  </ng-container>
-</m-modal>
-
+<app-setup-wizard #wizard [bundle]="resourceBundle" (created)="initFromWizard($event)"/>

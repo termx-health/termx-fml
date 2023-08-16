@@ -1,4 +1,4 @@
-import {copyDeep, isNil, unique} from '@kodality-web/core-util';
+import {copyDeep, group, isNil, unique} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
 import {getAlphabet, SEQUENCE} from './fml.utils';
@@ -39,7 +39,7 @@ export class FmlStructureGenerator {
     sm.extension = [{
       url: 'fml-export',
       valueString: JSON.stringify({
-        objects: fml.objects,
+        objects: group(Object.values(fml.objects).map(o => ({...o, fields: o.rawFields, rawFields: undefined})), o => o.name),
         rules: fml.rules,
         connections: fml.connections
       })

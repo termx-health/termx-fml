@@ -136,13 +136,16 @@ export class FMLStructureMapper {
   }
 
   private static fromObj(bundle: Bundle<StructureDefinition>, d: {
-    objects: {[name: string]: FMLStructureObject},
+    objects: {[name: string]: Omit<FMLStructureObject, 'rawFields'>},
     rules: FMLStructureRule[],
     connections: FMLStructureConnection[]
   }): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
-    Object.keys(d.objects).forEach(k => fml.objects[k] = plainToInstance(FMLStructureObject, d.objects[k]));
+    Object.keys(d.objects).forEach(k => fml.objects[k] = plainToInstance(FMLStructureObject, {
+      ...d.objects[k],
+      rawFields: d.objects[k].fields
+    }));
     fml.rules = plainToInstance(FMLStructureRule, d.rules);
     fml._connections = plainToInstance(FMLStructureConnection, d.connections);
     return fml;

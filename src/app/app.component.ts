@@ -1,10 +1,9 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
-import {StructureMapService} from './fhir/structure-map.service';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {finalize, forkJoin, interval, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
-import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
+import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
@@ -59,23 +58,20 @@ const RULES: RuleDescription[] = [
 
 @Component({
   selector: 'app-root',
-  templateUrl: 'app.component.html',
-  host: {
-    '[style.filter]': `_setupWizard ? 'blur(3px)' : 'initial'`
-  }
+  templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
-    const name = localStorage.getItem('selected_structure_map');
+    const name = localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY);
     const url = `assets/StructureMap/${name}.json`;
 
     if (isDefined(name) && name in this.localMaps) {
       return of(this.localMaps[name]);
     }
 
-    return this.structureMapService.getStructureMap(url).pipe(map(resp => this.structureMap = resp));
+    return this.http.get<StructureMap>(url).pipe(map(resp => this.structureMap = resp));
   };
 
   // todo: @Input()
@@ -85,17 +81,19 @@ export class AppComponent implements OnInit {
       const mapResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
 
       this.resourceLoader = {total: mapResources.length + resources.length, current: 0};
-      const reqs$ = [
-        ...mapResources.map(k => this.cache.put(k, this.structureMapService.getStructureDefinition(k)).pipe(tap(() => this.resourceLoader.current++))),
-        ...resources.map(r => this.cache.put(r, this.structureMapService.getStructureDefinition(r)).pipe(tap(() => this.resourceLoader.current++)))
-      ];
-      return forkJoin(reqs$).pipe(map(definitions => {
-        return this.resourceBundle = {
-          resourceType: 'Bundle',
-          type: 'collection',
-          entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
-        };
-      }), finalize(() => this.resourceLoader = undefined));
+      const reqs$ = [...mapResources, ...resources].map(k => {
+        return this.cache.put(k, this.http.get<StructureDefinition>(`assets/StructureDefinition/${k}.json`)).pipe(tap(() => this.resourceLoader.current++));
+      });
+
+      return forkJoin(reqs$).pipe(
+        map(definitions => {
+          return this.resourceBundle = {
+            resourceType: 'Bundle',
+            type: 'collection',
+            entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
+          };
+        }),
+        finalize(() => this.resourceLoader = undefined));
     }));
   };
 
@@ -105,20 +103,19 @@ export class AppComponent implements OnInit {
   protected nodeSelected: DrawflowNode;
 
   // component
+  protected structureMaps: string[];
   protected ruleDescriptions = RULES;
   protected isAnimated = true;
-
-  protected maps: string[];
-  protected localstorage = localStorage;
+  protected isDev = isDevMode();
   protected resourceLoader: {total: number, current: number};
-  protected _fmlResult: string;
-  protected _setupWizard: boolean;
-  protected _dev = isDevMode();
+  protected fmlResult: string;
+  protected localstorage = localStorage;
 
+  protected SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
+  protected STRUCTURE_MAPS_KEY = "structure_maps";
 
   constructor(
     private http: HttpClient,
-    private structureMapService: StructureMapService,
     private notificationService: MuiNotificationService,
     private cache: HttpCacheService
   ) {
@@ -136,31 +133,26 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
-      const local = Object.values(this.localMaps).map(m => m.name);
-      this.maps = [...maps, ...local].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+      const localMaps = Object.values(this.localMaps).map(m => m.name);
+      this.structureMaps = [...maps, ...localMaps].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
       this.init();
     });
   }
 
   protected init(): void {
-    this.localstorage.setItem('selected_structure_map', localStorage.getItem('selected_structure_map') ?? "step3");
+    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY) ?? "step3");
 
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = this.fml = FMLStructureMapper.map(bundle, resp);
         console.log(fml);
 
-        const nums = fml.connections
+        SEQUENCE.v = Math.max(...fml.connections
           .flatMap(c => [c.sourceObject, c.targetObject])
           .filter(o => o.includes("#"))
           .map(o => o.split("#")[1])
           .map(Number)
-          .filter(unique);
-        const max = Math.max(...nums)
-        while (SEQUENCE.v <= max) {
-          SEQUENCE.next()
-        }
-
+          .filter(unique));
 
         this.initEditor(fml);
       });
@@ -168,55 +160,24 @@ export class AppComponent implements OnInit {
   }
 
 
-  /* Export */
+  /* Toolbar */
 
-  private prepareExportData(): void {
+  private export(): StructureMap {
     this.editor._rerenderNodes();
+
     const exp = this.editor.export();
     Object.values(exp.drawflow.Home.data).forEach(el => {
       const {x, y} = (el.data.obj ?? el.data.rule).position;
       el.pos_x = x;
       el.pos_y = y;
     });
-  }
 
-  private _export(): StructureMap {
-    this.prepareExportData();
     try {
-      return FmlStructureGenerator.generate(this.fml, {name: localStorage.getItem('selected_structure_map')});
+      return FmlStructureGenerator.generate(this.fml, {name: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
     } catch (e) {
       this.notificationService.error('Export failed', e);
       throw e;
     }
-  }
-
-  protected save(): void {
-    try {
-      const sm = this._export();
-
-      const maps = this.localMaps;
-      maps[sm.name] = sm;
-      localStorage.setItem('structure_maps', JSON.stringify(maps));
-
-      this.notificationService.success("Saved into localstorage", 'Check console for any errors!', {placement: 'top'});
-    } catch (e) {
-      /* empty */
-    }
-  }
-
-  protected export(): void {
-    const sm = this._export();
-    saveAs(new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'}), `${sm.name}.json`);
-  }
-
-  protected exportAsFML(m: MuiModalContainerComponent): void {
-    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this._export())}, {responseType: 'text'}).subscribe(resp => {
-      this._fmlResult = resp
-        .replaceAll(',  ', ',\n    ')
-        .replaceAll(' ->  ', ' ->\n    ')
-        .replaceAll("#", "_");
-      m.open();
-    });
   }
 
   protected importStructureMap(m: MuiModalContainerComponent, json: string): void {
@@ -228,11 +189,41 @@ export class AppComponent implements OnInit {
     const maps = this.localMaps;
     maps[sm.name] = sm;
 
-    localStorage.setItem('selected_structure_map', sm.name);
-    localStorage.setItem('structure_maps', JSON.stringify(maps));
+    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, sm.name);
+    localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify(maps));
 
     this.init();
     m.close();
+  }
+
+  protected exportStructureMap(): void {
+    const sm = this.export();
+    const blob = new Blob([JSON.stringify(sm, null, 2)], {type: 'application/json'});
+    saveAs(blob, `${sm.name}.json`);
+  }
+
+  protected viewAsFML(m: MuiModalContainerComponent): void {
+    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this.export())}, {responseType: 'text'}).subscribe(resp => {
+      m.open();
+      this.fmlResult = resp
+        .replaceAll(',  ', ',\n    ')
+        .replaceAll(' ->  ', ' ->\n    ')
+        .replaceAll("#", "_");
+    });
+  }
+
+  protected save(): void {
+    try {
+      const sm = this.export();
+
+      const maps = this.localMaps;
+      maps[sm.name] = sm;
+      localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify(maps));
+
+      this.notificationService.success("Saved into localstorage", 'Check console for any errors!', {placement: 'top'});
+    } catch (e) {
+      /* empty */
+    }
   }
 
 
@@ -359,7 +350,6 @@ export class AppComponent implements OnInit {
   protected onDrop(ev: DragEvent): void {
     const {top, left} = this.editor._getOffsets();
 
-
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
     rule.name = `${data.code}#${SEQUENCE.next()}`;
@@ -377,55 +367,14 @@ export class AppComponent implements OnInit {
 
   /* Setup wizard */
 
-  protected initFromWizard(data: {name: string, sources: StructureDefinition[], targets: StructureDefinition[]}): void {
-    const sources = data.sources.map(sd => this.resourceBundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
-      url: r.url,
-      mode: 'source' as any,
-      alias: r.id
-    }));
-    const targets = data.targets.map(sd => this.resourceBundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
-      url: r.url,
-      mode: 'target' as any,
-      alias: r.id
-    }));
-
-    const map: StructureMap = {
-      "id": data.name,
-      "resourceType": "StructureMap",
-      "status": "draft",
-      "name": data.name,
-      "url": `http://hl7.org/fhir/StructureMap/${data.name}`,
-      "structure": [
-        ...sources,
-        ...targets
-      ],
-      "group": [
-        {
-          "name": "main",
-          "input": [
-            ...sources.map(s => ({
-              name: s.alias,
-              type: s.alias,
-              mode: 'source' as StructureMapGroupInput['mode']
-            })),
-            ...targets.map(s => ({
-              name: s.alias,
-              type: s.alias,
-              mode: 'source' as StructureMapGroupInput['mode']
-            }))
-          ],
-          "rule": []
-        }
-      ]
-    };
-
+  protected initFromWizard(map: StructureMap): void {
     const maps = this.localMaps;
-    maps[data.name] = map;
-    localStorage.setItem('selected_structure_map', data.name);
-    localStorage.setItem('structure_maps', JSON.stringify(maps));
+    maps[map.name] = map;
+    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, map.name);
+    localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify(maps));
 
+    this.structureMaps = [...this.structureMaps, map.name].filter(unique);
     this.init();
-    this._setupWizard = false;
   }
 
 
@@ -442,7 +391,7 @@ export class AppComponent implements OnInit {
   /* Utils */
 
   protected get localMaps(): {[k: string]: StructureMap} {
-    return JSON.parse(localStorage.getItem('structure_maps') ?? '{}');
+    return JSON.parse(localStorage.getItem(this.STRUCTURE_MAPS_KEY) ?? '{}');
   }
 
   protected splitUrl(url: string): [string, string] {

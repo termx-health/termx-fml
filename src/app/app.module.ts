@@ -14,6 +14,7 @@ import {RuleViewComponent} from './components/rule-view.component';
 import {ObjectViewComponent} from './components/object-view.component';
 import {FmlViewComponent} from './components/fml-view.component';
 import {StructureDefinitionSelectComponent} from './components/structure-definition-select.component';
+import {SetupWizardComponent} from './components/setup-wizard.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import {StructureDefinitionSelectComponent} from './components/structure-definit
     RuleViewComponent,
     ObjectViewComponent,
     FmlViewComponent,
-    StructureDefinitionSelectComponent
+    StructureDefinitionSelectComponent,
+    SetupWizardComponent
   ],
   imports: [
     BrowserModule,
