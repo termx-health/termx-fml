@@ -1,11 +1,11 @@
-<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; border-bottom: 1px solid var(--color-borders);">
-  <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr" class="m-justify-between">
-    <div class="m-items-middle">
-      <m-button (mClick)="wizard.open()" mSize="small">New</m-button>
+<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; background: linear-gradient(90deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2);">
+  <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr" class="m-justify-between">
+    <div class="m-items-middle menu">
+      <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
 
-      <m-button (mClick)="importer.open()" mSize="small">Import</m-button>
-      <m-button (mClick)="exportStructureMap()" mSize="small">Export</m-button>
-      <m-button *ngIf="isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small">FML</m-button>
+      <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
+      <m-button mDisplay="text" (mClick)="exportStructureMap()" mSize="small">Export</m-button>
+      <m-button mDisplay="text" *ngIf="isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small">FML</m-button>
 
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
@@ -20,64 +20,89 @@
         </ng-container>
       </m-dropdown>
 
-      <m-divider mVertical/>
-      <m-button (mClick)="topology()" mSize="small">Topology</m-button>
-      <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
-    </div>
 
-    <div class="m-items-middle" style="justify-self: center">
       <ng-container *ngIf="resourceLoader">
+        <m-divider mVertical/>
         <progress [value]="resourceLoader.current / resourceLoader.total * 100" max="100"></progress>
       </ng-container>
     </div>
 
-    <div style="justify-self: end">
+    <div style="justify-self: end" class="m-items-middle">
       Animation
       <nz-switch [(ngModel)]="isAnimated" nzSize="small"></nz-switch>
+
+      <m-divider mVertical/>
+      <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
+      <m-button (mClick)="topology()" mSize="small">Topology</m-button>
     </div>
   </div>
 </div>
 
-<div style="height: calc(100dvh - 2.5rem); display: grid; grid-template-columns: 2fr 8fr 2fr">
+<div style="height: calc(100dvh - 2.5rem); display: grid; grid-template-columns: auto 1fr">
   <!-- LEFT PANEL -->
-  <div style="border-right: var(--border-table); height: 100%; overflow: auto; background: var(--color-background-component);">
+  <m-collapse-panel
+    mKey="fml-left-panel"
+    mResizable
+    [mResizableMaxWidth]="400"
+    style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 1"
+  >
     <app-fml-view [fml]="fml"/>
-  </div>
+  </m-collapse-panel>
 
 
   <!-- MAIN PANEL -->
-  <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-    <!--<div id="drawflow" style="height: 100%; width: 100%; outline: none"></div>-->
-  </div>
-
-
-  <!-- RIGHT PANEL -->
-  <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
-    <div *ngIf="!nodeSelected" style="padding: 1rem; border-bottom: var(--border-table);">
-      <h5>Transformers</h5>
-      <m-list mSeparated>
-        <m-list-item
-          *ngFor="let rd of ruleDescriptions"
-          class="m-clickable"
-          draggable="true"
-          (dragstart)="onDragStart($event, rd)"
-        >
-          <div>{{rd.name}}</div>
-          <div class="description">{{rd.description}}</div>
-        </m-list-item>
-      </m-list>
-    </div>
-
-
-    <div *ngIf="nodeSelected as node">
-      <!-- Resource -->
-      <div *ngIf="node.data.obj as obj">
-        <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
+  <div style="display: flex; flex-direction: column">
+    <div class="editor-tabbar">
+      <div
+        *ngFor="let key of Object.keys(fmls)"
+        class="editor-tab m-justify-between"
+        [class.editor-tab--selected]="key === fmlSelected"
+        (click)="selectGroup(key)"
+      >
+        <div>
+          <m-icon mCode="file"/>
+          {{key}}
+        </div>
+        <m-icon *ngIf="key !== 'main'" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
       </div>
 
-      <!-- Rule -->
-      <div *ngIf="node.data.rule as rule">
-        <app-rule-view [rule]="rule" [fml]="fml" (ruleChange)="applyRule($event)"/>
+      <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
+        <m-icon mCode="file-add"/>
+        <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event)"/>
+      </div>
+    </div>
+
+    <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr">
+      <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+      <!-- RIGHT PANEL -->
+      <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
+        <div *ngIf="!nodeSelected" style="padding: 1rem; border-bottom: var(--border-table);">
+          <h5>Transformers</h5>
+          <m-list mSeparated>
+            <m-list-item
+              *ngFor="let rd of ruleDescriptions"
+              class="m-clickable"
+              draggable="true"
+              (dragstart)="onDragStart($event, rd)"
+            >
+              <div>{{rd.name}}</div>
+              <div class="description">{{rd.description}}</div>
+            </m-list-item>
+          </m-list>
+        </div>
+
+
+        <div *ngIf="nodeSelected as node">
+          <!-- Resource -->
+          <div *ngIf="node.data.obj as obj">
+            <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
+          </div>
+
+          <!-- Rule -->
+          <div *ngIf="node.data.rule as rule">
+            <app-rule-view [rule]="rule" [fml]="fml" (ruleChange)="applyRule($event)"/>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -103,4 +128,7 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<app-setup-wizard #wizard [bundle]="resourceBundle" (created)="initFromWizard($event)"/>
+<app-structure-map-setup #wizard [bundle]="resourceBundle" (created)="initFromWizard($event)"/>
+
+
+<app-update-version/>

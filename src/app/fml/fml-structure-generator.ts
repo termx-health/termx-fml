@@ -1,5 +1,5 @@
 import {copyDeep, group, isNil, unique} from '@kodality-web/core-util';
-import {StructureMap, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
+import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
 import {getAlphabet, SEQUENCE} from './fml.utils';
 import {FMLGraph} from './fml-graph';
@@ -16,7 +16,9 @@ const nextVar = (): string => {
 
 
 export class FmlStructureGenerator {
-  public static generate(fml: FMLStructure, options?: {name?: string}): StructureMap {
+  private static MAIN = 'main';
+
+  public static generate(fmls: {[key: string]: FMLStructure}, options?: {name?: string}): StructureMap {
     varCnt = -1;
     const name = options?.name ?? 'fml-compose';
 
@@ -26,88 +28,122 @@ export class FmlStructureGenerator {
       url: `http://termx.health/fhir/StructureMap/${name}`,
       name: `${name}`,
       status: 'draft',
-      group: [
-        {
-          name: 'main',
-          input: [],
-          rule: []
-        }
-      ]
+      group: []
     };
 
     // fml as extension
     sm.extension = [{
       url: 'fml-export',
-      valueString: JSON.stringify({
-        objects: group(Object.values(fml.objects).map(o => ({...o, fields: o.rawFields, rawFields: undefined})), o => o.name),
-        rules: fml.rules,
-        connections: fml.connections
-      })
+      valueString: JSON.stringify(
+        group(Object.keys(fmls), k => k, k => {
+          const fml = fmls[k];
+          return {
+            objects: group(Object.values(fml.objects).map(o => ({...o, fields: o.rawFields, rawFields: undefined})), o => o.name),
+            rules: fml.rules,
+            connections: fml.connections
+          };
+        })
+      )
     }];
 
     // structure inputs
-    const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
-    const targets = Object.values(fml.objects).filter(o => o.mode === 'target');
-    sm.structure = [...sources, ...targets].map<StructureMapStructure>(o => ({
-      url: o.url,
-      mode: o.mode as StructureMapStructure['mode'],
-      alias: o.name
-    }));
+    sm.structure = Object.values(fmls[this.MAIN].objects)
+      .filter(o => ['source', 'target'].includes(o.mode))
+      .map(o => ({
+        url: o.url,
+        mode: o.mode as StructureMapStructure['mode'],
+        alias: o.name
+      }));
+
+
+    // strucuture groups
+    Object.keys(fmls).forEach(groupName => {
+      const group = this.generateGroup(groupName, fmls[groupName]);
+      sm.group.push(group);
+    });
+
+
+    console.log("#### STRUCTURE MAP ####");
+    console.log(sm);
+    return sm;
+  }
+
+
+  private static generateGroup(groupName: string, fml: FMLStructure,): StructureMapGroup {
+    const smGroup = {
+      name: groupName,
+      input: [],
+      rule: []
+    };
+
 
     // group inputs
-    const smGroup = sm.group[0];
-    smGroup.input = [...sources, ...targets].map<StructureMapGroupInput>(o => ({
-      name: o.name,
-      type: o.resource,
-      mode: o.mode as StructureMapGroupInput['mode'],
-    }));
+    smGroup.input = Object.values(fml.objects)
+      .filter(o => ['source', 'target'].includes(o.mode))
+      .map(o => ({
+        name: o.name,
+        type: o.resource,
+        mode: o.mode as StructureMapGroupInput['mode'],
+      }));
 
+    /*
+      Magic below does following:
 
+      before:
+      # AModel (target)
+        * field-1 -> x
+        * field-2
+        * field-3 -> x
+
+      after:
+      [[AModel, field-1], [AModel, field-3]]
+    */
     // group rules
     Object.values(fml.objects)
       .filter(o => o.mode === 'target')
       .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
       .forEach(([target, field]) => {
-        const _fml = fml.subFML(target, field);
-        const _vars = {};
+        const subFml = fml.subFML(target, field);
+        const vars = {};
 
-        const topology = FMLGraph.fromFML(_fml).topologySort();
+        const topology = FMLGraph.fromFML(subFml).topologySort();
         const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
+        const newObjects = copyDeep(topologicalOrder)
+          .reverse()
+          .filter(name => 'object' === subFml.objects[name]?.mode)
+          .flatMap(name => {
+            const obj = subFml.objects[name];
 
-        const newObjects = copyDeep(topologicalOrder).reverse().flatMap(name => {
-          const obj = _fml.objects[name];
-          if ('object' === obj?.mode) {
-            // create sub element
             if (FMLStructure.isBackboneElement(obj.resource)) {
-              return _fml.getTargets(obj.name).map(n => (<StructureMapGroupRuleTarget>{
-                context: _vars[n.object] ?? n.object,
+              // create sub element
+              return subFml.getTargets(obj.name).map(n => (<StructureMapGroupRuleTarget>{
+                context: vars[n.object] ?? n.object,
                 element: n.field,
-                variable: _vars[`${obj.name}`] = nextVar(),
+                variable: vars[`${obj.name}`] = nextVar(),
               }));
             }
+
             return [<StructureMapGroupRuleTarget>{
-              variable: _vars[`${obj.name}`] = nextVar(),
+              variable: vars[`${obj.name}`] = nextVar(),
               transform: 'create',
-              parameter: [
-                {valueString: obj.resource}
-              ]
+              parameter: [{
+                valueString: obj.resource
+              }]
             }];
-          }
-          return [];
-        });
+          });
 
 
         let smRule: StructureMapGroupRule;
         let ctx: FMLStructureObject;
 
         topologicalOrder.forEach(name => {
-          const rule = _fml.rules.find(r => r.name === name);
+          const rule = subFml.rules.find(r => r.name === name);
           if (rule) {
-            smRule.target.push(getRuleGenerator(rule.action).generate(rule, ctx, _vars));
+            smRule.target.push(getRuleGenerator(rule.action).generate(rule, ctx, vars));
           }
 
-          const obj = _fml.objects[name];
+          const obj = subFml.objects[name];
           if (obj) {
             ctx = obj;
             if (isNil(smRule)) {
@@ -122,17 +158,17 @@ export class FmlStructureGenerator {
 
 
             if (['source', 'element'].includes(obj.mode)) {
-              const objOutputs = this.outputs(_fml, obj);
+              const objOutputs = this.outputs(subFml, obj);
 
               // initialize (put into vars) fields that are used as source in other objects/rules
               objOutputs.forEach(n => {
                 const baseName = obj.name.includes('#') ? obj.name.slice(0, obj.name.lastIndexOf("#")) : obj.name;
 
                 smRule.target.push({
-                  variable: _vars[`${obj.name}.${n.name}`] = nextVar(),
+                  variable: vars[`${obj.name}.${n.name}`] = nextVar(),
                   transform: 'evaluate',
                   parameter: [
-                    {valueId: _vars[baseName] ?? baseName},
+                    {valueId: vars[baseName] ?? baseName},
                     {valueString: n.name}
                   ]
                 });
@@ -140,26 +176,26 @@ export class FmlStructureGenerator {
             }
 
             if (['target', 'object'].includes(obj.mode)) {
-              const objInputs = this.inputs(_fml, obj);
+              const objInputs = this.inputs(subFml, obj);
               objInputs.forEach(n => {
-                const fieldSources = _fml.getSources(obj.name, n.name);
+                const fieldSources = subFml.getSources(obj.name, n.name);
                 if (fieldSources.length >= 2) {
                   console.warn("Has multiple sources");
                 }
 
                 const {object, field} = fieldSources[0];
-                if (FMLStructure.isBackboneElement(_fml.objects[object]?.resource)) {
+                if (FMLStructure.isBackboneElement(subFml.objects[object]?.resource)) {
                   // just because
                   return;
                 }
 
                 smRule.target.push({
-                  context: _vars[obj.name] ?? obj.name,
+                  context: vars[obj.name] ?? obj.name,
                   element: n.name,
                   transform: 'copy',
                   parameter: [
                     // create(Any) ?? field (type='var') ?? default fallback
-                    {valueId: _vars[object] ?? _vars[`${object}.${field}`] ?? object}
+                    {valueId: vars[object] ?? vars[`${object}.${field}`] ?? object}
                   ]
                 });
               });
@@ -169,11 +205,8 @@ export class FmlStructureGenerator {
       });
 
 
-    console.log("#### STRUCTURE MAP ####");
-    console.log(sm);
-    return sm;
+    return smGroup;
   }
-
 
   protected static inputs = (fml: FMLStructure, obj: FMLStructureObject): FMLStructureObjectField[] => {
     return fml.connections

@@ -5,7 +5,7 @@ import {group, isDefined} from '@kodality-web/core-util';
 @Component({
   selector: 'app-fml-view',
   template: `
-    <div *ngIf="simpleFML as fml " style="padding: 1rem; display: flex; flex-direction: column">
+    <div *ngIf="simpleFML as fml">
       <!-- Objects -->
       <m-form-item mLabel="Objects">
         <m-table mSize="small">

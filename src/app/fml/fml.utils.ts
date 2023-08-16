@@ -45,7 +45,7 @@ export function getAlphabet(): string[] {
 export const SEQUENCE = {
   v: 420,
   next: function () {
-    return this.v++;
+    return ++this.v;
   }
 };
 

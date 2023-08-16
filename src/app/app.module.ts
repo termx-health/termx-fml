@@ -14,16 +14,18 @@ import {RuleViewComponent} from './components/rule-view.component';
 import {ObjectViewComponent} from './components/object-view.component';
 import {FmlViewComponent} from './components/fml-view.component';
 import {StructureDefinitionSelectComponent} from './components/structure-definition-select.component';
-import {SetupWizardComponent} from './components/setup-wizard.component';
+import {StructureMapSetupComponent} from './components/structure-map-setup.component';
+import {UpdateVersionComponent} from './components/update-version.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    RuleViewComponent,
-    ObjectViewComponent,
     FmlViewComponent,
+    ObjectViewComponent,
+    RuleViewComponent,
     StructureDefinitionSelectComponent,
-    SetupWizardComponent
+    StructureMapSetupComponent,
+    UpdateVersionComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,6 +1,6 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
-import {finalize, forkJoin, interval, map, mergeMap, Observable, of, tap} from 'rxjs';
+import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
@@ -99,7 +99,13 @@ export class AppComponent implements OnInit {
 
   // FML editor
   private editor: FMLEditor;
-  protected fml: FMLStructure;
+  protected fmls: {[key: string]: FMLStructure} = {};
+  protected fmlSelected = 'main';
+
+  protected get fml(): FMLStructure {
+    return this.editor?._fml;
+  }
+
   protected nodeSelected: DrawflowNode;
 
   // component
@@ -118,17 +124,7 @@ export class AppComponent implements OnInit {
     private http: HttpClient,
     private notificationService: MuiNotificationService,
     private cache: HttpCacheService
-  ) {
-    interval(5000).subscribe(val => {
-      this.http.get('./assets/env.js', {responseType: 'text'}).subscribe(resp => {
-        if (val === 0) {
-          localStorage.setItem('env', resp);
-        } else if (localStorage.getItem('env') !== resp) {
-          this.notificationService.warning("New version", "Save changes and refresh browser", {duration: 0, messageKey: 'update-version'});
-        }
-      });
-    });
-  }
+  ) { }
 
 
   public ngOnInit(): void {
@@ -144,36 +140,42 @@ export class AppComponent implements OnInit {
 
     this._structureMap().subscribe(resp => {
       this._resourceBundle(resp).subscribe(bundle => {
-        const fml = this.fml = FMLStructureMapper.map(bundle, resp);
-        console.log(fml);
-
-        SEQUENCE.v = Math.max(...fml.connections
-          .flatMap(c => [c.sourceObject, c.targetObject])
-          .filter(o => o.includes("#"))
-          .map(o => o.split("#")[1])
-          .map(Number)
-          .filter(unique));
-
-        this.initEditor(fml);
+        const fml = FMLStructureMapper.map(bundle, resp);
+        this.fmls = fml;
+        this.setFML('main', fml['main']);
       });
     });
   }
 
+  protected setFML(name: string, fml: FMLStructure): void {
+    this.nodeSelected = undefined;
+    this.fmlSelected = name;
+    this.fmls[name] = fml;
+
+    SEQUENCE.v = Math.max(...Object.values(this.fmls).flatMap(f => f.connections)
+      .flatMap(c => [c.sourceObject, c.targetObject])
+      .filter(o => o.includes("#"))
+      .map(o => o.split("#")[1])
+      .map(Number)
+      .filter(unique));
+
+    this.initEditor(fml);
+  }
 
   /* Toolbar */
 
   private export(): StructureMap {
     this.editor._rerenderNodes();
 
-    const exp = this.editor.export();
-    Object.values(exp.drawflow.Home.data).forEach(el => {
-      const {x, y} = (el.data.obj ?? el.data.rule).position;
-      el.pos_x = x;
-      el.pos_y = y;
-    });
+    // const exp = this.editor.export();
+    // Object.values(exp.drawflow.Home.data).forEach(el => {
+    //   const {x, y} = (el.data.obj ?? el.data.rule).position;
+    //   el.pos_x = x;
+    //   el.pos_y = y;
+    // });
 
     try {
-      return FmlStructureGenerator.generate(this.fml, {name: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
+      return FmlStructureGenerator.generate(this.fmls, {name: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
     } catch (e) {
       this.notificationService.error('Export failed', e);
       throw e;
@@ -245,6 +247,28 @@ export class AppComponent implements OnInit {
 
   protected autoLayout(): void {
     this.editor._autoLayout();
+  }
+
+
+  /* Editor bar */
+
+  protected selectGroup(name: string): void {
+    if (this.fmls[name]) {
+      this.setFML(name, this.fmls[name]);
+    }
+  }
+
+  protected deleteGroup(name: string): void {
+    if (name !== 'main') {
+      delete this.fmls[name];
+      this.setFML('main', this.fmls['main']);
+    }
+  }
+
+  protected createGroup(map: StructureMap): void {
+    const name = map.name;
+    const fml = FMLStructureMapper.map(this.resourceBundle, map);
+    this.setFML(name, fml[name] ?? fml['main']);
   }
 
 
@@ -394,7 +418,5 @@ export class AppComponent implements OnInit {
     return JSON.parse(localStorage.getItem(this.STRUCTURE_MAPS_KEY) ?? '{}');
   }
 
-  protected splitUrl(url: string): [string, string] {
-    return [url.substring(0, url.lastIndexOf('/')), url.substring(url.lastIndexOf('/') + 1)];
-  }
+  protected readonly Object = Object;
 }

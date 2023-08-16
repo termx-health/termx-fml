@@ -3,7 +3,7 @@ import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 
 
 
 @Component({
-  selector: 'app-setup-wizard',
+  selector: 'app-structure-map-setup',
   template: `
     <!-- Setup wizard -->
     <m-modal #wizard [mVisible]="isOpen" mPlacement="top" (mClose)="isOpen = false">
@@ -39,7 +39,7 @@ import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 
     </m-modal>
   `
 })
-export class SetupWizardComponent {
+export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
   @Output() public created = new EventEmitter<StructureMap>();
 
@@ -92,5 +92,6 @@ export class SetupWizardComponent {
     };
 
     this.created.emit(map);
+    this.isOpen = false
   }
 }

@@ -7,10 +7,16 @@ import {getRuleParser} from './rule-parsers/_parsers';
 
 
 export class FMLStructureMapper {
-  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
+  private static MAIN = 'main';
+
+  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): {[groupName: string]: FMLStructure} {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
     if (exported) {
-      return this.fromObj(bundle, JSON.parse(exported));
+      let parsed = JSON.parse(exported);
+      if (isNil(parsed[this.MAIN])) {
+        parsed = {[this.MAIN]: parsed};
+      }
+      return group(Object.keys(parsed), k => k, k => this.fromObj(bundle, parsed[k]));
     }
 
 
@@ -91,7 +97,7 @@ export class FMLStructureMapper {
     // validate
     this.validate(struc, fhir);
 
-    return struc;
+    return {[this.MAIN]: struc};
   }
 
   private static validate(struc: FMLStructure, fhir: StructureMap): void {
