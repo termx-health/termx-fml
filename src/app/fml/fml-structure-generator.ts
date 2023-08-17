@@ -14,19 +14,35 @@ const nextVar = (): string => {
   return [...Array.from({length: times - 1}).fill(0), varCnt % 26].map(i => alphabet[i as number]).join('');
 };
 
+interface FMLStructureGroup {
+  [groupName: string]: FMLStructure
+}
+
+interface FmlStructureGeneratorOptions {
+  mapName?: string
+}
 
 export class FmlStructureGenerator {
   private static MAIN = 'main';
 
-  public static generate(fmls: {[key: string]: FMLStructure}, options?: {name?: string}): StructureMap {
+  public static generate(fmls: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap;
+  public static generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap;
+  public static generate(fmls: FMLStructure | FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
+    if (fmls instanceof FMLStructure) {
+      fmls = {[this.MAIN]: fmls};
+    }
+    return this._generate(fmls, options);
+  }
+
+  public static _generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
     varCnt = -1;
-    const name = options?.name ?? 'fml-compose';
+    const mapName = options?.mapName ?? 'fml-compose';
 
     // structure map base
     const sm: StructureMap = {
       resourceType: 'StructureMap',
-      url: `http://termx.health/fhir/StructureMap/${name}`,
-      name: `${name}`,
+      url: `http://termx.health/fhir/StructureMap/${mapName}`,
+      name: `${mapName}`,
       status: 'draft',
       group: []
     };

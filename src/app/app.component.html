@@ -1,8 +1,7 @@
-<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; background: linear-gradient(90deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2);">
+<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; background: linear-gradient(45deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2);">
   <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr" class="m-justify-between">
     <div class="m-items-middle menu">
       <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
-
       <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
       <m-button mDisplay="text" (mClick)="exportStructureMap()" mSize="small">Export</m-button>
       <m-button mDisplay="text" *ngIf="isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small">FML</m-button>
@@ -11,15 +10,14 @@
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
       <m-dropdown [mHideIfEmpty]="false">
         <div *m-dropdown-container>{{localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)}}.json
-          <m-icon *ngIf="localMaps[localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)]" mCode="database"/>
+          <m-icon *ngIf="localMaps[localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)]" mCode="hdd"/>
         </div>
         <ng-container *ngFor="let m of structureMaps">
           <a *m-dropdown-item (mClick)="localstorage.setItem(SELECTED_STRUCTURE_MAPS_KEY, m); init()">{{m}}
-            <m-icon *ngIf="localMaps[m]" mCode="database"/>
+            <m-icon *ngIf="localMaps[m]" mCode="hdd"/>
           </a>
         </ng-container>
       </m-dropdown>
-
 
       <ng-container *ngIf="resourceLoader">
         <m-divider mVertical/>
@@ -53,23 +51,29 @@
   <!-- MAIN PANEL -->
   <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
-      <div
-        *ngFor="let key of Object.keys(fmls)"
-        class="editor-tab m-justify-between"
-        [class.editor-tab--selected]="key === fmlSelected"
-        (click)="selectGroup(key)"
-      >
-        <div>
-          <m-icon mCode="file"/>
-          {{key}}
-        </div>
-        <m-icon *ngIf="key !== 'main'" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
+      <div *ngIf="!fmls[MAIN]" class="editor-tab">
+        <m-icon mCode="loading"/>&nbsp;loading...
       </div>
 
-      <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
-        <m-icon mCode="file-add"/>
-        <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event)"/>
-      </div>
+      <ng-container *ngIf="fmls[MAIN]">
+        <div
+          *ngFor="let key of Object.keys(fmls)"
+          class="editor-tab m-justify-between"
+          [class.editor-tab--selected]="key === fmlSelected"
+          (click)="selectGroup(key)"
+        >
+          <div>
+            <m-icon mCode="file"/>&nbsp;{{key}}
+          </div>
+          <m-icon *ngIf="key !== MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
+        </div>
+
+        <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
+          <m-icon mCode="file-add"/>
+          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fml)"/>
+        </div>
+      </ng-container>
+
     </div>
 
     <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr; max-height: calc(100% - 32px - 1px)">
@@ -128,7 +132,7 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<app-structure-map-setup #wizard [bundle]="resourceBundle" (created)="initFromWizard($event)"/>
+<app-structure-map-setup #wizard [bundle]="resourceBundle" (created)="initFromWizard($event.name, $event.fml)"/>
 
 
 <app-update-version/>

@@ -99,8 +99,9 @@ export class AppComponent implements OnInit {
 
   // FML editor
   private editor: FMLEditor;
+  protected MAIN = 'main';
   protected fmls: {[key: string]: FMLStructure} = {};
-  protected fmlSelected = 'main';
+  protected fmlSelected = this.MAIN;
 
   protected get fml(): FMLStructure {
     return this.editor?._fml;
@@ -142,15 +143,15 @@ export class AppComponent implements OnInit {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = FMLStructureMapper.map(bundle, resp);
         this.fmls = fml;
-        this.setFML('main', fml['main']);
+        this.setFML(this.MAIN, fml[this.MAIN]);
       });
     });
   }
 
-  protected setFML(name: string, fml: FMLStructure): void {
+  protected setFML(groupName: string, fml: FMLStructure): void {
     this.nodeSelected = undefined;
-    this.fmlSelected = name;
-    this.fmls[name] = fml;
+    this.fmlSelected = groupName;
+    this.fmls[groupName] = fml;
 
     SEQUENCE.v = Math.max(...Object.values(this.fmls).flatMap(f => f.connections)
       .flatMap(c => [c.sourceObject, c.targetObject])
@@ -175,7 +176,7 @@ export class AppComponent implements OnInit {
     // });
 
     try {
-      return FmlStructureGenerator.generate(this.fmls, {name: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
+      return FmlStructureGenerator.generate(this.fmls, {mapName: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
     } catch (e) {
       this.notificationService.error('Export failed', e);
       throw e;
@@ -259,16 +260,14 @@ export class AppComponent implements OnInit {
   }
 
   protected deleteGroup(name: string): void {
-    if (name !== 'main') {
+    if (name !== this.MAIN) {
       delete this.fmls[name];
-      this.setFML('main', this.fmls['main']);
+      this.setFML(this.MAIN, this.fmls[this.MAIN]);
     }
   }
 
-  protected createGroup(map: StructureMap): void {
-    const name = map.name;
-    const fml = FMLStructureMapper.map(this.resourceBundle, map);
-    this.setFML(name, fml[name] ?? fml['main']);
+  protected createGroup(groupName: string, fml: FMLStructure): void {
+    this.setFML(groupName, fml);
   }
 
 
@@ -391,7 +390,9 @@ export class AppComponent implements OnInit {
 
   /* Setup wizard */
 
-  protected initFromWizard(map: StructureMap): void {
+  protected initFromWizard(groupName: string, fml: FMLStructure): void {
+    const map = FmlStructureGenerator.generate(fml, {mapName: groupName});
+
     const maps = this.localMaps;
     maps[map.name] = map;
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, map.name);

@@ -1,5 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
+import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
+import {FMLStructure} from '../fml/fml-structure';
+import {SEQUENCE} from '../fml/fml.utils';
 
 interface ModalData {
   name: string,
@@ -46,7 +48,7 @@ interface ModalData {
 })
 export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
-  @Output() public created = new EventEmitter<StructureMap>();
+  @Output() public created = new EventEmitter<{name: string, fml: FMLStructure}>();
 
   protected modalData: {
     visible: boolean,
@@ -63,51 +65,25 @@ export class StructureMapSetupComponent {
     this.modalData = {visible: false};
   }
 
-
+  protected selectableBackbone = (e: ElementDefinition): boolean => {
+    return e.type?.some(t => FMLStructure.isBackboneElement(t.code));
+  };
 
   protected initFromWizard(data: Partial<ModalData>): void {
-    const sources = data.sources.map(sd => this.bundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
-      url: r.url,
-      mode: 'source' as any,
-      alias: r.id
-    }));
-    const targets = data.targets.map(sd => this.bundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
-      url: r.url,
-      mode: 'target' as any,
-      alias: r.id
-    }));
+    const fml = new FMLStructure();
+    fml.bundle = this.bundle;
+    data.sources.forEach(sd => {
+      fml.objects[sd.id] = fml.newFMLObject(sd.id, sd.id, 'source');
+    });
+    data.targets.forEach(sd => {
+      const obj = fml.newFMLObject(sd.id, sd.id, 'target');
+      if (obj.resource !== obj.name) {
+        obj.name = `${obj.name}#${SEQUENCE.next()}`
+      }
+      fml.objects[obj.name] = obj;
+    });
 
-    const map: StructureMap = {
-      "id": data.name,
-      "resourceType": "StructureMap",
-      "status": "draft",
-      "name": data.name,
-      "url": `http://hl7.org/fhir/StructureMap/${data.name}`,
-      "structure": [
-        ...sources,
-        ...targets
-      ],
-      "group": [
-        {
-          "name": "main",
-          "input": [
-            ...sources.map(s => ({
-              name: s.alias,
-              type: s.alias,
-              mode: 'source' as StructureMapGroupInput['mode']
-            })),
-            ...targets.map(s => ({
-              name: s.alias,
-              type: s.alias,
-              mode: 'source' as StructureMapGroupInput['mode']
-            }))
-          ],
-          "rule": []
-        }
-      ]
-    };
-
-    this.created.emit(map);
+    this.created.emit({name: data.name, fml});
     this.close();
   }
 }

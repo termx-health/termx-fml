@@ -1,5 +1,5 @@
-import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {StructureDefinition} from 'fhir/r5';
+import {Component, Input, OnChanges} from '@angular/core';
+import {ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructure} from '../../fml/fml-structure';
 import {MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 
@@ -23,18 +23,20 @@ import {MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 export class StructureDefinitionTreeComponent implements OnChanges {
   @Input() definition: StructureDefinition;
   @Input() base: string;
+  @Input() selectable: (el: ElementDefinition) => boolean;
 
   protected options: MuiTreeNodeOptions[] = [];
 
-  public ngOnChanges(changes: SimpleChanges): void {
+  public ngOnChanges(): void {
     this.composeTree(this.definition, this.base);
   }
 
   protected composeTree = (sm: StructureDefinition, base: string) => {
+    const name = base ?? sm.name;
     this.options = [{
       key: sm.id,
-      title: base ?? sm.name,
-      children: this.compose(sm, base ?? sm.name)
+      title: name,
+      children: this.compose(sm, name)
     }];
   };
 
@@ -51,16 +53,16 @@ export class StructureDefinitionTreeComponent implements OnChanges {
     return elements
       .filter(e => !backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p))
       .map<MuiTreeNodeOptions>(e => {
-        const isBackbone = isBackboneElement(e);
         return ({
           key: e.path,
           title: e.path.substring(base.length).replace(/^\./, ''),
+          children: this.compose(sm, e.path + '.'),
           data: {
             types: e.type?.map(t => t.code)
           },
-          selectable: isBackbone,
-          expandable: isBackbone,
-          children: this.compose(sm, e.path + '.')
+
+          selectable: this.selectable?.(e) ?? false,
+          expandable: isBackboneElement(e)
         });
       });
   };

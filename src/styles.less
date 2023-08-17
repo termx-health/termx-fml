@@ -73,7 +73,10 @@ li {
     padding-inline: 10px 6px;
     position: relative;
 
-    border-right: @mui-border;
+    &:not(:first-child) {
+      border-left: @mui-border;
+    }
+
     box-shadow: inset @mui-border-color-light 0px -11px 7px -11px;
 
     &--selected {

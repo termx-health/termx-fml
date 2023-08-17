@@ -19,7 +19,12 @@ export class FMLStructureMapper {
       return group(Object.keys(parsed), k => k, k => this.fromObj(bundle, parsed[k]));
     }
 
+    return {
+      [this.MAIN]: this._map(bundle, fhir)
+    };
+  }
 
+  private static _map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     // finds the correct resource type based on URL
     const getKey = ({url}: StructureMapStructure) => bundle.entry.find(c => c.resource.url === url)?.resource?.id;
 
@@ -97,7 +102,7 @@ export class FMLStructureMapper {
     // validate
     this.validate(struc, fhir);
 
-    return {[this.MAIN]: struc};
+    return struc;
   }
 
   private static validate(struc: FMLStructure, fhir: StructureMap): void {
