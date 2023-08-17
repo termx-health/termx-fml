@@ -12,6 +12,7 @@ import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {SEQUENCE} from './fml/fml.utils';
+import Mousetrap from 'mousetrap';
 
 
 interface RuleDescription {
@@ -326,6 +327,41 @@ export class AppComponent implements OnInit {
 
     // notify readiness
     editor._ready();
+
+
+    // shortcuts, experimental
+    Mousetrap.bind('ctrl+d', () => {
+      if (!this.nodeSelected) {
+        return true;
+      }
+
+      const node = editor.getNodeFromId(this.nodeSelected?.id);
+      if (this.editor._isRule(node)) {
+        const rule = node.data.rule;
+
+        const _rule = new FMLStructureRule();
+        _rule['_base'] = rule.name;
+        _rule.name = `${rule.name.slice(0, rule.name.lastIndexOf('#'))}#${SEQUENCE.next()}`;
+        _rule.mode = rule.mode;
+        _rule.position = rule.position;
+        _rule.action = rule.action;
+        _rule.parameters = structuredClone(rule.parameters);
+        _rule.condition = rule.condition;
+        fml.rules.push(_rule);
+
+        const nodeId = this.editor._createRuleNode(_rule, {..._rule.position});
+        fml.getSources(_rule['_base']).forEach(({object, field}, idx) => {
+          this.editor._createConnection(object, field ?? 1, _rule.name, idx + 1);
+        });
+
+        editor._updateRule(nodeId, _rule.name, r => {
+          r.parameters = rule.parameters;
+        });
+
+        editor._rerenderNodes();
+        return false;
+      }
+    });
   }
 
 

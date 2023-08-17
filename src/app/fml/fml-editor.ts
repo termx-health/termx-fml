@@ -66,6 +66,7 @@ export class FMLEditor extends Drawflow {
   }) {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
+
     this.on('nodeCreated', event => event);
 
     this.on('nodeMoved', nodeId => {
@@ -236,7 +237,7 @@ export class FMLEditor extends Drawflow {
         `input_${iIdx}`,
       );
     } catch (e) {
-      console.error(`Connection "${source}:${sourceField}" -> "${target}:${targetField}" failed!`);
+      console.error(`Connection "${source}:${sourceField}" -> "${target}:${targetField}" failed!`, e);
     }
   }
 
