@@ -192,7 +192,7 @@ export class FMLStructure {
     }
 
     // true => assume resource's definition is described within the structure definition
-    const inlineDefinition = ['object', 'element'].includes(mode) && path === resource;
+    const inlineDefinition = path.includes(".") && path === resource;
 
     // try to find resource's structure definition
     const structureDefinition = this.findStructureDefinition(this.bundle, resource);

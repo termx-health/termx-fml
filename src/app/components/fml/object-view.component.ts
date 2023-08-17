@@ -20,7 +20,7 @@ import {StructureDefinition} from 'fhir/r5';
         <app-structure-definition-tree
             *ngIf="treeView"
             [definition]="object | apply: findDefinition: fml"
-            [base]="object.element.path"
+            [definitionBase]="object.element.path"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
