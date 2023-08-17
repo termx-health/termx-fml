@@ -51,7 +51,7 @@
 
 
   <!-- MAIN PANEL -->
-  <div style="display: flex; flex-direction: column">
+  <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
       <div
         *ngFor="let key of Object.keys(fmls)"
@@ -72,7 +72,7 @@
       </div>
     </div>
 
-    <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr">
+    <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr; max-height: calc(100% - 32px - 1px)">
       <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
       <!-- RIGHT PANEL -->
       <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">

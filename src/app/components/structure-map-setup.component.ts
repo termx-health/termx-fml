@@ -1,14 +1,19 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupInput} from 'fhir/r5';
 
+interface ModalData {
+  name: string,
+  sources: StructureDefinition[],
+  targets: StructureDefinition[]
+}
 
 @Component({
   selector: 'app-structure-map-setup',
   template: `
     <!-- Setup wizard -->
-    <m-modal #wizard [mVisible]="isOpen" mPlacement="top" (mClose)="isOpen = false">
-      <ng-container *ngIf="isOpen">
-        <form #f="ngForm" *ngIf="{name: '', sources: [], targets:[]} as data">
+    <m-modal #wizard [mVisible]="modalData.visible" mPlacement="top" (mClose)="close()">
+      <ng-container *ngIf="modalData.visible">
+        <form #f="ngForm" *ngIf="modalData.data as data">
           <div *m-modal-header>
             StructureMap setup
           </div>
@@ -43,13 +48,24 @@ export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
   @Output() public created = new EventEmitter<StructureMap>();
 
-  protected isOpen: boolean;
+  protected modalData: {
+    visible: boolean,
+    data?: Partial<ModalData>
+  } = {
+    visible: false
+  };
 
   public open(): void {
-    this.isOpen = true;
+    this.modalData = {visible: true, data: {}};
   }
 
-  protected initFromWizard(data: {name: string, sources: StructureDefinition[], targets: StructureDefinition[]}): void {
+  public close(): void {
+    this.modalData = {visible: false};
+  }
+
+
+
+  protected initFromWizard(data: Partial<ModalData>): void {
     const sources = data.sources.map(sd => this.bundle.entry.find(e => e.resource.url === sd.url).resource).map(r => ({
       url: r.url,
       mode: 'source' as any,
@@ -92,6 +108,6 @@ export class StructureMapSetupComponent {
     };
 
     this.created.emit(map);
-    this.isOpen = false
+    this.close();
   }
 }

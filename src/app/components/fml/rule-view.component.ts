@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {FMLStructure, FMLStructureRule, FMLStructureRuleParameter} from '../fml/fml-structure';
+import {FMLStructure, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {unique} from '@kodality-web/core-util';
 

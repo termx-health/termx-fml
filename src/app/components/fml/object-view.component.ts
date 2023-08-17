@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../fml/fml-structure';
+import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
 import {MuiNotificationService} from '@kodality-web/marina-ui';
 import {StructureDefinition} from 'fhir/r5';
 
@@ -8,10 +8,22 @@ import {StructureDefinition} from 'fhir/r5';
   template: `
     <div *ngIf="object">
       <div style="padding: 1rem; border-bottom: var(--border-table)">
+        <div>
+          <h5 class="m-justify-between">
+            <span>Resource | {{object.mode}} </span>
+            <div>
+              <nz-switch [(ngModel)]="treeView" (ngModelChange)="setTreeView($event)" nzSize="small"></nz-switch>
+            </div>
+          </h5>
+        </div>
 
-        <h5>Resource | {{object.mode}}</h5>
+        <app-structure-definition-tree
+            *ngIf="treeView"
+            [definition]="object | apply: findDefinition: fml"
+            [base]="object.element.path"
+        ></app-structure-definition-tree>
 
-        <m-table mSize="small">
+        <m-table *ngIf="!treeView" mSize="small">
           <tr *ngFor="let f of object.fields">
             <td>
               <div class="m-items-top m-justify-between">
@@ -93,6 +105,7 @@ export class ObjectViewComponent {
     type?: string
   }>();
 
+  protected treeView = sessionStorage.getItem('object-view-as-tree') === 'true';
   protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition} = {
     visible: false
   };
@@ -106,7 +119,7 @@ export class ObjectViewComponent {
     const types = object.fields.find(f => f.name === field).types;
     if (types.includes("Resource")) {
       this.resourceModal = {visible: true, field};
-    }  else {
+    } else {
       if (types.length > 1) {
         this.notifications.warning("Unknown type", "Selected the first one", {placement: 'top'});
       }
@@ -114,6 +127,13 @@ export class ObjectViewComponent {
     }
   }
 
+  protected findDefinition(obj: FMLStructureObject, fml: FMLStructure): StructureDefinition {
+    return fml.bundle.entry.find(e => e.resource.url === obj.url)?.resource;
+  }
+
+  protected setTreeView(isTree: boolean): void {
+    sessionStorage.setItem('object-view-as-tree', String(isTree));
+  }
 
   /* Resource modal */
 

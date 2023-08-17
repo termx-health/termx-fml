@@ -6,7 +6,7 @@ import {BooleanInput} from '@kodality-web/core-util';
 @Component({
   selector: 'app-structure-definition-select',
   template: `
-    <m-select name="targets" [(ngModel)]="val" (ngModelChange)="fireOnChange()" [multiple]="multiple"  compareWith="id">
+    <m-select name="targets" [(ngModel)]="val" (ngModelChange)="fireOnChange()" [multiple]="multiple"  compareWith="url">
       <m-option
           *ngFor="let res of bundle?.entry"
           [mValue]="res.resource"

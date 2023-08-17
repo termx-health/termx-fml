@@ -10,10 +10,11 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {FormsModule} from '@angular/forms';
 import {APP_BASE_HREF} from '@angular/common';
 import {environment} from '../environments/environment';
-import {RuleViewComponent} from './components/rule-view.component';
-import {ObjectViewComponent} from './components/object-view.component';
-import {FmlViewComponent} from './components/fml-view.component';
-import {StructureDefinitionSelectComponent} from './components/structure-definition-select.component';
+import {RuleViewComponent} from './components/fml/rule-view.component';
+import {ObjectViewComponent} from './components/fml/object-view.component';
+import {FmlViewComponent} from './components/fml/fml-view.component';
+import {StructureDefinitionSelectComponent} from './components/structure-definition/structure-definition-select.component';
+import {StructureDefinitionTreeComponent} from './components/structure-definition/structure-definition-tree.component';
 import {StructureMapSetupComponent} from './components/structure-map-setup.component';
 import {UpdateVersionComponent} from './components/update-version.component';
 
@@ -23,6 +24,7 @@ import {UpdateVersionComponent} from './components/update-version.component';
     FmlViewComponent,
     ObjectViewComponent,
     RuleViewComponent,
+    StructureDefinitionTreeComponent,
     StructureDefinitionSelectComponent,
     StructureMapSetupComponent,
     UpdateVersionComponent,
