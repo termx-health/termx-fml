@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {FMLStructure, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {unique} from '@kodality-web/core-util';
@@ -17,7 +17,7 @@ import {unique} from '@kodality-web/core-util';
         <m-form-item [mLabel]="clbl">
           <ng-template #clbl>
             Condition
-            <m-icon-button mIcon="edit" (mClick)="editStart(conditionModal)"/>
+            <m-icon-button mIcon="edit" (mClick)="editCondition()"/>
           </ng-template>
 
           {{rule.condition ?? '-'}}
@@ -26,7 +26,7 @@ import {unique} from '@kodality-web/core-util';
         <m-form-item [mLabel]="plbl">
           <ng-template #plbl>
             Parameters
-            <m-icon-button mIcon="edit" (mClick)="editStart(parameterModal)"/>
+            <m-icon-button mIcon="edit" (mClick)="editParameter()"/>
           </ng-template>
 
           <span *ngIf="!rule.parameters?.length">-</span>
@@ -135,10 +135,20 @@ export class RuleViewComponent {
   @Input() rule: FMLStructureRule;
   @Output() ruleChange = new EventEmitter<FMLStructureRule>();
 
+  @ViewChild('parameterModal') private parameterModal: MuiModalContainerComponent;
+  @ViewChild('conditionModal') private conditionModal: MuiModalContainerComponent;
   protected _cp: FMLStructureRule;
 
+  public editParameter(): void {
+    this.editStart(this.parameterModal);
+  }
 
-  protected editStart(m: MuiModalContainerComponent): void {
+  public editCondition(): void {
+    this.editStart(this.conditionModal);
+  }
+
+
+  private editStart(m: MuiModalContainerComponent): void {
     this._cp = structuredClone(this.rule);
     m.open();
   }

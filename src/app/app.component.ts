@@ -1,4 +1,4 @@
-import {Component, isDevMode, OnInit} from '@angular/core';
+import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
@@ -13,6 +13,7 @@ import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
+import {RuleViewComponent} from './components/fml/rule-view.component';
 
 
 interface RuleDescription {
@@ -123,6 +124,8 @@ export class AppComponent implements OnInit {
   protected isDev = isDevMode();
   protected localstorage = localStorage;
 
+
+  @ViewChild(RuleViewComponent) private ruleViewComponent: RuleViewComponent;
 
   constructor(
     private http: HttpClient,
@@ -325,7 +328,9 @@ export class AppComponent implements OnInit {
 
 
     // shortcuts, experimental
-    Mousetrap.bind('ctrl+d', () => {
+    Mousetrap.reset();
+
+    Mousetrap.bind('option+d', () => {
       if (!this.nodeSelected) {
         return true;
       }
@@ -353,6 +358,13 @@ export class AppComponent implements OnInit {
         });
 
         editor._rerenderNodes();
+        return false;
+      }
+    });
+
+    Mousetrap.bind(['option+p'], () => {
+      if (this.ruleViewComponent) {
+        this.ruleViewComponent.editParameter();
         return false;
       }
     });

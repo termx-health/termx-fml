@@ -21,7 +21,8 @@
               "drawflow",
               "dagre",
               "angular2-text-mask",
-              "file-saver"
+              "file-saver",
+              "mousetrap"
             ],
             "outputPath": "dist/fml",
             "index": "src/index.html",

@@ -15,7 +15,7 @@ export class UpdateVersionComponent implements OnInit{
 
   public ngOnInit(): void {
     interval(5000).subscribe(val => {
-      this.http.get('./assets/env.js', {responseType: 'text'}).subscribe(resp => {
+      this.http.get(`./assets/env.js?ts=${new Date().getTime()}`, {responseType: 'text'}).subscribe(resp => {
         if (val === 0) {
           localStorage.setItem('env', resp);
         } else if (localStorage.getItem('env') !== resp) {
