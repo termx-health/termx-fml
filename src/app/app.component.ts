@@ -118,7 +118,7 @@ export class AppComponent implements OnInit {
   // component
   protected structureMaps: string[];
   protected ruleDescriptions = RULES;
-  protected fmlResult: string;
+  protected fmlResult: {text: string, json: StructureMap};
   protected resourceLoader: {total: number, current: number};
   protected isAnimated = true;
   protected isDev = isDevMode();
@@ -205,12 +205,18 @@ export class AppComponent implements OnInit {
   }
 
   protected viewAsFML(m: MuiModalContainerComponent): void {
-    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(this.export())}, {responseType: 'text'}).subscribe(resp => {
+    const map = this.export();
+
+    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(map)}, {responseType: 'text'}).subscribe(resp => {
+      this.fmlResult = {
+        text: resp
+          .replaceAll(',  ', ',\n    ')
+          .replaceAll(' ->  ', ' ->\n    ')
+          .replaceAll("#", "_"),
+        json: map
+      };
+
       m.open();
-      this.fmlResult = resp
-        .replaceAll(',  ', ',\n    ')
-        .replaceAll(' ->  ', ' ->\n    ')
-        .replaceAll("#", "_");
     });
   }
 

@@ -20,7 +20,7 @@ interface ModalData {
       <ng-container *ngIf="modalData.visible">
         <form #f="ngForm" *ngIf="modalData.data as data">
           <div *m-modal-header>
-            StructureMap setup
+            Setup
           </div>
 
           <div *m-modal-content>

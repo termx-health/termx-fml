@@ -118,7 +118,17 @@
 <!-- FML preview modal -->
 <m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="fmlResult = undefined">
   <div *m-modal-content>
-    <pre>{{fmlResult}}</pre>
+    <ng-container *ngIf="{t: 'fml'} as d">
+      <m-radio-group [(ngModel)]="d.t" style="margin-bottom: 1rem; display: inline-block" >
+        <label m-radio mValue="fml">FML</label>
+        <label m-radio mValue="json">JSON</label>
+      </m-radio-group>
+
+      <ng-container [ngSwitch]="d.t">
+        <pre *ngSwitchCase="'fml'" style="font-size: 12px; line-height: 1.1;">{{fmlResult.text}}</pre>
+        <pre *ngSwitchCase="'json'" style="font-size: 12px; line-height: 1.1;">{{fmlResult.json | json}}</pre>
+      </ng-container>
+    </ng-container>
   </div>
 </m-modal>
 
@@ -126,10 +136,10 @@
 <!-- FML preview modal -->
 <m-modal #importer mPlacement="top" (mClose)="importer.close()">
   <div *m-modal-header>
-    Import FHIR StructureMap
+    Import StructureMap
   </div>
   <div *m-modal-content>
-    <m-textarea [autosize]="{minRows: 10}" (mChange)="importStructureMap(importer, $event)"></m-textarea>
+    <m-textarea [autosize]="{minRows: 10}" placeholder="JSON file content" (mChange)="importStructureMap(importer, $event)"></m-textarea>
   </div>
 </m-modal>
 

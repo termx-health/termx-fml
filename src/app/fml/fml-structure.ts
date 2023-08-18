@@ -117,7 +117,7 @@ export class FMLStructure {
     const _rules = group(this.rules, r => r.name);
 
     const _fml = new FMLStructure();
-    _fml.bundle = structuredClone(this.bundle);
+    // _fml.bundle = structuredClone(this.bundle); // fixme: revert
 
     const traverse = (o: string, f?) => {
       if (this.objects[o]) {
