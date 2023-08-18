@@ -157,7 +157,7 @@ export class AppComponent implements OnInit {
   protected setFML(groupName: string, fml: FMLStructure): void {
     this.nodeSelected = undefined;
     this.fmlSelected = groupName;
-    this.fmls[groupName] = fml;
+    this.fmls = {...this.fmls, [groupName]: fml};
 
     SEQUENCE.v = Math.max(...Object.values(this.fmls).flatMap(f => f.connections)
       .flatMap(c => [c.sourceObject, c.targetObject])
@@ -260,7 +260,7 @@ export class AppComponent implements OnInit {
 
   protected deleteGroup(name: string): void {
     if (name !== this.FML_MAIN) {
-      delete this.fmls[name];
+      this.fmls = {...this.fmls, [name]: undefined};
       this.setFML(this.FML_MAIN, this.fmls[this.FML_MAIN]);
     }
   }
@@ -350,13 +350,11 @@ export class AppComponent implements OnInit {
 
         const nodeId = this.editor._createRuleNode(_rule, {..._rule.position});
         fml.getSources(rule.name).forEach(({sourceObject, field}, idx) => {
+          // fixme: idx + 1 is very sus
           this.editor._createConnection(sourceObject, field ?? 1, _rule.name, idx + 1);
         });
 
-        editor._updateRule(nodeId, _rule.name, r => {
-          r.parameters = rule.parameters;
-        });
-
+        editor._updateRule(nodeId, _rule.name, r => r.parameters = rule.parameters);
         editor._rerenderNodes();
         return false;
       }
@@ -460,6 +458,4 @@ export class AppComponent implements OnInit {
   protected get localMaps(): {[k: string]: StructureMap} {
     return JSON.parse(localStorage.getItem(this.STRUCTURE_MAPS_KEY) ?? '{}');
   }
-
-  protected readonly Object = Object;
 }

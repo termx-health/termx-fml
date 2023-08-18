@@ -1,5 +1,5 @@
-<div style="height: 2.5rem; display: flex; align-items: center; padding-inline: 1rem; background: linear-gradient(45deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2);">
-  <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr" class="m-justify-between">
+<div style="height: 2.5rem; display: flex; align-items: center; background: linear-gradient(45deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2)">
+  <div style="width: 100%; padding-inline: 1rem; white-space: nowrap;" class="m-justify-between">
     <div class="m-items-middle menu">
       <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
       <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
@@ -51,19 +51,21 @@
   <!-- MAIN PANEL -->
   <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
-      <div *ngIf="!fmls[FML_MAIN]" class="editor-tab">
-        <m-icon mCode="loading"/>&nbsp;loading...
+      <div *ngIf="!fmls[FML_MAIN]" class="editor-tab m-items-middle">
+        <m-icon mCode="loading"/>
+        <span>loading...</span>
       </div>
 
       <ng-container *ngIf="fmls[FML_MAIN]">
         <div
-          *ngFor="let key of Object.keys(fmls)"
+          *ngFor="let key of fmls | keys"
           class="editor-tab m-justify-between"
           [class.editor-tab--selected]="key === fmlSelected"
           (click)="selectGroup(key)"
         >
-          <div>
-            <m-icon mCode="file"/>&nbsp;{{key}}
+          <div class="m-items-middle">
+            <m-icon mCode="file"/>
+            <span>{{key}}</span>
           </div>
           <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
         </div>

@@ -1,0 +1,29 @@
+image: registry.gitlab.com/kodality/gitlab-builders/ng
+
+.dependencies_cache:
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+      - node_modules
+
+stages:
+  - build
+
+build:
+  stage: build
+  extends: .dependencies_cache
+  before_script:
+    - echo "@kodality-web:registry=https://kexus.kodality.com/repository/npm/" >> ~/.npmrc
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - "**/dist"
+    expire_in: 1 hour
+  only:
+    - branches
+    - tags

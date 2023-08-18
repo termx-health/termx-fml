@@ -72,12 +72,17 @@ li {
     min-width: 110px;
     padding-inline: 10px 6px;
     position: relative;
+    transition: 100ms;
+    box-shadow: inset @mui-border-color-light 0px -11px 7px -11px;
 
     &:not(:first-child) {
       border-left: @mui-border;
     }
 
-    box-shadow: inset @mui-border-color-light 0px -11px 7px -11px;
+
+    &:not(&--selected):hover {
+      box-shadow: inset @mui-border-color 0px -11px 7px -11px;
+    }
 
     &--selected {
       --tab-background: white;
