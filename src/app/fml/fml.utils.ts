@@ -41,9 +41,9 @@ export function getPortNumber(str: string): number {
 /* Sequence */
 
 export const SEQUENCE = {
-  v: 420,
+  current: 420,
   next: function () {
-    return ++this.v;
+    return ++this.current;
   }
 };
 

@@ -1,5 +1,5 @@
 import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
-import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {asResourceVariable, getPortNumber} from './fml.utils';
@@ -59,11 +59,16 @@ export class FMLEditor extends Drawflow {
     this._initialized = true;
   }
 
+  public get _fml(): FMLStructure {
+    return this._fmls?.[this._selectedFml];
+  }
 
-  constructor(public _fml: FMLStructure, public element: HTMLElement, options?: {
-    render?: object,
-    parent?: object
-  }) {
+  constructor(
+    public _fmls: FMLStructureGroup,
+    public _selectedFml: string,
+    public element: HTMLElement,
+    options?: {render?: object, parent?: object}
+  ) {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
 
@@ -87,15 +92,15 @@ export class FMLEditor extends Drawflow {
 
 
     this.on('nodeRemoved', nodeId => {
-      Object.values(_fml.objects).forEach(o => {
+      Object.values(this._fml.objects).forEach(o => {
         if (o['_nodeId'] === Number(nodeId)) {
-          delete _fml.objects[o.name];
+          delete this._fml.objects[o.name];
         }
       });
 
-      _fml.rules.forEach(r => {
+      this._fml.rules.forEach(r => {
         if (r['_nodeId'] === Number(nodeId)) {
-          remove(_fml.rules, r);
+          remove(this._fml.rules, r);
         }
       });
     });
@@ -128,8 +133,8 @@ export class FMLEditor extends Drawflow {
         rule.name = asResourceVariable(action);
         rule.action = action;
 
-        const conn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
-        _fml.putConnection(conn);
+        const conn = this._fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
+        this._fml.putConnection(conn);
         this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
 
         this._rerenderNodes();
@@ -158,7 +163,7 @@ export class FMLEditor extends Drawflow {
         const sourceFieldIdx = getPortNumber(e.output_class);
         const targetFieldIdx = getPortNumber(e.input_class);
 
-        _fml.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
+        this._fml.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
       }
     });
   }
@@ -201,14 +206,14 @@ export class FMLEditor extends Drawflow {
     return nodeId;
   }
 
-  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number}): number {
+  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, inputs?: number, outputs?: number}): number {
     if (isDefined(this._getNodeId(rule.name))) {
       throw Error(`Rule node with name "${rule.name}" is already created`);
     }
 
     const nodeId = this.addNode(
       rule.name,
-      1, 1,
+      options?.inputs ?? 1, options?.outputs ?? 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},

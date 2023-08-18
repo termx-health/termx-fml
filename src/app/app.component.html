@@ -42,7 +42,7 @@
     mKey="fml-left-panel"
     mResizable
     [mResizableMaxWidth]="400"
-    style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 1"
+    style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 10"
   >
     <app-fml-view [fml]="fml"/>
   </m-collapse-panel>
@@ -82,23 +82,40 @@
       <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
       <!-- RIGHT PANEL -->
       <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
-        <div *ngIf="!nodeSelected" style="padding: 1rem; border-bottom: var(--border-table);">
-          <h5>Transformers</h5>
-          <m-list mSeparated>
-            <m-list-item
-              *ngFor="let rd of ruleDescriptions"
-              class="m-clickable"
-              draggable="true"
-              (dragstart)="onDragStart($event, rd)"
-            >
-              <div>{{rd.name}}</div>
-              <div class="description">{{rd.description}}</div>
-            </m-list-item>
-          </m-list>
-        </div>
+        <ng-container *ngIf="!nodeSelected">
+          <div style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="ruleGroups.length">
+            <h5>Groups</h5>
+
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rg of ruleGroups" class="m-clickable" draggable="true" (dragstart)="onGroupDragStart($event, rg)">
+                <div class="m-items-middle">
+                  <m-icon mCode="folder"/>
+                  <m-divider mVertical></m-divider>
+                  {{rg.groupName}}
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+
+          <div style="padding: 1rem; border-bottom: var(--border-table);">
+            <h5>Transformers</h5>
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rd of ruleDescriptions" class="m-clickable" draggable="true" (dragstart)="onRuleDragStart($event, rd)">
+                <div class="m-items-middle">
+                  <m-icon mCode="experiment"/>
+                  <m-divider mVertical></m-divider>
+                  <div>
+                    <div>{{rd.name}}</div>
+                    <div class="description">{{rd.description}}</div>
+                  </div>
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+        </ng-container>
 
 
-        <div *ngIf="nodeSelected as node">
+        <ng-container *ngIf="nodeSelected as node">
           <!-- Resource -->
           <div *ngIf="node.data.obj as obj">
             <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
@@ -108,7 +125,7 @@
           <div *ngIf="node.data.rule as rule">
             <app-rule-view [rule]="rule" [fml]="fml" (ruleChange)="applyRule($event)"/>
           </div>
-        </div>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -119,14 +136,14 @@
 <m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="fmlResult = undefined">
   <div *m-modal-content>
     <ng-container *ngIf="{t: 'fml'} as d">
-      <m-radio-group [(ngModel)]="d.t" style="margin-bottom: 1rem; display: inline-block" >
+      <m-radio-group [(ngModel)]="d.t" style="margin-bottom: 1rem; display: inline-block">
         <label m-radio mValue="fml">FML</label>
         <label m-radio mValue="json">JSON</label>
       </m-radio-group>
 
       <ng-container [ngSwitch]="d.t">
-        <pre *ngSwitchCase="'fml'" style="font-size: 12px; line-height: 1.1;">{{fmlResult.text}}</pre>
-        <pre *ngSwitchCase="'json'" style="font-size: 12px; line-height: 1.1;">{{fmlResult.json | json}}</pre>
+        <pre *ngSwitchCase="'fml'" style="font-size: 13px; line-height: 1.25;">{{fmlResult.text}}</pre>
+        <pre *ngSwitchCase="'json'" style="font-size: 13px; line-height: 1.25;">{{fmlResult.json | json}}</pre>
       </ng-container>
     </ng-container>
   </div>

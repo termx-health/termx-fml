@@ -140,18 +140,18 @@ export class RuleViewComponent {
   protected _cp: FMLStructureRule;
 
   public editParameter(): void {
-    this.editStart(this.parameterModal);
+    this._cp = structuredClone(this.rule);
+    if (this._cp.parameters.length === 0) {
+      this.addParameter(this._cp.parameters);
+    }
+    this.parameterModal.open();
   }
 
   public editCondition(): void {
-    this.editStart(this.conditionModal);
-  }
-
-
-  private editStart(m: MuiModalContainerComponent): void {
     this._cp = structuredClone(this.rule);
-    m.open();
+    this.conditionModal.open();
   }
+
 
   protected editCancel(m: MuiModalContainerComponent): void {
     m.close();

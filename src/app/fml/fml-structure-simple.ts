@@ -1,6 +1,6 @@
 import {group} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition} from 'fhir/r5';
-import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {plainToInstance} from 'class-transformer';
 
 export interface FMLStructureSimple {
@@ -10,7 +10,7 @@ export interface FMLStructureSimple {
 }
 
 export class FMLStructureSimpleMapper {
-  public static toFML(bundle: Bundle<StructureDefinition>, fmls: {[groupName: string]: FMLStructureSimple}): {[groupName: string]: FMLStructure} {
+  public static toFML(bundle: Bundle<StructureDefinition>, fmls: {[groupName: string]: FMLStructureSimple}): FMLStructureGroup {
     return group(Object.keys(fmls), k => k, k => {
       const _fml = fmls[k];
 
@@ -26,7 +26,7 @@ export class FMLStructureSimpleMapper {
     });
   }
 
-  public static fromFML(fmls: {[groupName: string]: FMLStructure}): {[groupName: string]: FMLStructureSimple} {
+  public static fromFML(fmls: FMLStructureGroup): {[groupName: string]: FMLStructureSimple} {
     return group(Object.keys(fmls), k => k, k => {
       const fml = fmls[k];
       const simpleObjects = Object.values(fml.objects).map(o => ({

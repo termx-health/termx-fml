@@ -6,6 +6,7 @@ import {FMLCcRuleRenderer} from './cc.renderer';
 import {FMLConstantRuleRenderer} from './constant.renderer';
 import {FMLEvaluateRuleRenderer} from './evaluate.renderer';
 import {FMLTruncateRuleRenderer} from './truncate.renderer';
+import {FMLRulegroupRuleRenderer} from './rulegroup.renderer';
 
 export const RULE_RENDERERS = [
   new FMLAppendRuleRenderer(),
@@ -14,6 +15,7 @@ export const RULE_RENDERERS = [
   new FMLCopyRuleRenderer(),
   new FMLDefaultRuleRenderer(),
   new FMLEvaluateRuleRenderer(),
+  new FMLRulegroupRuleRenderer(),
   new FMLTruncateRuleRenderer(),
 ];
 

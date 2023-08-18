@@ -1,6 +1,6 @@
 import {copyDeep, isNil} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
-import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getAlphabet, SEQUENCE, substringBeforeLast} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleGenerator} from './rule-generators/_generators';
@@ -16,9 +16,6 @@ const nextVar = (): string => {
 };
 
 
-interface FMLStructureGroup {
-  [groupName: string]: FMLStructure
-}
 
 interface FmlStructureGeneratorOptions {
   mapName?: string

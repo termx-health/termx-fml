@@ -1,7 +1,7 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
 import {FMLRuleParserVariables} from './rule-parsers/parser';
-import {FMLStructure, FMLStructureEntityMode, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getRuleParser} from './rule-parsers/_parsers';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
@@ -9,8 +9,12 @@ import {FMLStructureSimpleMapper} from './fml-structure-simple';
 export class FMLStructureMapper {
   private static MAIN = 'main';
 
-  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): {[groupName: string]: FMLStructure} {
+  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructureGroup {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
+    if (isNil(fhir.version)) {
+      fhir.version = '1';
+    }
+
     if (exported) {
       let parsed = JSON.parse(exported);
       if (isNil(parsed[this.MAIN])) {

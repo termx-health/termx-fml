@@ -1,12 +1,12 @@
-import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
-import {FMLStructure, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
+import {Component, EnvironmentInjector, isDevMode, OnInit, ViewChild} from '@angular/core';
+import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
-import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
+import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
@@ -14,49 +14,55 @@ import {saveAs} from 'file-saver';
 import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
+import {createCustomElement} from '@angular/elements';
 
 
 interface RuleDescription {
-  code: string,
+  action: string,
   name: string,
   description?: string
 }
 
 const RULES: RuleDescription[] = [
   {
-    code: 'uuid',
-    name: 'uuid',
-    description: 'Generate a random UUID (in lowercase). No Parameters'
-  },
-  {
-    code: 'copy',
-    name: 'copy'
-  },
-  {
-    code: 'constant',
+    action: 'constant',
     name: 'constant'
   },
   {
-    code: 'append',
+    action: 'uuid',
+    name: 'uuid',
+    description: 'Generate a random UUID (in lowercase).'
+  },
+  {
+    action: 'copy',
+    name: 'copy'
+  },
+  {
+    action: 'truncate',
+    name: 'truncate',
+    description: 'Source must be some stringy type that has some meaningful length property.'
+  },
+  {
+    action: 'append',
     name: 'append',
     description: 'Element or string - just append them all together'
   },
   {
-    code: 'evaluate',
+    action: 'evaluate',
     name: 'evaluate',
-    description: 'Execute the supplied FHIRPath expression and use the value returned by that'
+    description: 'Execute the supplied FHIRPath expression and use the value returned by that.'
   },
   {
-    code: 'truncate',
-    name: 'truncate',
-    description: 'Source must be some stringy type that has some meaningful length property'
-  },
-  {
-    code: 'cc',
+    action: 'cc',
     name: 'cc',
-    description: 'Create a CodeableConcept from the parameters provided'
+    description: 'Create a CodeableConcept from the parameters provided.'
   }
 ];
+
+
+interface RuleGroup {
+  groupName: string,
+}
 
 @Component({
   selector: 'app-root',
@@ -117,7 +123,8 @@ export class AppComponent implements OnInit {
 
   // component
   protected structureMaps: string[];
-  protected ruleDescriptions = RULES;
+  protected ruleDescriptions: RuleDescription[] = RULES;
+  protected ruleGroups: RuleGroup[] = [];
   protected fmlResult: {text: string, json: StructureMap};
   protected resourceLoader: {total: number, current: number};
   protected isAnimated = true;
@@ -130,8 +137,13 @@ export class AppComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private notificationService: MuiNotificationService,
-    private cache: HttpCacheService
-  ) { }
+    private cache: HttpCacheService,
+    injector: EnvironmentInjector
+  ) {
+    if (!customElements.get('ce-icon')) {
+      customElements.define('ce-icon', createCustomElement(MuiIconComponent, {injector}));
+    }
+  }
 
 
   public ngOnInit(): void {
@@ -159,14 +171,21 @@ export class AppComponent implements OnInit {
     this.fmlSelected = groupName;
     this.fmls = {...this.fmls, [groupName]: fml};
 
-    SEQUENCE.v = Math.max(...Object.values(this.fmls).flatMap(f => f.connections)
-      .flatMap(c => [c.sourceObject, c.targetObject])
+    this.ruleGroups = Object.keys(this.fmls)
+      .filter(n => ![this.FML_MAIN, groupName].includes(n))
+      .map(n => ({groupName: n}));
+
+    SEQUENCE.current = Math.max(...Object.values(this.fmls)
+      .flatMap(f => [
+        ...Object.keys(f.objects),
+        ...f.rules.map(r => r.name)
+      ])
       .filter(o => o.includes("#"))
-      .map(o => o.split("#")[1])
+      .map(o => substringAfterLast(o, '#'))
       .map(Number)
       .filter(unique));
 
-    this.initEditor(fml);
+    this.initEditor(this.fmls, groupName);
   }
 
 
@@ -278,7 +297,7 @@ export class AppComponent implements OnInit {
 
   /* Editor */
 
-  private initEditor(fml: FMLStructure): void {
+  private initEditor(fmls: FMLStructureGroup, groupName = this.FML_MAIN): void {
     this.editor?.element.remove();
 
     const parent = document.getElementById("drawflow-parent");
@@ -288,7 +307,7 @@ export class AppComponent implements OnInit {
     parent.appendChild(element);
 
 
-    const editor = this.editor = new FMLEditor(fml, element);
+    const editor = this.editor = new FMLEditor(fmls, groupName, element);
     editor.start();
     editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id));
     editor.on('nodeUnselected', () => this.nodeSelected = undefined);
@@ -298,6 +317,8 @@ export class AppComponent implements OnInit {
         this.nodeSelected = editor.getNodeFromId(selectedNodeId);
       }
     });
+
+    const fml = editor._fml;
 
     // render objects
     Object.values(fml.objects).forEach(obj => {
@@ -408,8 +429,18 @@ export class AppComponent implements OnInit {
 
   /* Drag & drop */
 
-  protected onDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
-    ev.dataTransfer.setData("application/json", JSON.stringify(ruleDescription));
+  protected onRuleDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
+    ev.dataTransfer.setData("application/json", JSON.stringify({
+      type: 'rule',
+      data: ruleDescription
+    }));
+  }
+
+  protected onGroupDragStart(ev: DragEvent, ruleGroup: RuleGroup): void {
+    ev.dataTransfer.setData("application/json", JSON.stringify({
+      type: 'group',
+      data: ruleGroup
+    }));
   }
 
   protected onDragOver(ev: DragEvent): void {
@@ -419,17 +450,37 @@ export class AppComponent implements OnInit {
   protected onDrop(ev: DragEvent): void {
     const {top, left} = this.editor._getOffsets();
 
-    const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
-    rule.name = asResourceVariable(data.code);
-    rule.action = data.code;
+    this.fml.putRule(rule);
+
     rule.parameters = [];
     rule.position = {
       y: ev.y - top,
       x: ev.x - left
     };
 
-    this.fml.putRule(rule);
+
+    const datum: {type: 'rule', data: RuleDescription} | {type: 'group', data: RuleGroup} = JSON.parse(ev.dataTransfer.getData('application/json'));
+
+    if (datum.type === 'group') {
+      rule.action = 'rulegroup';
+      rule.name = asResourceVariable('rulegroup');
+      rule.parameters = [{
+        type: 'const',
+        value: datum.data.groupName
+      }];
+
+      const objects = Object.values(this.fmls[datum.data.groupName].objects)
+      this.editor._createRuleNode(rule, {
+        ...rule.position,
+        inputs: objects.filter(o=> o.mode === 'source').length,
+        outputs: objects.filter(o=> o.mode === 'target').length,
+      });
+      return;
+    }
+
+    rule.action = datum.data.action;
+    rule.name = asResourceVariable(datum.data.action);
     this.editor._createRuleNode(rule, {...rule.position});
   }
 

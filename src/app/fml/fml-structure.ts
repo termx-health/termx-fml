@@ -15,7 +15,7 @@ export class FMLStructureEntity {
   position?: FMLPosition;
 }
 
-export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule';
+export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule' | 'group';
 
 
 /* Object */
@@ -105,6 +105,7 @@ export class FMLStructureConnection {
 
 
 /* Structure */
+
 
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
@@ -306,4 +307,8 @@ export class FMLStructure {
   public static isBackboneElement(resource: string): boolean {
     return ['BackboneElement', 'Element'].includes(resource);
   }
+}
+
+export interface FMLStructureGroup {
+  [groupName: string]: FMLStructure
 }
