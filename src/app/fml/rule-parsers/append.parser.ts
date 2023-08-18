@@ -2,6 +2,7 @@ import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './pars
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {isDefined} from '@kodality-web/core-util';
 import {FMLStructure} from '../fml-structure';
+import {substringAfterLast, substringBeforeLast} from '../fml.utils';
 
 export class FMLAppendRuleParser extends FMLRuleParser {
   public action = 'append';
@@ -19,8 +20,8 @@ export class FMLAppendRuleParser extends FMLRuleParser {
     const valueIdParam = fhirRuleTarget.parameter?.find(p => p.valueId);
     if (isDefined(valueIdParam)) {
       const variable = variables[valueIdParam.valueId];
-      fhirRuleSource.context = variable.slice(0, variable.lastIndexOf("."));
-      fhirRuleSource.element = variable.slice(variable.lastIndexOf(".") + 1);
+      fhirRuleSource.context = substringBeforeLast(variable, '.');
+      fhirRuleSource.element = substringAfterLast(variable, '.');
     }
 
     const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);

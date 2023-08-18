@@ -2,16 +2,17 @@ import {Component, forwardRef, Input} from '@angular/core';
 import {Bundle, StructureDefinition} from 'fhir/r5';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {BooleanInput} from '@kodality-web/core-util';
+import {substringAfterLast, substringBeforeLast} from '../../fml/fml.utils';
 
 @Component({
   selector: 'app-structure-definition-select',
   template: `
-    <m-select name="targets" [(ngModel)]="val" (ngModelChange)="fireOnChange()" [multiple]="multiple"  compareWith="url">
+    <m-select name="targets" [(ngModel)]="val" (ngModelChange)="fireOnChange()" [multiple]="multiple" compareWith="url">
       <m-option
-          *ngFor="let res of bundle?.entry"
-          [mValue]="res.resource"
-          [mLabel]="(res.resource.url | apply: splitUrl)[1]"
-          [mLabelTemplate]="tlbl"
+        *ngFor="let res of bundle?.entry"
+        [mValue]="res.resource"
+        [mLabel]="(res.resource.url | apply: splitUrl)[1]"
+        [mLabelTemplate]="tlbl"
       >
         <ng-template #tlbl>
           {{(res.resource.url | apply: splitUrl)[1]}} <span class="description">{{(res.resource.url | apply: splitUrl)[0]}}</span>
@@ -54,6 +55,6 @@ export class StructureDefinitionSelectComponent implements ControlValueAccessor 
 
 
   protected splitUrl(url: string): [string, string] {
-    return [url.substring(0, url.lastIndexOf('/')), url.substring(url.lastIndexOf('/') + 1)];
+    return [substringBeforeLast(url, '/'), substringAfterLast(url, '/')];
   }
 }

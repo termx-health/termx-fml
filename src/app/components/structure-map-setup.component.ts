@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructure, FMLStructureEntityMode} from '../fml/fml-structure';
-import {SEQUENCE} from '../fml/fml.utils';
+import {asResourceVariable} from '../fml/fml.utils';
 import {group} from '@kodality-web/core-util';
 
 interface ModalData {
@@ -122,7 +122,7 @@ export class StructureMapSetupComponent {
 
       const obj = fml.newFMLObject(mapping, mapping, mode);
       if (obj.resource !== obj.name) {
-        obj.name = `${obj.name}#${SEQUENCE.next()}`;
+        obj.name = asResourceVariable(obj.name);
       }
       fml.objects[obj.name] = obj;
     }

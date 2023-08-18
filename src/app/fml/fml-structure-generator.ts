@@ -1,9 +1,10 @@
-import {copyDeep, group, isNil, unique} from '@kodality-web/core-util';
+import {copyDeep, isNil} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
-import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from './fml-structure';
-import {getAlphabet, SEQUENCE} from './fml.utils';
+import {FMLStructure, FMLStructureObject} from './fml-structure';
+import {getAlphabet, SEQUENCE, substringBeforeLast} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleGenerator} from './rule-generators/_generators';
+import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
 const alphabet = getAlphabet().map(el => el.toLowerCase());
@@ -13,6 +14,7 @@ const nextVar = (): string => {
   const times = Math.floor(varCnt / 26);
   return [...Array.from({length: times - 1}).fill(0), varCnt % 26].map(i => alphabet[i as number]).join('');
 };
+
 
 interface FMLStructureGroup {
   [groupName: string]: FMLStructure
@@ -34,7 +36,7 @@ export class FmlStructureGenerator {
     return this._generate(fmls, options);
   }
 
-  public static _generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
+  private static _generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
     varCnt = -1;
     const mapName = options?.mapName ?? 'fml-compose';
 
@@ -50,16 +52,7 @@ export class FmlStructureGenerator {
     // fml as extension
     sm.extension = [{
       url: 'fml-export',
-      valueString: JSON.stringify(
-        group(Object.keys(fmls), k => k, k => {
-          const fml = fmls[k];
-          return {
-            objects: group(Object.values(fml.objects).map(o => ({...o, fields: o.rawFields, rawFields: undefined})), o => o.name),
-            rules: fml.rules,
-            connections: fml.connections
-          };
-        })
-      )
+      valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fmls))
     }];
 
     // structure inputs
@@ -83,7 +76,6 @@ export class FmlStructureGenerator {
     console.log(sm);
     return sm;
   }
-
 
   private static generateGroup(groupName: string, fml: FMLStructure,): StructureMapGroup {
     const smGroup = {
@@ -120,121 +112,106 @@ export class FmlStructureGenerator {
       .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
       .forEach(([target, field]) => {
         const subFml = fml.subFML(target, field);
-        const vars = {};
-
-        const topology = FMLGraph.fromFML(subFml).topologySort();
-        const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
-
-        const newObjects = copyDeep(topologicalOrder)
-          .reverse()
-          .filter(name => 'object' === subFml.objects[name]?.mode)
-          .flatMap(name => {
-            const obj = subFml.objects[name];
-
-            if (FMLStructure.isBackboneElement(obj.resource)) {
-              // create sub element
-              return subFml.getTargets(obj.name).map(n => (<StructureMapGroupRuleTarget>{
-                context: vars[n.object] ?? n.object,
-                element: n.field,
-                variable: vars[`${obj.name}`] = nextVar(),
-              }));
-            }
-
-            return [<StructureMapGroupRuleTarget>{
-              variable: vars[`${obj.name}`] = nextVar(),
-              transform: 'create',
-              parameter: [{
-                valueString: obj.resource
-              }]
-            }];
-          });
-
-
-        let smRule: StructureMapGroupRule;
-        let ctx: FMLStructureObject;
-
-        topologicalOrder.forEach(name => {
-          const rule = subFml.rules.find(r => r.name === name);
-          if (rule) {
-            smRule.target.push(getRuleGenerator(rule.action).generate(rule, ctx, vars));
-          }
-
-          const obj = subFml.objects[name];
-          if (obj) {
-            ctx = obj;
-            if (isNil(smRule)) {
-              // create new rule inside of group
-              smGroup.rule.push(smRule = {
-                name: `rule_${SEQUENCE.next()}`,
-                source: [{context: obj.name}],
-                target: [...newObjects],
-                rule: [],
-              });
-            }
-
-
-            if (['source', 'element'].includes(obj.mode)) {
-              const objOutputs = this.outputs(subFml, obj);
-
-              // initialize (put into vars) fields that are used as source in other objects/rules
-              objOutputs.forEach(n => {
-                const baseName = obj.name.includes('#') ? obj.name.slice(0, obj.name.lastIndexOf("#")) : obj.name;
-
-                smRule.target.push({
-                  variable: vars[`${obj.name}.${n.name}`] = nextVar(),
-                  transform: 'evaluate',
-                  parameter: [
-                    {valueId: vars[baseName] ?? baseName},
-                    {valueString: n.name}
-                  ]
-                });
-              });
-            }
-
-            if (['target', 'object'].includes(obj.mode)) {
-              const objInputs = this.inputs(subFml, obj);
-              objInputs.forEach(n => {
-                const fieldSources = subFml.getSources(obj.name, n.name);
-                if (fieldSources.length >= 2) {
-                  console.warn("Has multiple sources");
-                }
-
-                const {object, field} = fieldSources[0];
-                if (FMLStructure.isBackboneElement(subFml.objects[object]?.resource)) {
-                  // just because
-                  return;
-                }
-
-                smRule.target.push({
-                  context: vars[obj.name] ?? obj.name,
-                  element: n.name,
-                  transform: 'copy',
-                  parameter: [
-                    // create(Any) ?? field (type='var') ?? default fallback
-                    {valueId: vars[object] ?? vars[`${object}.${field}`] ?? object}
-                  ]
-                });
-              });
-            }
-          }
-        });
+        this.generateRule(subFml, smGroup);
       });
-
 
     return smGroup;
   }
 
-  protected static inputs = (fml: FMLStructure, obj: FMLStructureObject): FMLStructureObjectField[] => {
-    return fml.connections
-      .filter(c => c.targetObject === obj.name)
-      .map(c => obj.fields[c.targetFieldIdx])
-      .filter(unique);
-  };
+  private static generateRule(subFml: FMLStructure, smGroup: StructureMapGroup): void {
+    const topology = FMLGraph.fromFML(subFml).topologySort();
+    const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
+    const vars = {};
 
-  protected static outputs = (fml: FMLStructure, obj: FMLStructureObject): FMLStructureObjectField[] => {
-    return fml.connections
-      .filter(c => c.sourceObject === obj.name)
-      .map(c => obj.fields[c.sourceFieldIdx])
-      .filter(unique);
-  };
+    const newObjects = copyDeep(topologicalOrder)
+      .reverse()
+      .filter(name => 'object' === subFml.objects[name]?.mode)
+      .flatMap(name => {
+        const obj = subFml.objects[name];
+
+        if (FMLStructure.isBackboneElement(obj.resource)) {
+          // create sub element
+          return subFml.getTargets(obj.name).map(n => (<StructureMapGroupRuleTarget>{
+            context: vars[n.targetObject] ?? n.targetObject,
+            element: n.field,
+            variable: vars[`${obj.name}`] = nextVar(),
+          }));
+        }
+
+        return [<StructureMapGroupRuleTarget>{
+          variable: vars[`${obj.name}`] = nextVar(),
+          transform: 'create',
+          parameter: [{
+            valueString: obj.resource
+          }]
+        }];
+      });
+
+
+    let smRule: StructureMapGroupRule;
+    let ctx: FMLStructureObject;
+
+    topologicalOrder.forEach(name => {
+      const rule = subFml.rules.find(r => r.name === name);
+      if (rule) {
+        smRule.target.push(getRuleGenerator(rule.action).generate(rule, ctx, vars));
+      }
+
+      const obj = subFml.objects[name];
+      if (obj) {
+        ctx = obj;
+        if (isNil(smRule)) {
+          // create new rule inside of group
+          smGroup.rule.push(smRule = {
+            name: `rule_${SEQUENCE.next()}`,
+            source: [{context: obj.name}],
+            target: [...newObjects],
+            rule: [],
+          });
+        }
+
+
+        if (['source', 'element'].includes(obj.mode)) {
+          // initialize (put into vars) fields that are used as source in other objects/rules
+          subFml.outputFields(obj).forEach(n => {
+            const baseName = substringBeforeLast(obj.name, '#');
+
+            smRule.target.push({
+              variable: vars[`${obj.name}.${n.name}`] = nextVar(),
+              transform: 'evaluate',
+              parameter: [
+                {valueId: vars[baseName] ?? baseName},
+                {valueString: n.name}
+              ]
+            });
+          });
+        }
+
+        if (['target', 'object'].includes(obj.mode)) {
+          subFml.inputFields(obj).forEach(n => {
+            const fieldSources = subFml.getSources(obj.name, n.name);
+            if (fieldSources.length >= 2) {
+              console.warn("Has multiple sources");
+            }
+
+            const {sourceObject, field} = fieldSources[0];
+            if (FMLStructure.isBackboneElement(subFml.objects[sourceObject]?.resource)) {
+              // just because
+              return;
+            }
+
+            smRule.target.push({
+              context: vars[obj.name] ?? obj.name,
+              element: n.name,
+              transform: 'copy',
+              parameter: [
+                // create(Any) ?? field (type='var') ?? default fallback
+                {valueId: vars[sourceObject] ?? vars[`${sourceObject}.${field}`] ?? sourceObject}
+              ]
+            });
+          });
+        }
+      }
+    });
+  }
 }

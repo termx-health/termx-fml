@@ -2,7 +2,7 @@ import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
-import {getPortNumber, SEQUENCE} from './fml.utils';
+import {asResourceVariable, getPortNumber} from './fml.utils';
 import {getRuleRenderer} from './rule-renderers/_renderers';
 
 
@@ -125,7 +125,7 @@ export class FMLEditor extends Drawflow {
         // build objects
         const action = source.data.obj.mode === 'object' ? 'create' : 'copy';
         const rule = new FMLStructureRule();
-        rule.name = `${action}#${SEQUENCE.next()}`;
+        rule.name = asResourceVariable(action);
         rule.action = action;
 
         const conn = _fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);

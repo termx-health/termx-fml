@@ -1,7 +1,7 @@
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../fml-structure';
 import {isDefined, isNil} from '@kodality-web/core-util';
-import {SEQUENCE} from '../fml.utils';
+import {asResourceVariable, substringAfterLast, substringBeforeLast} from '../fml.utils';
 
 
 export interface FMLRuleParserResult {
@@ -31,7 +31,7 @@ export abstract class FMLRuleParser {
     variables: FMLRuleParserVariables
   ): FMLStructureRule {
     const rule = new FMLStructureRule();
-    rule.name = `${ruleName}#${SEQUENCE.next()}`;
+    rule.name = asResourceVariable(ruleName);
     // rule.alias = fhirRuleTarget.variable;
     rule.action = fhirRuleTarget.transform;
     rule.parameters = fhirRuleTarget.parameter?.map(p =>
@@ -60,9 +60,7 @@ export abstract class FMLRuleParser {
 
     valueIdParams.forEach(valueId => {
       const variable = variables[valueId];
-      const source = variable.includes(".")
-        ? variable.substring(0, variable.lastIndexOf("."))
-        : variable;
+      const source = substringBeforeLast(variable, '.');
 
       if (isDefined(fml.objects[source])) {
         // fml object
@@ -138,7 +136,7 @@ export abstract class FMLRuleParser {
     if (st.element) {
       return [ctx, st.element];
     } else if (ctx.includes('.')) {
-      return [ctx.slice(0, ctx.lastIndexOf('.')), ctx.slice(ctx.lastIndexOf('.') + 1)];
+      return [substringBeforeLast(ctx, '.'), substringAfterLast(ctx, '.')];
     }
     return [undefined, undefined];
   }

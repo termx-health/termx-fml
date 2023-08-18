@@ -42,11 +42,11 @@ import {unique} from '@kodality-web/core-util';
       <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
         <m-form-item mLabel="Source" *ngIf="rule.name | apply: fml.getSources as srcs">
           <span *ngIf="!srcs?.length">-</span>
-          <div *ngFor="let src of srcs">{{src.object}}<b *ngIf="src.field">:{{src.field}}</b></div>
+          <div *ngFor="let src of srcs">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
         </m-form-item>
         <m-form-item mLabel="Target" *ngIf="rule.name | apply: fml.getTargets as tgts">
           <span *ngIf="!tgts?.length">-</span>
-          <div *ngFor="let tgt of tgts">{{tgt.object}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
+          <div *ngFor="let tgt of tgts">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
         </m-form-item>
       </div>
 
@@ -185,7 +185,7 @@ export class RuleViewComponent {
 
   protected ctxVariables = (name: string): string[] => {
     return this.fml.getSources(name)
-      .map(s => s.object)
+      .map(s => s.sourceObject)
       .flatMap(sn => [sn, ...this.ctxVariables(sn)])
       .filter(unique)
       .filter(n => this.fml.objects[n]);

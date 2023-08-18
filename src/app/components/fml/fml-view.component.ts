@@ -99,15 +99,10 @@ export class FmlViewComponent {
       })),
       rules: this.fml?.rules.map(r => ({
         ...r,
-        sources: this.fml.getSources(r.name).map(this.toObjectFieldPath),
-        targets: this.fml.getTargets(r.name).map(this.toObjectFieldPath),
+        sources: this.fml.getSources(r.name).map(n => [n.sourceObject, n.field].filter(isDefined).join(':')),
+        targets: this.fml.getTargets(r.name).map(n => [n.targetObject, n.field].filter(isDefined).join(':')),
       })),
       connections: this.fml?.connections as any
     };
   }
-
-
-  protected toObjectFieldPath = ({object, field}) => {
-    return [object, field].filter(isDefined).join(':');
-  };
 }

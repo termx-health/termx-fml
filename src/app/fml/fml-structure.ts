@@ -1,5 +1,5 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {group, isNil, remove} from '@kodality-web/core-util';
+import {group, isNil, remove, unique} from '@kodality-web/core-util';
 
 
 export interface FMLPosition {
@@ -123,7 +123,7 @@ export class FMLStructure {
       if (this.objects[o]) {
         _fml.objects[o] = this.objects[o];
       } else if (_rules[o] && !_fml.rules.some(r => r.name === o)) {
-        _fml.rules.push(_rules[o]);
+        _fml.putRule(_rules[o]);
       }
 
       return this.connections
@@ -146,26 +146,6 @@ export class FMLStructure {
     return this._connections;
   }
 
-  public getSources = (target: string, field?: string): {object: string, field?: string}[] => {
-    return this.connections
-      .filter(c => c.targetObject === target)
-      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
-      .map(c => ({
-        object: c.sourceObject,
-        field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name
-      }));
-  };
-
-  public getTargets = (source: string, field?: string): {object: string, field?: string}[] => {
-    return this.connections
-      .filter(c => c.sourceObject === source)
-      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
-      .map(c => ({
-        object: c.targetObject,
-        field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
-      }));
-  };
-
   public putConnection(conn: FMLStructureConnection): void {
     const exists = this.connections.some(c =>
       c.sourceObject === conn.sourceObject && c.sourceFieldIdx === conn.sourceFieldIdx &&
@@ -184,6 +164,54 @@ export class FMLStructure {
   }
 
 
+  /* Rules */
+
+  public putRule(rule: FMLStructureRule): void {
+    const exists = this.rules.some(r => r.name === rule.name);
+    if (!exists) {
+      this.rules.push(rule);
+    }
+  }
+
+
+  /**/
+
+  public inputFields = (obj: FMLStructureObject): FMLStructureObjectField[] => {
+    return this.connections
+      .filter(c => c.targetObject === obj.name)
+      .map(c => obj.fields[c.targetFieldIdx])
+      .filter(unique);
+  };
+
+  public outputFields = (obj: FMLStructureObject): FMLStructureObjectField[] => {
+    return this.connections
+      .filter(c => c.sourceObject === obj.name)
+      .map(c => obj.fields[c.sourceFieldIdx])
+      .filter(unique);
+  };
+
+
+  public getSources = (target: string, field?: string): {sourceObject: string, field?: string}[] => {
+    return this.connections
+      .filter(c => c.targetObject === target)
+      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+      .map(c => ({
+        sourceObject: c.sourceObject,
+        field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name
+      }));
+  };
+
+  public getTargets = (source: string, field?: string): {targetObject: string, field?: string}[] => {
+    return this.connections
+      .filter(c => c.sourceObject === source)
+      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
+      .map(c => ({
+        targetObject: c.targetObject,
+        field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
+      }));
+  };
+
+
   /* Builders */
 
   public newFMLObject(resource: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
@@ -195,7 +223,7 @@ export class FMLStructure {
     const inlineDefinition = path.includes(".") && path === resource;
 
     // try to find resource's structure definition
-    const structureDefinition = this.findStructureDefinition(this.bundle, resource);
+    const structureDefinition = this.findStructureDefinition(resource);
     if (isNil(structureDefinition)) {
       throw Error(`StructureDefinition for the "${resource}" not found!`);
     } else if (isNil(structureDefinition.snapshot)) {
@@ -264,13 +292,13 @@ export class FMLStructure {
 
   /* Utils */
 
-  public findStructureDefinition(bundle: Bundle<StructureDefinition>, anyPath: string): StructureDefinition {
+  public findStructureDefinition(anyPath: string): StructureDefinition {
     // MyResource.whatever.element (anyPath) => MyResource (base)
     const base = anyPath.includes('.')
       ? anyPath.slice(0, anyPath.indexOf('.'))
       : anyPath;
 
-    return bundle.entry
+    return this.bundle.entry
       .map(e => e.resource)
       .find(e => e.id === base);
   }

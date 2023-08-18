@@ -1,7 +1,7 @@
 import {FMLEditor} from './fml-editor';
 
 
-/* FML editor  */
+/* FML  */
 
 export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): void {
   const node = editor.getNodeFromId(editor._getNodeId(id));
@@ -37,10 +37,8 @@ export function getPortNumber(str: string): number {
   return Number(str.split("_")[1]);
 }
 
-export function getAlphabet(): string[] {
-  const alpha = Array.from(Array(26)).map((e, i) => i + 65);
-  return alpha.map((x) => String.fromCharCode(x));
-}
+
+/* Sequence */
 
 export const SEQUENCE = {
   v: 420,
@@ -49,3 +47,22 @@ export const SEQUENCE = {
   }
 };
 
+export const asResourceVariable = (name: string): string => {
+  return `${name}#${SEQUENCE.next()}`;
+};
+
+
+/* String */
+
+export const substringBeforeLast = (str: string, sep: string): string => {
+  return str.includes(sep) ? str.slice(0, str.lastIndexOf(sep)) : str;
+};
+
+export const substringAfterLast = (str: string, sep: string): string => {
+  return str.includes(sep) ? str.slice(str.lastIndexOf(sep) + 1) : str;
+};
+
+export const getAlphabet = (): string[] => {
+  const alpha = Array.from(Array(26)).map((e, i) => i + 65);
+  return alpha.map((x) => String.fromCharCode(x));
+}

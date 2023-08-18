@@ -51,11 +51,11 @@
   <!-- MAIN PANEL -->
   <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
-      <div *ngIf="!fmls[MAIN]" class="editor-tab">
+      <div *ngIf="!fmls[FML_MAIN]" class="editor-tab">
         <m-icon mCode="loading"/>&nbsp;loading...
       </div>
 
-      <ng-container *ngIf="fmls[MAIN]">
+      <ng-container *ngIf="fmls[FML_MAIN]">
         <div
           *ngFor="let key of Object.keys(fmls)"
           class="editor-tab m-justify-between"
@@ -65,7 +65,7 @@
           <div>
             <m-icon mCode="file"/>&nbsp;{{key}}
           </div>
-          <m-icon *ngIf="key !== MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
+          <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
         </div>
 
         <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">

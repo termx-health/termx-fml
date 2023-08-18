@@ -11,7 +11,7 @@ import {HttpClient} from '@angular/common/http';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
-import {SEQUENCE} from './fml/fml.utils';
+import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
 
 
@@ -62,6 +62,11 @@ const RULES: RuleDescription[] = [
   templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
+  protected FML_MAIN = 'main';
+  protected SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
+  protected STRUCTURE_MAPS_KEY = "structure_maps";
+
+
   // todo: @Input()
   public structureMap: StructureMap;
   private _structureMap = (): Observable<StructureMap> => {
@@ -79,7 +84,7 @@ export class AppComponent implements OnInit {
   public resourceBundle: Bundle<StructureDefinition>;
   private _resourceBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
-      const mapResources = sm.structure.map(s => s.url.substring(s.url.lastIndexOf('/') + 1));
+      const mapResources = sm.structure.map(s => substringAfterLast(s.url, '/'));
 
       this.resourceLoader = {total: mapResources.length + resources.length, current: 0};
       const reqs$ = [...mapResources, ...resources].filter(unique).map(k => {
@@ -100,9 +105,8 @@ export class AppComponent implements OnInit {
 
   // FML editor
   private editor: FMLEditor;
-  protected MAIN = 'main';
   protected fmls: {[key: string]: FMLStructure} = {};
-  protected fmlSelected = this.MAIN;
+  protected fmlSelected = this.FML_MAIN;
 
   protected get fml(): FMLStructure {
     return this.editor?._fml;
@@ -113,14 +117,12 @@ export class AppComponent implements OnInit {
   // component
   protected structureMaps: string[];
   protected ruleDescriptions = RULES;
+  protected fmlResult: string;
+  protected resourceLoader: {total: number, current: number};
   protected isAnimated = true;
   protected isDev = isDevMode();
-  protected resourceLoader: {total: number, current: number};
-  protected fmlResult: string;
   protected localstorage = localStorage;
 
-  protected SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
-  protected STRUCTURE_MAPS_KEY = "structure_maps";
 
   constructor(
     private http: HttpClient,
@@ -144,7 +146,7 @@ export class AppComponent implements OnInit {
       this._resourceBundle(resp).subscribe(bundle => {
         const fml = FMLStructureMapper.map(bundle, resp);
         this.fmls = fml;
-        this.setFML(this.MAIN, fml[this.MAIN]);
+        this.setFML(this.FML_MAIN, fml[this.FML_MAIN]);
       });
     });
   }
@@ -164,18 +166,11 @@ export class AppComponent implements OnInit {
     this.initEditor(fml);
   }
 
+
   /* Toolbar */
 
   private export(): StructureMap {
     this.editor._rerenderNodes();
-
-    // const exp = this.editor.export();
-    // Object.values(exp.drawflow.Home.data).forEach(el => {
-    //   const {x, y} = (el.data.obj ?? el.data.rule).position;
-    //   el.pos_x = x;
-    //   el.pos_y = y;
-    // });
-
     try {
       return FmlStructureGenerator.generate(this.fmls, {mapName: localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY)});
     } catch (e) {
@@ -261,9 +256,9 @@ export class AppComponent implements OnInit {
   }
 
   protected deleteGroup(name: string): void {
-    if (name !== this.MAIN) {
+    if (name !== this.FML_MAIN) {
       delete this.fmls[name];
-      this.setFML(this.MAIN, this.fmls[this.MAIN]);
+      this.setFML(this.FML_MAIN, this.fmls[this.FML_MAIN]);
     }
   }
 
@@ -340,18 +335,17 @@ export class AppComponent implements OnInit {
         const rule = node.data.rule;
 
         const _rule = new FMLStructureRule();
-        _rule['_base'] = rule.name;
-        _rule.name = `${rule.name.slice(0, rule.name.lastIndexOf('#'))}#${SEQUENCE.next()}`;
+        _rule.name = asResourceVariable(substringBeforeLast(rule.name, '#'));
         _rule.mode = rule.mode;
         _rule.position = rule.position;
         _rule.action = rule.action;
         _rule.parameters = structuredClone(rule.parameters);
         _rule.condition = rule.condition;
-        fml.rules.push(_rule);
+        fml.putRule(_rule);
 
         const nodeId = this.editor._createRuleNode(_rule, {..._rule.position});
-        fml.getSources(_rule['_base']).forEach(({object, field}, idx) => {
-          this.editor._createConnection(object, field ?? 1, _rule.name, idx + 1);
+        fml.getSources(rule.name).forEach(({sourceObject, field}, idx) => {
+          this.editor._createConnection(sourceObject, field ?? 1, _rule.name, idx + 1);
         });
 
         editor._updateRule(nodeId, _rule.name, r => {
@@ -373,7 +367,7 @@ export class AppComponent implements OnInit {
       mode = 'element';
     }
 
-    const structureDefinition = this.fml.findStructureDefinition(this.resourceBundle, parentObj.element.id);
+    const structureDefinition = this.fml.findStructureDefinition(parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
@@ -384,7 +378,7 @@ export class AppComponent implements OnInit {
     }
 
     const obj = this.fml.newFMLObject(fieldType, fieldPath, mode);
-    obj.name = `${parentObj.name}.${field}#${SEQUENCE.next()}`;
+    obj.name = asResourceVariable(`${parentObj.name}.${field}`);
     this.fml.objects[obj.name] = obj;
 
     this.editor._createObjectNode(obj);
@@ -411,15 +405,15 @@ export class AppComponent implements OnInit {
 
     const data = JSON.parse(ev.dataTransfer.getData('application/json')) as RuleDescription;
     const rule = new FMLStructureRule();
-    rule.name = `${data.code}#${SEQUENCE.next()}`;
+    rule.name = asResourceVariable(data.code);
     rule.action = data.code;
     rule.parameters = [];
     rule.position = {
       y: ev.y - top,
       x: ev.x - left
     };
-    this.fml.rules.push(rule);
 
+    this.fml.putRule(rule);
     this.editor._createRuleNode(rule, {...rule.position});
   }
 

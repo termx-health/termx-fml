@@ -1,9 +1,9 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
 import {FMLRuleParserVariables} from './rule-parsers/parser';
-import {FMLStructure, FMLStructureConnection, FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {plainToInstance} from 'class-transformer';
+import {FMLStructure, FMLStructureEntityMode, FMLStructureObject} from './fml-structure';
 import {getRuleParser} from './rule-parsers/_parsers';
+import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
 export class FMLStructureMapper {
@@ -16,15 +16,15 @@ export class FMLStructureMapper {
       if (isNil(parsed[this.MAIN])) {
         parsed = {[this.MAIN]: parsed};
       }
-      return group(Object.keys(parsed), k => k, k => this.fromObj(bundle, parsed[k]));
+      return FMLStructureSimpleMapper.toFML(bundle, parsed);
     }
 
     return {
-      [this.MAIN]: this._map(bundle, fhir)
+      [this.MAIN]: this.mapEach(bundle, fhir)
     };
   }
 
-  private static _map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
+  private static mapEach(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     // finds the correct resource type based on URL
     const getKey = ({url}: StructureMapStructure) => bundle.entry.find(c => c.resource.url === url)?.resource?.id;
 
@@ -79,7 +79,7 @@ export class FMLStructureMapper {
               struc.objects[object.name] = object;
             }
             if (isDefined(rule)) {
-              struc.rules.push(rule);
+              struc.putRule(rule);
             }
             if (isDefined(connections)) {
               connections.forEach(c => struc.putConnection(c));
@@ -143,21 +143,5 @@ export class FMLStructureMapper {
         console.warn(`Structure Map's group ${fhirGroup.name} has duplicate rules`, duplicates.filter(unique));
       }
     });
-  }
-
-  private static fromObj(bundle: Bundle<StructureDefinition>, d: {
-    objects: {[name: string]: Omit<FMLStructureObject, 'rawFields'>},
-    rules: FMLStructureRule[],
-    connections: FMLStructureConnection[]
-  }): FMLStructure {
-    const fml = new FMLStructure();
-    fml.bundle = bundle;
-    Object.keys(d.objects).forEach(k => fml.objects[k] = plainToInstance(FMLStructureObject, {
-      ...d.objects[k],
-      rawFields: d.objects[k].fields
-    }));
-    fml.rules = plainToInstance(FMLStructureRule, d.rules);
-    fml._connections = plainToInstance(FMLStructureConnection, d.connections);
-    return fml;
   }
 }
