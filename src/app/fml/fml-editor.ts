@@ -5,7 +5,6 @@ import dagre from "dagre";
 import {asResourceVariable, getPortNumber} from './fml.utils';
 import {getRuleRenderer} from './rule-renderers/_renderers';
 
-
 export interface FMLDrawflowRuleNode extends DrawflowNode {
   data: {
     rule?: FMLStructureRule
@@ -57,6 +56,7 @@ export class FMLEditor extends Drawflow {
 
   public _ready(): void {
     this._initialized = true;
+    this._rerenderNodes();
   }
 
   public get _fml(): FMLStructure {
@@ -137,8 +137,9 @@ export class FMLEditor extends Drawflow {
         this._fml.putConnection(conn);
         this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
 
-        this._rerenderNodes();
       }
+
+      this._rerenderNodes();
     });
 
 
@@ -165,6 +166,8 @@ export class FMLEditor extends Drawflow {
 
         this._fml.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
       }
+
+      this._rerenderNodes();
     });
   }
 
@@ -311,6 +314,10 @@ export class FMLEditor extends Drawflow {
   }
 
   public _rerenderNodes(): void {
+    if (!this._initialized) {
+      return;
+    }
+
     Object.keys(this._fml.objects).forEach(name => {
       const {el, nodeId} = this._getNodeElementByName(name);
       if (isDefined(el)) {
@@ -331,6 +338,34 @@ export class FMLEditor extends Drawflow {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
         content.innerHTML = getRuleRenderer(rule.action).render(this, rule);
         this.updateConnectionNodes(`node-${nodeId}`);
+      }
+    });
+
+    Object.values(this.drawflow.drawflow.Home.data).forEach(node => {
+      const el = document.getElementById(`node-${node.id}`);
+
+      Object.keys(node.inputs).forEach(k => {
+        const inputEl = el.getElementsByClassName(k).item(0) as HTMLElement;
+        inputEl.style.background = '';
+        inputEl.style.borderColor = '';
+
+        if (node.inputs[k].connections?.length) {
+          inputEl.style.background = 'var(--color-green-0)';
+          inputEl.style.borderColor = 'var(--color-green-7)';
+        }
+      });
+
+      if (this._isObj(node) && ['source', 'element'].includes(node.data.obj.mode)) {
+        Object.keys(node.outputs).forEach(k => {
+          const inputEl = el.getElementsByClassName(k).item(0) as HTMLElement;
+          inputEl.style.background = '';
+          inputEl.style.borderColor = '';
+
+          if (node.outputs[k].connections?.length) {
+            inputEl.style.background = 'var(--color-primary-1)';
+            inputEl.style.borderColor = 'var(--color-primary-6)';
+          }
+        });
       }
     });
   }

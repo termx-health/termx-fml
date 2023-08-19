@@ -8,7 +8,7 @@ export class FMLTruncateRuleRenderer extends FMLRuleRenderer {
   public override render(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
       ${this.renderMeta(rule)}
-      <h5>truncate(${rule.parameters.map(p => this.renderParam(p)).join(", ")})</h5>
+      <h5>truncate${rule.parameters.length ? '('+rule.parameters.map(p => this.renderParam(p)).join(", ") + ')' : ''}</h5>
     `;
   }
 }

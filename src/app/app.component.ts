@@ -470,11 +470,11 @@ export class AppComponent implements OnInit {
         value: datum.data.groupName
       }];
 
-      const objects = Object.values(this.fmls[datum.data.groupName].objects)
+      const objects = Object.values(this.fmls[datum.data.groupName].objects);
       this.editor._createRuleNode(rule, {
         ...rule.position,
-        inputs: objects.filter(o=> o.mode === 'source').length,
-        outputs: objects.filter(o=> o.mode === 'target').length,
+        inputs: objects.filter(o => o.mode === 'source').length,
+        outputs: objects.filter(o => o.mode === 'target').length,
       });
       return;
     }

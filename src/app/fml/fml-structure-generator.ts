@@ -16,7 +16,6 @@ const nextVar = (): string => {
 };
 
 
-
 interface FmlStructureGeneratorOptions {
   mapName?: string
 }

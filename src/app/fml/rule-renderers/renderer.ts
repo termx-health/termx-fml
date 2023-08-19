@@ -47,8 +47,6 @@ export abstract class FMLRuleRenderer {
         rule.parameters.push({type: 'var', value: paramName});
       }
     });
-
-    editor._rerenderNodes();
   }
 
 
@@ -82,7 +80,6 @@ export abstract class FMLRuleRenderer {
       editor._updateRule(node.id, node.name, rule => {
         rule.parameters.splice(paramIdx, 1);
       });
-      editor._rerenderNodes();
     }
   }
 
