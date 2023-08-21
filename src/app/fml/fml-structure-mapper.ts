@@ -11,9 +11,6 @@ export class FMLStructureMapper {
 
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructureGroup {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
-    if (isNil(fhir.version)) {
-      fhir.version = '1';
-    }
 
     if (exported) {
       let parsed = JSON.parse(exported);

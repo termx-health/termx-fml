@@ -17,10 +17,12 @@ import {StructureDefinitionSelectComponent} from './components/structure-definit
 import {StructureDefinitionTreeComponent} from './components/structure-definition/structure-definition-tree.component';
 import {StructureMapSetupComponent} from './components/structure-map-setup.component';
 import {UpdateVersionComponent} from './components/update-version.component';
+import {EditorComponent} from './editor.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    EditorComponent,
     FmlViewComponent,
     ObjectViewComponent,
     RuleViewComponent,

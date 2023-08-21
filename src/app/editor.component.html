@@ -1,0 +1,96 @@
+
+
+<div style="display: grid; grid-template-columns: auto 1fr">
+  <!-- LEFT PANEL -->
+  <m-collapse-panel
+    mKey="fml-left-panel"
+    mResizable
+    [mResizableMaxWidth]="400"
+    style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 10"
+  >
+    <app-fml-view [fml]="fml"/>
+  </m-collapse-panel>
+
+
+  <!-- MAIN PANEL -->
+  <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
+    <div class="editor-tabbar">
+      <div *ngIf="!fmls[FML_MAIN]" class="editor-tab m-items-middle">
+        <m-icon mCode="loading"/>
+        <span>loading...</span>
+      </div>
+
+      <ng-container *ngIf="fmls[FML_MAIN]">
+        <div
+          *ngFor="let key of fmls | keys"
+          class="editor-tab m-justify-between"
+          [class.editor-tab--selected]="key === groupName"
+          (click)="selectGroup(key)"
+        >
+          <div class="m-items-middle">
+            <m-icon mCode="file"/>
+            <span>{{key}}</span>
+          </div>
+          <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
+        </div>
+
+        <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
+          <m-icon mCode="file-add"/>
+          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fml)"/>
+        </div>
+      </ng-container>
+    </div>
+
+    <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr; max-height: calc(100% - 32px - 1px)">
+      <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+      <!-- RIGHT PANEL -->
+      <div style="border-left: var(--border-table);  height: 100%; overflow: auto; background: var(--color-background-component)">
+        <ng-container *ngIf="!nodeSelected">
+          <div style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="ruleGroups.length">
+            <h5>Groups</h5>
+
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rg of ruleGroups" class="m-clickable" draggable="true" (dragstart)="onGroupDragStart($event, rg)">
+                <div class="m-items-middle">
+                  <m-icon mCode="folder"/>
+                  <m-divider mVertical></m-divider>
+                  {{rg.groupName}}
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+
+          <div style="padding: 1rem; border-bottom: var(--border-table);">
+            <h5>Transformers</h5>
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rd of ruleDescriptions" class="m-clickable" draggable="true" (dragstart)="onRuleDragStart($event, rd)">
+                <div class="m-items-middle">
+                  <m-icon mCode="experiment"/>
+                  <m-divider mVertical></m-divider>
+                  <div>
+                    <div>{{rd.name}}</div>
+                    <div class="description">{{rd.description}}</div>
+                  </div>
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+        </ng-container>
+
+
+        <ng-container *ngIf="nodeSelected as node">
+          <!-- Resource -->
+          <div *ngIf="node.data.obj as obj">
+            <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
+          </div>
+
+          <!-- Rule -->
+          <div *ngIf="node.data.rule as rule">
+            <app-rule-view [rule]="rule" [fml]="fml" (ruleChange)="applyRule($event)"/>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
