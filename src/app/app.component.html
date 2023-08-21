@@ -12,7 +12,7 @@
         <div *m-dropdown-container>{{localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)}}.json
           <m-icon *ngIf="localMaps[localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)]" mCode="hdd"/>
         </div>
-        <ng-container *ngFor="let m of structureMaps">
+        <ng-container *ngFor="let m of maps">
           <a *m-dropdown-item (mClick)="localstorage.setItem(SELECTED_STRUCTURE_MAPS_KEY, m); init()">{{m}}
             <m-icon *ngIf="localMaps[m]" mCode="hdd"/>
           </a>
@@ -24,9 +24,9 @@
         <div class="description">Embedded</div>
       </ng-container>
 
-      <ng-container *ngIf="resourceLoader">
+      <ng-container *ngIf="loader">
         <m-divider mVertical/>
-        <progress [value]="resourceLoader.current / resourceLoader.total * 100" max="100"></progress>
+        <progress [value]="loader.current / loader.total * 100" max="100"></progress>
       </ng-container>
     </div>
 
@@ -55,7 +55,7 @@
 
 
 <!-- FML preview modal -->
-<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="fmlResult = undefined">
+<m-modal #fmlPreview mPlacement="top" mStyle="width:100%; max-width: 90rem" (mClose)="fml = undefined">
   <div *m-modal-content>
     <ng-container *ngIf="{t: 'fml'} as d">
       <m-radio-group [(ngModel)]="d.t" style="margin-bottom: 1rem; display: inline-block">
@@ -64,8 +64,8 @@
       </m-radio-group>
 
       <ng-container [ngSwitch]="d.t">
-        <pre *ngSwitchCase="'fml'" style="font-size: 13px; line-height: 1.25;">{{fmlResult.text}}</pre>
-        <pre *ngSwitchCase="'json'" style="font-size: 13px; line-height: 1.25;">{{fmlResult.json | json}}</pre>
+        <pre *ngSwitchCase="'fml'" style="font-size: 13px; line-height: 1.25;">{{fml.text}}</pre>
+        <pre *ngSwitchCase="'json'" style="font-size: 13px; line-height: 1.25;">{{fml.json | json}}</pre>
       </ng-container>
     </ng-container>
   </div>

@@ -12,53 +12,6 @@ import {substringAfterLast} from './fml/fml.utils';
 import {EditorComponent} from './editor.component';
 
 
-interface RuleDescription {
-  action: string,
-  name: string,
-  description?: string
-}
-
-const RULES: RuleDescription[] = [
-  {
-    action: 'constant',
-    name: 'constant'
-  },
-  {
-    action: 'uuid',
-    name: 'uuid',
-    description: 'Generate a random UUID (in lowercase).'
-  },
-  {
-    action: 'copy',
-    name: 'copy'
-  },
-  {
-    action: 'truncate',
-    name: 'truncate',
-    description: 'Source must be some stringy type that has some meaningful length property.'
-  },
-  {
-    action: 'append',
-    name: 'append',
-    description: 'Element or string - just append them all together'
-  },
-  {
-    action: 'evaluate',
-    name: 'evaluate',
-    description: 'Execute the supplied FHIRPath expression and use the value returned by that.'
-  },
-  {
-    action: 'cc',
-    name: 'cc',
-    description: 'Create a CodeableConcept from the parameters provided.'
-  }
-];
-
-
-interface RuleGroup {
-  groupName: string,
-}
-
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html'
@@ -85,9 +38,9 @@ export class AppComponent implements OnInit {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
       const mapResources = sm.structure.map(s => substringAfterLast(s.url, '/'));
 
-      this.resourceLoader = {total: mapResources.length + resources.length, current: 0};
+      this.loader = {total: mapResources.length + resources.length, current: 0};
       const reqs$ = [...mapResources, ...resources].filter(unique).map(k => {
-        return this.cache.put(k, this.http.get<StructureDefinition>(`assets/StructureDefinition/${k}.json`)).pipe(tap(() => this.resourceLoader.current++));
+        return this.cache.put(k, this.http.get<StructureDefinition>(`assets/StructureDefinition/${k}.json`)).pipe(tap(() => this.loader.current++));
       });
 
       return forkJoin(reqs$).pipe(
@@ -98,13 +51,13 @@ export class AppComponent implements OnInit {
             entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
           };
         }),
-        finalize(() => this.resourceLoader = undefined));
+        finalize(() => this.loader = undefined));
     }));
   };
 
-  protected structureMaps: string[];
-  protected fmlResult: {text: string, json: StructureMap};
-  protected resourceLoader: {total: number, current: number};
+  protected maps: string[] = [];
+  protected fml: {text: string, json: StructureMap};
+  protected loader: {total: number, current: number};
 
   protected isDev = isDevMode();
   protected isAnimated = true;
@@ -118,15 +71,13 @@ export class AppComponent implements OnInit {
     private http: HttpClient,
     private notificationService: MuiNotificationService,
     private cache: HttpCacheService
-  ) {
-
-  }
+  ) { }
 
 
   public ngOnInit(): void {
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
       const localMaps = Object.values(this.localMaps).map(m => m.name);
-      this.structureMaps = [...maps, ...localMaps].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+      this.maps = [...maps, ...localMaps].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
       this.init();
     });
 
@@ -158,7 +109,7 @@ export class AppComponent implements OnInit {
       [sm.name]: sm
     }));
 
-    this.structureMaps = [...this.structureMaps, sm.name].filter(unique);
+    this.maps = [...this.maps, sm.name].filter(unique);
     this.init();
   }
 
@@ -192,7 +143,7 @@ export class AppComponent implements OnInit {
     const map = this.export();
 
     this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(map)}, {responseType: 'text'}).subscribe(resp => {
-      this.fmlResult = {
+      this.fml = {
         text: resp
           .replaceAll(',  ', ',\n    ')
           .replaceAll(' ->  ', ' ->\n    ')

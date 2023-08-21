@@ -70,14 +70,8 @@ export class EditorComponent implements OnInit, OnChanges {
   protected ZOOM_KEY = "fml_zoom";
 
   @Input() public iframe: boolean;
-
-  /* The list of resources available for the edit */
   @Input() public resourceBundle: Bundle<StructureDefinition>;
-
-  /* The list of resources available for the edit */
   @Input() public structureMap: StructureMap;
-
-  /* Name of the currently selected map */
   @Input() public mapName: string;
 
 
@@ -403,6 +397,4 @@ export class EditorComponent implements OnInit, OnChanges {
     }
     this.editor._rerenderNodes();
   }
-
-
 }
