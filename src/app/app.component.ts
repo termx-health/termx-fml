@@ -1,15 +1,16 @@
 import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
 import {FMLStructure} from './fml/fml-structure';
-import {finalize, forkJoin, map, mergeMap, Observable, of, tap} from 'rxjs';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {HttpCacheService, isDefined, isNil, unique, uniqueBy} from '@kodality-web/core-util';
+import {HttpCacheService, isDefined} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
-import {substringAfterLast} from './fml/fml.utils';
 import {EditorComponent} from './editor.component';
+import {IframeStorage} from './storage/iframe.storage';
+import {EditorStorage} from './storage/storage';
+import {LocalStorage} from './storage/local.storage';
 
 
 @Component({
@@ -17,43 +18,8 @@ import {EditorComponent} from './editor.component';
   templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
-  protected SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
-  protected STRUCTURE_MAPS_KEY = "structure_maps";
-
-
   public structureMap: StructureMap;
-  private _structureMap = (): Observable<StructureMap> => {
-    const name = localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY);
-    const url = `assets/StructureMap/${name}.json`;
-
-    if (isDefined(name) && name in this.localMaps) {
-      return of(this.localMaps[name]).pipe(map(resp => this.structureMap = resp));
-    }
-
-    return this.http.get<StructureMap>(url).pipe(map(resp => this.structureMap = resp));
-  };
-
   public resourceBundle: Bundle<StructureDefinition>;
-  private _resourceBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
-    return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
-      const mapResources = sm.structure.map(s => substringAfterLast(s.url, '/'));
-
-      this.loader = {total: mapResources.length + resources.length, current: 0};
-      const reqs$ = [...mapResources, ...resources].filter(unique).map(k => {
-        return this.cache.put(k, this.http.get<StructureDefinition>(`assets/StructureDefinition/${k}.json`)).pipe(tap(() => this.loader.current++));
-      });
-
-      return forkJoin(reqs$).pipe(
-        map(definitions => {
-          return this.resourceBundle = {
-            resourceType: 'Bundle',
-            type: 'collection',
-            entry: uniqueBy(definitions.map(def => ({resource: def})), e => e.resource.url)
-          };
-        }),
-        finalize(() => this.loader = undefined));
-    }));
-  };
 
   protected maps: string[] = [];
   protected fml: {text: string, json: StructureMap};
@@ -61,39 +27,24 @@ export class AppComponent implements OnInit {
 
   protected isDev = isDevMode();
   protected isAnimated = true;
-  protected localstorage = localStorage;
-
 
   @ViewChild(EditorComponent) public editor: EditorComponent;
 
+  protected service: EditorStorage;
 
   constructor(
     private http: HttpClient,
     private notificationService: MuiNotificationService,
     private cache: HttpCacheService
-  ) { }
+  ) {
+  }
 
 
   public ngOnInit(): void {
-    this.http.get<string[]>("assets/StructureMap/index.json").subscribe(maps => {
-      const localMaps = Object.values(this.localMaps).map(m => m.name);
-      this.maps = [...maps, ...localMaps].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
-      this.init();
-    });
-
-  }
-
-  protected init(): void {
-    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY) ?? "step3");
-
-    this.structureMap = undefined;
-    this.resourceBundle = undefined;
-
-    this._structureMap().subscribe(resp => {
-      this._resourceBundle(resp).subscribe(bundle => {
-        console.log(bundle, resp);
-      });
-    });
+    this.service = this.inIframe ? new IframeStorage() : new LocalStorage(this.http, this.cache);
+    this.service.maps$.subscribe(r => this.maps = r);
+    this.service.structureMap$.subscribe(r => this.structureMap = r);
+    this.service.bundle$.subscribe(r => this.resourceBundle = r);
   }
 
 
@@ -102,33 +53,16 @@ export class AppComponent implements OnInit {
   // New
   protected initFromWizard(groupName: string, fml: FMLStructure): void {
     const sm = FmlStructureGenerator.generate(fml, {mapName: groupName});
-
-    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, sm.name);
-    localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify({
-      ...this.localMaps,
-      [sm.name]: sm
-    }));
-
-    this.maps = [...this.maps, sm.name].filter(unique);
-    this.init();
+    this.service.importMap(sm);
   }
 
   // Import
   protected importStructureMap(m: MuiModalContainerComponent, json: string): void {
-    if (isNil(json)) {
-      return;
+    if (isDefined(json)) {
+      const sm = JSON.parse(json);
+      this.service.importMap(sm);
+      m.close();
     }
-
-    const sm = JSON.parse(json);
-
-    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, sm.name);
-    localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify({
-      ...this.localMaps,
-      [sm.name]: sm
-    }));
-
-    this.init();
-    m.close();
   }
 
   // Export
@@ -158,12 +92,7 @@ export class AppComponent implements OnInit {
   protected save(): void {
     try {
       const sm = this.export();
-
-      localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify({
-        ...this.localMaps,
-        [sm.name]: sm
-      }));
-
+      this.service.saveMap(sm);
       this.notificationService.success("Saved into localstorage", 'Check console for any errors!', {placement: 'top'});
     } catch (e) {
       /* empty */
@@ -173,6 +102,10 @@ export class AppComponent implements OnInit {
 
   /* Right side */
 
+  protected setAnimation(animated: boolean): void {
+    this.editor.setAnimation(animated);
+  }
+
   protected zoomIn(): void {
     this.editor.zoomIn();
   }
@@ -180,7 +113,6 @@ export class AppComponent implements OnInit {
   protected zoomOut(): void {
     this.editor.zoomOut();
   }
-
 
   protected autoLayout(): void {
     this.editor.autoLayout();
@@ -212,10 +144,6 @@ export class AppComponent implements OnInit {
       this.notificationService.error('Export failed', e);
       throw e;
     }
-  }
-
-  protected get localMaps(): {[k: string]: StructureMap} {
-    return JSON.parse(localStorage.getItem(this.STRUCTURE_MAPS_KEY) ?? '{}');
   }
 
   protected get inIframe(): boolean {

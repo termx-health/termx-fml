@@ -9,12 +9,12 @@
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
       <m-dropdown [mHideIfEmpty]="false">
-        <div *m-dropdown-container>{{localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)}}.json
-          <m-icon *ngIf="localMaps[localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)]" mCode="hdd"/>
+        <div *m-dropdown-container>{{service.selectedMapName ?? 'xxx'}}.json
+          <m-icon *ngIf="service.isSaved(service.selectedMapName)" mCode="hdd"/>
         </div>
         <ng-container *ngFor="let m of maps">
-          <a *m-dropdown-item (mClick)="localstorage.setItem(SELECTED_STRUCTURE_MAPS_KEY, m); init()">{{m}}
-            <m-icon *ngIf="localMaps[m]" mCode="hdd"/>
+          <a *m-dropdown-item (mClick)="service.selectMap(m)">{{m}}
+            <m-icon *ngIf="service.isSaved(m)" mCode="hdd"/>
           </a>
         </ng-container>
       </m-dropdown>
@@ -32,7 +32,7 @@
 
     <div style="justify-self: end" class="m-items-middle">
       Animation
-      <nz-switch [(ngModel)]="isAnimated" nzSize="small"></nz-switch>
+      <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
       <m-divider mVertical/>
 
       <m-icon-button mIcon="zoom-out" (mClick)="zoomOut()"/>
@@ -50,7 +50,7 @@
   [iframe]="inIframe"
   [resourceBundle]="resourceBundle"
   [structureMap]="structureMap"
-  [mapName]="localstorage.getItem(SELECTED_STRUCTURE_MAPS_KEY)"
+  [mapName]="structureMap?.name"
 ></app-editor>
 
 

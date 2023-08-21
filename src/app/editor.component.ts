@@ -119,7 +119,6 @@ export class EditorComponent implements OnInit, OnChanges {
 
   protected init(): void {
     const fml = FMLStructureMapper.map(this.resourceBundle, this.structureMap);
-    console.log(fml)
     this.fmls = fml;
     this.setFML(this.FML_MAIN, fml[this.FML_MAIN]);
   }
@@ -164,6 +163,10 @@ export class EditorComponent implements OnInit, OnChanges {
 
   public zoomOut(): void {
     this.editor.zoom_out();
+  }
+
+  public setAnimation(isAnimated: boolean): void {
+    this.isAnimated = isAnimated;
   }
 
 
@@ -243,7 +246,8 @@ export class EditorComponent implements OnInit, OnChanges {
 
     // auto layout
     if (Object.values(fml.objects).some(o => isNil(o.position))) {
-      editor._autoLayout();
+      // schedule after nodes are rendered, fixme: maybe it's better to provided initial HTML to DrawFlow node?
+      setTimeout(() => editor._autoLayout());
     }
 
     // rerender nodes
