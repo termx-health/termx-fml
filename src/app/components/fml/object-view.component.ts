@@ -18,9 +18,9 @@ import {StructureDefinition} from 'fhir/r5';
         </div>
 
         <app-structure-definition-tree
-            *ngIf="treeView"
-            [definition]="object | apply: findDefinition: fml"
-            [definitionBase]="object.element.path"
+          *ngIf="treeView"
+          [definition]="object | apply: findDefinition: fml"
+          [definitionBase]="object.element.path"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -34,10 +34,10 @@ import {StructureDefinition} from 'fhir/r5';
                   <div class="description">{{f.types | join: ', '}}</div>
                 </div>
                 <ng-template #name>
-                  <span [mPopover]="f | apply: isBackboneElement"
-                      [mTitle]="backboneRawFields"
-                      [mTitleContext]="{base: f.name}"
-                      mPosition="left"
+                  <span [mPopover]="f | apply: isBackboneElementField"
+                    [mTitle]="backboneRawFields"
+                    [mTitleContext]="{base: f.name}"
+                    mPosition="left"
                   >{{f.name}}</span>
                 </ng-template>
 
@@ -115,7 +115,7 @@ export class ObjectViewComponent {
   ) { }
 
 
-  protected onFieldClick(object: FMLStructureObject, field: string): void {
+  public onFieldClick(object: FMLStructureObject, field: string): void {
     const types = object.fields.find(f => f.name === field).types;
     if (types.includes("Resource")) {
       this.resourceModal = {visible: true, field};
@@ -146,12 +146,10 @@ export class ObjectViewComponent {
   /* Utils */
 
   protected isResourceSelectable = (f: FMLStructureObjectField): boolean => {
-    return this.isBackboneElement(f) || this.fml?.bundle?.entry.some(e => f.types?.includes(e.resource.type));
+    return this.fml.isFieldSelectable(f);
   };
 
-  protected isBackboneElement = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => FMLStructure.isBackboneElement(t));
-  };
+  protected isBackboneElementField = FMLStructure.isBackboneElementField;
 
   protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
     return fields.filter(f => f.name.startsWith(base));

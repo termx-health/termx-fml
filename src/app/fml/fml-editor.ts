@@ -1,5 +1,5 @@
 import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
-import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureObjectRenderer, FMLStructureRule} from './fml-structure';
 import {isDefined, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {asResourceVariable, getPortNumber} from './fml.utils';
@@ -201,7 +201,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--with-title', {obj},
-      FMLStructureObject.html(obj),
+      '',
       false
     );
 
@@ -220,7 +220,7 @@ export class FMLEditor extends Drawflow {
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
-      getRuleRenderer(rule.action).render(this, rule),
+      '',
       false
     );
 
@@ -322,7 +322,7 @@ export class FMLEditor extends Drawflow {
       const {el, nodeId} = this._getNodeElementByName(name);
       if (isDefined(el)) {
         const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = FMLStructureObject.html(this._fml.objects[name]);
+        content.innerHTML = FMLStructureObjectRenderer.html(this._fml, this._fml.objects[name]);
         this.updateConnectionNodes(`node-${nodeId}`);
 
 

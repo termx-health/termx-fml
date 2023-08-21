@@ -15,6 +15,7 @@ import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast} f
 import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
 import {createCustomElement} from '@angular/elements';
+import {ObjectViewComponent} from './components/fml/object-view.component';
 
 
 interface RuleDescription {
@@ -72,6 +73,7 @@ export class AppComponent implements OnInit {
   protected FML_MAIN = 'main';
   protected SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
   protected STRUCTURE_MAPS_KEY = "structure_maps";
+  protected ZOOM_KEY = "fml_zoom";
 
 
   // todo: @Input()
@@ -133,6 +135,7 @@ export class AppComponent implements OnInit {
 
 
   @ViewChild(RuleViewComponent) private ruleViewComponent: RuleViewComponent;
+  @ViewChild(ObjectViewComponent) private objectViewComponent: ObjectViewComponent;
 
   constructor(
     private http: HttpClient,
@@ -151,6 +154,13 @@ export class AppComponent implements OnInit {
       const localMaps = Object.values(this.localMaps).map(m => m.name);
       this.structureMaps = [...maps, ...localMaps].filter(unique).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
       this.init();
+    });
+
+    window.addEventListener('fmlStructureObjectFieldSelect', (evt: CustomEvent) => {
+      // Freaking event kung fu! Seems like wild hack, but works!
+      // Imitates the object view component behaviour.
+      const {name, field} = evt.detail;
+      this.objectViewComponent.onFieldClick(this.fml.objects[name], field);
     });
   }
 
@@ -254,6 +264,15 @@ export class AppComponent implements OnInit {
   }
 
 
+  protected zoomIn(): void {
+    this.editor.zoom_in();
+  }
+
+  protected zoomOut(): void {
+    this.editor.zoom_out();
+  }
+
+
   protected topology(): void {
     const sorted = FMLGraph.fromFML(this.fml).topologySort();
     const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
@@ -309,6 +328,7 @@ export class AppComponent implements OnInit {
 
     const editor = this.editor = new FMLEditor(fmls, groupName, element);
     editor.start();
+
     editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id));
     editor.on('nodeUnselected', () => this.nodeSelected = undefined);
     editor.on('nodeMoved', () => {
@@ -317,6 +337,12 @@ export class AppComponent implements OnInit {
         this.nodeSelected = editor.getNodeFromId(selectedNodeId);
       }
     });
+
+    editor.on('zoom', v => localStorage.setItem(this.ZOOM_KEY, String(Math.round(v * 100) / 100)))
+    if (localStorage.getItem(this.ZOOM_KEY)) {
+      editor.zoom = Number(localStorage.getItem(this.ZOOM_KEY));
+      editor.zoom_refresh();
+    }
 
     const fml = editor._fml;
 
@@ -409,7 +435,7 @@ export class AppComponent implements OnInit {
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
 
-    let fieldType = type ?? fieldElement.type?.[0]?.code; // fixme: ACHTUNG! the first type is selected!
+    let fieldType = type ?? fieldElement.type?.[0]?.code;
     if (FMLStructure.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
@@ -448,19 +474,26 @@ export class AppComponent implements OnInit {
   }
 
   protected onDrop(ev: DragEvent): void {
+    const datum: {type: 'rule', data: RuleDescription} | {type: 'group', data: RuleGroup} = JSON.parse(ev.dataTransfer.getData('application/json'));
     const {top, left} = this.editor._getOffsets();
 
     const rule = new FMLStructureRule();
     this.fml.putRule(rule);
-
     rule.parameters = [];
     rule.position = {
       y: ev.y - top,
       x: ev.x - left
     };
 
+    if (datum.type === 'rule') {
+      rule.action = datum.data.action;
+      rule.name = asResourceVariable(datum.data.action);
 
-    const datum: {type: 'rule', data: RuleDescription} | {type: 'group', data: RuleGroup} = JSON.parse(ev.dataTransfer.getData('application/json'));
+      this.editor._createRuleNode(rule, {...rule.position});
+      this.editor._rerenderNodes();
+      return;
+    }
+
 
     if (datum.type === 'group') {
       rule.action = 'rulegroup';
@@ -473,15 +506,13 @@ export class AppComponent implements OnInit {
       const objects = Object.values(this.fmls[datum.data.groupName].objects);
       this.editor._createRuleNode(rule, {
         ...rule.position,
+        // fixme: should not be set like that, cannot save and restore
         inputs: objects.filter(o => o.mode === 'source').length,
         outputs: objects.filter(o => o.mode === 'target').length,
       });
-      return;
-    }
 
-    rule.action = datum.data.action;
-    rule.name = asResourceVariable(datum.data.action);
-    this.editor._createRuleNode(rule, {...rule.position});
+      this.editor._rerenderNodes();
+    }
   }
 
 

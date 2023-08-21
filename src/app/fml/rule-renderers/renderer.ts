@@ -44,6 +44,7 @@ export abstract class FMLRuleRenderer {
     editor._updateRule(node.id, node.name, rule => {
       if (editor._initialized) {
         const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+        rule.parameters ??= [];
         rule.parameters.push({type: 'var', value: paramName});
       }
     });

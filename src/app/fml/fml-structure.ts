@@ -36,25 +36,6 @@ export class FMLStructureObject extends FMLStructureEntity {
     return this.fields.findIndex(f => f.name === field);
   }
 
-
-  /** @deprecated */
-  public static html(o: FMLStructureObject): string {
-    const meta = () => `
-      <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
-        ${o.name}
-      </div>
-    `;
-
-    return `
-      <div>
-        ${meta()}
-
-        <h5 class="node-title">${o.mode === 'object' ? 'new' : o.mode} <b>${o.resource}</b></div>
-        ${o.fields.map(f => `<div style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">${f.name}</div>`).join('\n')}
-      </div>
-    `;
-  }
-
   /**
    * DO NOT REMOVE!
    * Used by JSON.stringify(), because getters are not serialized automatically
@@ -113,6 +94,10 @@ export class FMLStructure {
   rules: FMLStructureRule[] = [];
   _connections: FMLStructureConnection[] = [];
 
+  public get connections(): readonly FMLStructureConnection[] {
+    return this._connections;
+  }
+
 
   public subFML(target: string, field: string): FMLStructure {
     const _rules = group(this.rules, r => r.name);
@@ -142,10 +127,6 @@ export class FMLStructure {
 
 
   /* Connections */
-
-  public get connections(): readonly FMLStructureConnection[] {
-    return this._connections;
-  }
 
   public putConnection(conn: FMLStructureConnection): void {
     const exists = this.connections.some(c =>
@@ -237,7 +218,6 @@ export class FMLStructure {
     }
 
     const selfDefinition = elements[0];
-    // fixme: takes the first one! provide type as an argument?
     const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
     const selfFields = elements.slice(1);
 
@@ -304,11 +284,52 @@ export class FMLStructure {
       .find(e => e.id === base);
   }
 
-  public static isBackboneElement(resource: string): boolean {
-    return ['BackboneElement', 'Element'].includes(resource);
+  public isFieldSelectable = (f: FMLStructureObjectField): boolean => {
+    return FMLStructure.isBackboneElementField(f) || this.bundle?.entry.some(e => f.types?.includes(e.resource.type));
+  };
+
+  public static isBackboneElement(resourceType: string): boolean {
+    return ['BackboneElement', 'Element'].includes(resourceType);
   }
+
+  public static isBackboneElementField = (f: FMLStructureObjectField): boolean => {
+    return f.types?.some(t => FMLStructure.isBackboneElement(t));
+  };
 }
 
 export interface FMLStructureGroup {
   [groupName: string]: FMLStructure
+}
+
+
+export class FMLStructureObjectRenderer {
+  /** @deprecated */
+  public static html(fml: FMLStructure, o: FMLStructureObject): string {
+
+
+    const meta = () => `
+      <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
+        ${o.name}
+      </div>
+    `;
+
+    window['_fieldClick'] = (name: number, field: string): void => {
+      window.dispatchEvent(new CustomEvent('fmlStructureObjectFieldSelect', {detail: {name, field}}));
+    };
+
+    return `
+      <div>
+        ${meta()}
+
+        <h5 class="node-title">${o.mode === 'object' ? 'new' : o.mode} <b>${o.resource}</b></div>
+        ${o.fields.map(f => `
+          <div class="m-justify-between" style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">
+            <span>${f.name}</span>
+            ${fml.isFieldSelectable(f) ? `<span class="m-clickable" onclick="_fieldClick('${o.name}', '${f.name}')">+</span>` : ''}
+
+          </div>
+        `).join('\n')}
+      </div>
+    `;
+  }
 }

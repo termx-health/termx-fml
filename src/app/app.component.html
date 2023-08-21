@@ -28,8 +28,12 @@
     <div style="justify-self: end" class="m-items-middle">
       Animation
       <nz-switch [(ngModel)]="isAnimated" nzSize="small"></nz-switch>
-
       <m-divider mVertical/>
+
+      <m-icon-button mIcon="zoom-out" (mClick)="zoomOut()"/>
+      <m-icon-button mIcon="zoom-in" (mClick)="zoomIn()"/>
+      <m-divider mVertical/>
+
       <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
       <m-button (mClick)="topology()" mSize="small">Topology</m-button>
     </div>
@@ -75,7 +79,6 @@
           <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fml)"/>
         </div>
       </ng-container>
-
     </div>
 
     <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr; max-height: calc(100% - 32px - 1px)">
