@@ -33,14 +33,19 @@
     <div style="justify-self: end" class="m-items-middle">
       Animation
       <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
-      <m-divider mVertical/>
 
+      <m-divider mVertical/>
       <m-icon-button mIcon="zoom-out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" (mClick)="zoomIn()"/>
-      <m-divider mVertical/>
 
+      <m-divider mVertical/>
       <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
       <m-button (mClick)="topology()" mSize="small">Topology</m-button>
+
+      <ng-container *ngIf="inIframe">
+        <m-divider mVertical/>
+        <m-button (mClick)="exit()" mSize="small">Exit</m-button>
+      </ng-container>
     </div>
   </div>
 </div>

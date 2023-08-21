@@ -134,6 +134,10 @@ export class AppComponent implements OnInit {
     setTimeout(() => nodeEls.forEach(e => e.closest<HTMLElement>('.drawflow-node').style.backgroundColor = ''), (order.length + 1) * timeout);
   }
 
+  protected exit(): void {
+    this.service.exit();
+  }
+
 
   /* Utils */
 

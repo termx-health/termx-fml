@@ -99,6 +99,10 @@ export class LocalStorage implements EditorStorage {
     this.maps$.next([...this.maps$.getValue(), sm.name].filter(unique));
   }
 
+  public exit(): void {
+    throw Error('not implemented');
+  }
+
   public isSaved = (name: string): boolean => {
     return name in this._localMaps;
   };

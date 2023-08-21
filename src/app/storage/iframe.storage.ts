@@ -2,6 +2,11 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject} from 'rxjs';
 import {EditorStorage} from './storage';
 
+export interface LoadMessage {
+  action: 'load',
+  bundle: Bundle<StructureDefinition>,
+  structureMap?: StructureMap
+}
 
 export class IframeStorage implements EditorStorage {
   public maps$ = new BehaviorSubject<string[]>([]);
@@ -15,16 +20,18 @@ export class IframeStorage implements EditorStorage {
 
 
   public constructor() {
+    this._attachListener();
     this._postMessage({event: 'init'});
+  }
 
-    window.addEventListener("message", (event) => {
-        if (event.origin === 'http://localhost:4300') {
+
+  private _attachListener(): void {
+    window.addEventListener("message", event => {
+        if (event.origin === location.origin) {
           return;
         }
 
-        const msg: {action: 'load', bundle: Bundle<StructureDefinition>, structureMap?: StructureMap} = JSON.parse(event.data);
-        console.log("received from parent", msg);
-
+        const msg: LoadMessage = JSON.parse(event.data);
         switch (msg.action) {
           case'load':
             this.structureMap$.next(msg.structureMap);
@@ -33,7 +40,6 @@ export class IframeStorage implements EditorStorage {
       }
     );
   }
-
 
   public get selectedMapName(): string {
     return this.structureMap$.getValue()?.name;
@@ -48,7 +54,11 @@ export class IframeStorage implements EditorStorage {
   }
 
   public saveMap(sm: StructureMap): void {
-    this._postMessage({event: 'save', data: sm});
+    this._postMessage({event: 'export', data: sm});
+  }
+
+  public exit(): void {
+    this._postMessage({event: 'exit'});
   }
 
   public isSaved = (_name: string): boolean => {

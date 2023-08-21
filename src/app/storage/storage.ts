@@ -15,6 +15,8 @@ export interface EditorStorage {
 
   saveMap(sm: StructureMap): void;
 
+  exit(): void;
+
 
   isSaved(name: string): boolean;
 }
