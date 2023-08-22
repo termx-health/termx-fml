@@ -48,7 +48,7 @@ export class IframeContext implements EditorContext {
   }
 
 
-  public constructor() {
+  public constructor(private opt: {exportMap: () => StructureMap}) {
     this._attachListener();
     this._postMessage({event: 'init'});
   }
@@ -68,7 +68,7 @@ export class IframeContext implements EditorContext {
             this.bundle$.next(msg.bundle);
             break;
           case 'export': {
-            const sm = this.structureMap$.getValue();
+            const sm = this.opt.exportMap();
             this._postMessage({event: 'export', data: JSON.stringify(sm), format: msg.format});
             break;
           }
@@ -77,19 +77,21 @@ export class IframeContext implements EditorContext {
     );
   }
 
+
+  public selectMap(): void {
+    throw Error('Not supported!');
+  }
+
   public get selectedMapName(): string {
     return this.structureMap$.getValue()?.name;
   }
 
-  public selectMap(_name: string): void {
-    throw Error('not implemented');
-  }
 
   public importMap(sm: StructureMap): void {
     this.structureMap$.next(sm);
   }
 
-  public saveMap(_sm: StructureMap): void {
+  public saveMap(): void {
     this._postMessage({event: 'save'});
   }
 
@@ -97,7 +99,7 @@ export class IframeContext implements EditorContext {
     this._postMessage({event: 'exit'});
   }
 
-  public isSaved = (_name: string): boolean => {
+  public isSaved(): boolean {
     return false;
-  };
+  }
 }

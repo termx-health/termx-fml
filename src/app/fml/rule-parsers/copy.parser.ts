@@ -24,19 +24,28 @@ export class FMLCopyRuleParser extends FMLRuleParser {
       return {rule, connections};
     }
 
-    if (connections.length == 2) {
-      // remove rule, creates direct link from source to target
-      const [src, tgt] = connections;
-      return {
-        connections: [{
-          sourceObject: src.sourceObject,
-          sourceFieldIdx: src.sourceFieldIdx,
-          targetObject: tgt.targetObject,
-          targetFieldIdx: tgt.targetFieldIdx
-        }]
-      };
+
+    if (connections.length > 2) {
+      throw Error(`Too many connections for the ${this.action} transformation!`);
     }
 
-    throw Error(`Too many connections for the ${this.action} transformation!`);
+    let _rule;
+    if (connections.length === 1) {
+      connections.push(connections[0]);
+      _rule = rule;
+      _rule.action = 'constant';
+    }
+
+    // creates direct link from source to target
+    const [src, tgt] = connections;
+    return {
+      rule: _rule,
+      connections: [{
+        sourceObject: src.sourceObject,
+        sourceFieldIdx: src.sourceFieldIdx,
+        targetObject: tgt.targetObject,
+        targetFieldIdx: tgt.targetFieldIdx
+      }]
+    };
   }
 }

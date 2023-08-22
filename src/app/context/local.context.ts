@@ -16,22 +16,22 @@ export class LocalContext implements EditorContext {
   public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
 
 
-  private get _localMaps(): {[k: string]: StructureMap} {
+  private get localMaps(): {[k: string]: StructureMap} {
     return JSON.parse(localStorage.getItem(this.STRUCTURE_MAPS_KEY) ?? '{}');
   }
 
-  private _structureMap = (): Observable<StructureMap> => {
+  private loadStructureMap = (): Observable<StructureMap> => {
     const name = localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY);
     const url = `assets/StructureMap/${name}.json`;
 
-    if (isDefined(name) && name in this._localMaps) {
-      return of(this._localMaps[name]);
+    if (isDefined(name) && name in this.localMaps) {
+      return of(this.localMaps[name]);
     }
 
     return this.http.get<StructureMap>(url);
   };
 
-  private _resourceBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
+  private loadBundle = (sm: StructureMap): Observable<Bundle<StructureDefinition>> => {
     return this.http.get<string[]>("assets/StructureDefinition/index.json").pipe(mergeMap(resources => {
       const mapResources = sm.structure.map(s => substringAfterLast(s.url, '/'));
 
@@ -55,7 +55,7 @@ export class LocalContext implements EditorContext {
     private cache: HttpCacheService
   ) {
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(namesPersisted => {
-      const namesLocal = Object.values(this._localMaps).map(m => m.name);
+      const namesLocal = Object.values(this.localMaps).map(m => m.name);
       const names = [...namesPersisted, ...namesLocal].filter(unique);
 
       this.maps$.next(names.sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})));
@@ -66,8 +66,8 @@ export class LocalContext implements EditorContext {
   private reinit(): void {
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY) ?? "step3");
 
-    this._structureMap().subscribe(resp => {
-      this._resourceBundle(resp).subscribe(bundle => {
+    this.loadStructureMap().subscribe(resp => {
+      this.loadBundle(resp).subscribe(bundle => {
         this.structureMap$.next(resp);
         this.bundle$.next(bundle);
       });
@@ -75,14 +75,15 @@ export class LocalContext implements EditorContext {
   }
 
 
-  public get selectedMapName(): string {
-    return this.structureMap$.getValue()?.name;
-  }
-
   public selectMap(name: string): void {
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, name);
     this.reinit();
   }
+
+  public get selectedMapName(): string {
+    return this.structureMap$.getValue()?.name;
+  }
+
 
   public importMap(sm: StructureMap): void {
     this.saveMap(sm);
@@ -92,7 +93,7 @@ export class LocalContext implements EditorContext {
   public saveMap(sm: StructureMap): void {
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, sm.name);
     localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify({
-      ...this._localMaps,
+      ...this.localMaps,
       [sm.name]: sm
     }));
 
@@ -104,6 +105,6 @@ export class LocalContext implements EditorContext {
   }
 
   public isSaved = (name: string): boolean => {
-    return name in this._localMaps;
+    return name in this.localMaps;
   };
 }

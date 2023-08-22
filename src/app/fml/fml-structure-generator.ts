@@ -1,7 +1,7 @@
 import {copyDeep, isNil} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
 import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
-import {getAlphabet, SEQUENCE, substringBeforeLast} from './fml.utils';
+import {getAlphabet, SEQUENCE, substringBeforeLast, VARIABLE_SEP} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleGenerator} from './rule-generators/_generators';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
@@ -106,6 +106,7 @@ export class FmlStructureGenerator {
     Object.values(fml.objects)
       .filter(o => o.mode === 'target')
       .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
+      .filter((v, idx, self) => self.findIndex(el => el.join('|') === v.join('|')) === idx)
       .forEach(([target, field]) => {
         const subFml = fml.subFML(target, field);
         this.generateRule(subFml, smGroup);
@@ -170,7 +171,7 @@ export class FmlStructureGenerator {
         if (['source', 'element'].includes(obj.mode)) {
           // initialize (put into vars) fields that are used as source in other objects/rules
           subFml.outputFields(obj).forEach(n => {
-            const baseName = substringBeforeLast(obj.name, '#');
+            const baseName = substringBeforeLast(obj.name, VARIABLE_SEP);
 
             smRule.target.push({
               variable: vars[`${obj.name}.${n.name}`] = nextVar(),

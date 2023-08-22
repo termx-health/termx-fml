@@ -7,7 +7,7 @@ import {isNil, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
 import {FmlStructureGenerator} from './fml/fml-structure-generator';
-import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast} from './fml/fml.utils';
+import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
 import {createCustomElement} from '@angular/elements';
@@ -137,8 +137,8 @@ export class EditorComponent implements OnInit, OnChanges {
         ...Object.keys(f.objects),
         ...f.rules.map(r => r.name)
       ])
-      .filter(o => o.includes("#"))
-      .map(o => substringAfterLast(o, '#'))
+      .filter(o => o.includes(VARIABLE_SEP))
+      .map(o => substringAfterLast(o, VARIABLE_SEP))
       .map(Number)
       .filter(unique));
 
@@ -270,7 +270,7 @@ export class EditorComponent implements OnInit, OnChanges {
         const rule = node.data.rule;
 
         const _rule = new FMLStructureRule();
-        _rule.name = asResourceVariable(substringBeforeLast(rule.name, '#'));
+        _rule.name = asResourceVariable(substringBeforeLast(rule.name, VARIABLE_SEP));
         _rule.mode = rule.mode;
         _rule.position = rule.position;
         _rule.action = rule.action;

@@ -83,7 +83,10 @@ export abstract class FMLRuleParser {
 
     // connect to target
     conns.push(...this.connectTarget(fml, rule, fhirRuleTarget, variables));
-    return conns;
+    return conns.filter((v, idx, self) => {
+      const hash = (el: FMLStructureConnection): string => [el.sourceObject, el.sourceFieldIdx, el.targetObject, el.targetFieldIdx].join('%|');
+      return self.findIndex(el => hash(el) === hash(v)) === idx;
+    });
   }
 
   public connectSource(

@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this.ctx = this.isIframe
-      ? new IframeContext()
+      ? new IframeContext({exportMap: ()=> this.export()})
       : new LocalContext(this.http, this.cache);
   }
 
@@ -138,6 +138,7 @@ export class AppComponent implements OnInit {
       return this.editor.export();
     } catch (e) {
       this.notificationService.error('Export failed', e);
+      console.error(e)
       throw e;
     }
   }

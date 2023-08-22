@@ -47,8 +47,9 @@ export const SEQUENCE = {
   }
 };
 
+export const VARIABLE_SEP = '#';
 export const asResourceVariable = (name: string): string => {
-  return `${name}#${SEQUENCE.next()}`;
+  return `${name}${VARIABLE_SEP}${SEQUENCE.next()}`;
 };
 
 

@@ -7,9 +7,10 @@ export interface EditorContext {
   bundle$: BehaviorSubject<Bundle<StructureDefinition>>
 
 
+  selectMap(name: string): void;
+
   get selectedMapName(): string;
 
-  selectMap(name: string): void;
 
   importMap(sm: StructureMap): void;
 
