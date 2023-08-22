@@ -86,7 +86,7 @@ export class FmlStructureGenerator {
       .filter(o => ['source', 'target'].includes(o.mode))
       .map(o => ({
         name: o.name,
-        type: o.resource,
+        type: o.name, // fixme: o.resource?
         mode: o.mode as StructureMapGroupInput['mode'],
       }));
 

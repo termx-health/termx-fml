@@ -41,6 +41,8 @@ export class FMLStructureMapper {
 
     // groups
     fhir.group.forEach(fhirGroup => {
+      fhirGroup.rule ??= [];
+
       // rules
       fhirGroup.rule.forEach(fhirRule => {
         const variables = group(fhirGroup.input, i => i.name, i => i.type);
