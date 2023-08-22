@@ -2,11 +2,11 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject, forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {HttpCacheService, isDefined, unique, uniqueBy} from '@kodality-web/core-util';
-import {EditorStorage} from './storage';
+import {EditorContext} from './editor.context';
 import {substringAfterLast} from '../fml/fml.utils';
 
 
-export class LocalStorage implements EditorStorage {
+export class LocalContext implements EditorContext {
   private SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
   private STRUCTURE_MAPS_KEY = "structure_maps";
 

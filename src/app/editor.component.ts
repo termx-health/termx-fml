@@ -132,7 +132,7 @@ export class EditorComponent implements OnInit, OnChanges {
       .filter(n => ![this.FML_MAIN, groupName].includes(n))
       .map(n => ({groupName: n}));
 
-    SEQUENCE.current = Math.max(...Object.values(this.fmls)
+    SEQUENCE.current = Math.max(0, ...Object.values(this.fmls)
       .flatMap(f => [
         ...Object.keys(f.objects),
         ...f.rules.map(r => r.name)

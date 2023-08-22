@@ -1,6 +1,6 @@
 import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
 import {FMLStructure} from './fml/fml-structure';
-import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
+import {StructureMap} from 'fhir/r5';
 import {HttpCacheService, isDefined} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
@@ -8,9 +8,9 @@ import {FmlStructureGenerator} from './fml/fml-structure-generator';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {EditorComponent} from './editor.component';
-import {IframeStorage} from './storage/iframe.storage';
-import {EditorStorage} from './storage/storage';
-import {LocalStorage} from './storage/local.storage';
+import {IframeContext} from './context/iframe.context';
+import {EditorContext} from './context/editor.context';
+import {LocalContext} from './context/local.context';
 
 
 @Component({
@@ -18,33 +18,24 @@ import {LocalStorage} from './storage/local.storage';
   templateUrl: 'app.component.html'
 })
 export class AppComponent implements OnInit {
-  public structureMap: StructureMap;
-  public resourceBundle: Bundle<StructureDefinition>;
-
-  protected maps: string[] = [];
+  protected ctx: EditorContext;
   protected fml: {text: string, json: StructureMap};
-  protected loader: {total: number, current: number};
-
   protected isDev = isDevMode();
   protected isAnimated = true;
 
   @ViewChild(EditorComponent) public editor: EditorComponent;
 
-  protected service: EditorStorage;
-
   constructor(
     private http: HttpClient,
+    private cache: HttpCacheService,
     private notificationService: MuiNotificationService,
-    private cache: HttpCacheService
-  ) {
-  }
+  ) { }
 
 
   public ngOnInit(): void {
-    this.service = this.inIframe ? new IframeStorage() : new LocalStorage(this.http, this.cache);
-    this.service.maps$.subscribe(r => this.maps = r);
-    this.service.structureMap$.subscribe(r => this.structureMap = r);
-    this.service.bundle$.subscribe(r => this.resourceBundle = r);
+    this.ctx = this.isIframe
+      ? new IframeContext()
+      : new LocalContext(this.http, this.cache);
   }
 
 
@@ -53,14 +44,14 @@ export class AppComponent implements OnInit {
   // New
   protected initFromWizard(groupName: string, fml: FMLStructure): void {
     const sm = FmlStructureGenerator.generate(fml, {mapName: groupName});
-    this.service.importMap(sm);
+    this.ctx.importMap(sm);
   }
 
   // Import
   protected importStructureMap(m: MuiModalContainerComponent, json: string): void {
     if (isDefined(json)) {
       const sm = JSON.parse(json);
-      this.service.importMap(sm);
+      this.ctx.importMap(sm);
       m.close();
     }
   }
@@ -76,24 +67,25 @@ export class AppComponent implements OnInit {
   protected viewAsFML(m: MuiModalContainerComponent): void {
     const map = this.export();
 
-    this.http.post('http://localhost:8200/transformation-definitions/fml', {body: JSON.stringify(map)}, {responseType: 'text'}).subscribe(resp => {
-      this.fml = {
-        text: resp
-          .replaceAll(',  ', ',\n    ')
-          .replaceAll(' ->  ', ' ->\n    ')
-          .replaceAll("#", "_"),
-        json: map
-      };
-      m.open();
-    });
+    this.http.post('http://localhost:8200/transformation-definitions/generate-fml', {structureMap: JSON.stringify(map)}, {responseType: 'text'})
+      .subscribe(resp => {
+        this.fml = {
+          text: resp
+            .replaceAll(',  ', ',\n    ')
+            .replaceAll(' ->  ', ' ->\n    ')
+            .replaceAll("#", "_"),
+          json: map
+        };
+        m.open();
+      });
   }
 
   // Save
   protected save(): void {
     try {
       const sm = this.export();
-      this.service.saveMap(sm);
-      this.notificationService.success("Saved into localstorage", 'Check console for any errors!', {placement: 'top'});
+      this.ctx.saveMap(sm);
+      this.notificationService.success("Saved", 'Check console for any errors!', {placement: 'top'});
     } catch (e) {
       /* empty */
     }
@@ -135,7 +127,7 @@ export class AppComponent implements OnInit {
   }
 
   protected exit(): void {
-    this.service.exit();
+    this.ctx.exit();
   }
 
 
@@ -150,7 +142,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  protected get inIframe(): boolean {
+  protected get isIframe(): boolean {
     try {
       return window.self !== window.top;
     } catch (e) {

@@ -1,7 +1,7 @@
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject} from 'rxjs';
 
-export interface EditorStorage {
+export interface EditorContext {
   maps$: BehaviorSubject<string[]>
   structureMap$: BehaviorSubject<StructureMap>
   bundle$: BehaviorSubject<Bundle<StructureDefinition>>

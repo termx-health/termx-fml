@@ -8,25 +8,26 @@
 
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
-      <m-dropdown [mHideIfEmpty]="false">
-        <div *m-dropdown-container>{{service.selectedMapName ?? 'xxx'}}.json
-          <m-icon *ngIf="service.isSaved(service.selectedMapName)" mCode="hdd"/>
+
+      <span *ngIf="isIframe" class="m-primary-color">{{ctx.selectedMapName}}</span>
+      <m-dropdown *ngIf="!isIframe" [mHideIfEmpty]="false">
+        <div *m-dropdown-container>{{ctx.selectedMapName ?? 'xxx'}}.json
+          <m-icon *ngIf="ctx.isSaved(ctx.selectedMapName)" mCode="hdd"/>
         </div>
-        <ng-container *ngFor="let m of maps">
-          <a *m-dropdown-item (mClick)="service.selectMap(m)">{{m}}
-            <m-icon *ngIf="service.isSaved(m)" mCode="hdd"/>
+        <ng-container *ngFor="let m of ctx.maps$ | async">
+          <a *m-dropdown-item (mClick)="ctx.selectMap(m)">{{m}}
+            <m-icon *ngIf="ctx.isSaved(m)" mCode="hdd"/>
           </a>
         </ng-container>
       </m-dropdown>
 
-      <ng-container *ngIf="inIframe">
+      <ng-container *ngIf="isIframe">
         <m-divider mVertical/>
         <div class="description">Embedded</div>
       </ng-container>
-
-      <ng-container *ngIf="loader">
+      <ng-container *ngIf="isDev">
         <m-divider mVertical/>
-        <progress [value]="loader.current / loader.total * 100" max="100"></progress>
+        <div class="description">Dev</div>
       </ng-container>
     </div>
 
@@ -42,7 +43,7 @@
       <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
       <m-button (mClick)="topology()" mSize="small">Topology</m-button>
 
-      <ng-container *ngIf="inIframe">
+      <ng-container *ngIf="isIframe">
         <m-divider mVertical/>
         <m-button (mClick)="exit()" mSize="small">Exit</m-button>
       </ng-container>
@@ -51,11 +52,12 @@
 </div>
 
 <app-editor
+  *ngIf="ctx.structureMap$ | async as sm"
   style="height: calc(100dvh - 2.5rem)"
-  [iframe]="inIframe"
-  [resourceBundle]="resourceBundle"
-  [structureMap]="structureMap"
-  [mapName]="structureMap?.name"
+  [iframe]="isIframe"
+  [resourceBundle]="ctx.bundle$ | async"
+  [structureMap]="sm"
+  [mapName]="sm.name"
 ></app-editor>
 
 
@@ -77,7 +79,7 @@
 </m-modal>
 
 
-<!-- FML preview modal -->
+<!-- FML import modal -->
 <m-modal #importer mPlacement="top" (mClose)="importer.close()">
   <div *m-modal-header>
     Import StructureMap
@@ -88,7 +90,7 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<app-structure-map-setup #wizard [bundle]="resourceBundle" (created)="initFromWizard($event.name, $event.fml)"/>
+<app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromWizard($event.name, $event.fml)"/>
 
 
 <app-update-version/>
