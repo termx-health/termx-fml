@@ -120,6 +120,14 @@ export class AppComponent implements OnInit {
     this.editor.zoomOut();
   }
 
+  protected expandAll(): void {
+    this.editor.setExpanded(true);
+  }
+
+  protected collapseAll(): void {
+    this.editor.setExpanded(false);
+  }
+
   protected autoLayout(): void {
     this.editor.autoLayout();
   }

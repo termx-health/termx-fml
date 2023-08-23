@@ -165,6 +165,21 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor.zoom_out();
   }
 
+  public setExpanded(expanded = true): void {
+    Object.keys(this.fml.objects).forEach(name => {
+      const node = this.editor._getNodeByName(name);
+      this.editor._updateObject(node.id, node.name, obj => obj.expanded = expanded);
+    });
+
+    this.fml.rules.forEach(rule => {
+      const node = this.editor._getNodeByName(rule.name);
+      this.editor._updateRule(node.id, node.name, r => r.expanded = expanded);
+    });
+
+    this.editor._rerenderNodes();
+  }
+
+
   public setAnimation(isAnimated: boolean): void {
     this.isAnimated = isAnimated;
   }

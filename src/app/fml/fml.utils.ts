@@ -34,11 +34,10 @@ export function renderExpand(editor: FMLEditor, name: string): void {
   }
 
   if (editor._isRule(node)) {
-    const sibl = el.getElementsByClassName('node-header').item(0)?.nextElementSibling;
-    sibl?.classList.remove('hidden');
-
+    const nextSibling = el.getElementsByClassName('node-header').item(0)?.nextElementSibling;
+    nextSibling?.classList.remove('hidden');
     if (!isExpanded) {
-      sibl?.classList.add('hidden');
+      nextSibling?.classList.add('hidden');
     }
   }
 
