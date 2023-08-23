@@ -12,7 +12,7 @@ import {group, isDefined} from '@kodality-web/core-util';
           <tr *ngFor="let o of fml.objects | values ">
             <td>
               <div class="m-justify-between">
-                <div>{{o.name}} ({{o.fields.length}})</div>
+                <div>{{o.name}}</div>
               </div>
               <div class="description">{{o.resource}}</div>
             </td>

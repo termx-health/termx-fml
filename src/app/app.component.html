@@ -31,13 +31,14 @@
       </ng-container>
     </div>
 
-    <div style="justify-self: end" class="m-items-middle">
+    <div class="m-items-middle">
+      <m-icon-button mIcon="block" m-tooltip mTitle="Collapse elements" (mClick)="collapseAll()"/>
+      <m-icon-button mIcon="expand" m-tooltip mTitle="Expand elements" (mClick)="expandAll()"/>
+
+      <m-divider mVertical/>
       Animation
       <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
 
-      <m-divider mVertical/>
-      <m-icon-button mIcon="close" (mClick)="collapseAll()"/>
-      <m-icon-button mIcon="expand" (mClick)="expandAll()"/>
       <m-divider mVertical/>
       <m-icon-button mIcon="zoom-out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" (mClick)="zoomIn()"/>
