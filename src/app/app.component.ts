@@ -11,6 +11,7 @@ import {EditorComponent} from './editor.component';
 import {IframeContext} from './context/iframe.context';
 import {EditorContext} from './context/editor.context';
 import {LocalContext} from './context/local.context';
+import {toSvg} from 'html-to-image';
 
 
 @Component({
@@ -34,7 +35,20 @@ export class AppComponent implements OnInit {
 
   public ngOnInit(): void {
     this.ctx = this.isIframe
-      ? new IframeContext({exportMap: ()=> this.export()})
+      ? new IframeContext({
+        exportMap: async format => {
+          const sm = this.export();
+          if (format === 'json+svg') {
+            sm.extension.push({
+              url: 'fml-svg',
+              valueString: await this.generateSvg()
+            });
+            return sm;
+          }
+          await Promise.resolve();
+          return sm;
+        }
+      })
       : new LocalContext(this.http, this.cache);
   }
 
@@ -138,9 +152,71 @@ export class AppComponent implements OnInit {
       return this.editor.export();
     } catch (e) {
       this.notificationService.error('Export failed', e);
-      console.error(e)
+      console.error(e);
       throw e;
     }
+  }
+
+  private async generateSvg(): Promise<string> {
+    const fromPx = (v: string): number => Number(v.replace('px', ''));
+
+    const container = document.getElementById('drawflow');
+    const wrapper = container.firstElementChild as HTMLElement;
+
+    // create container
+    const cp = document.createElement('div');
+    cp.classList.add('drawflow');
+    cp.style.top = '0px';
+    cp.style.padding = `24px`;
+    document.body.appendChild(cp);
+
+    // add copies to new container
+    Array.from(wrapper.children).forEach((c: HTMLElement) => {
+      cp.append(c.cloneNode(true));
+    });
+
+    const nodes = Array.from(cp.children) as HTMLElement[];
+
+    // calculate position and dimensions of object node
+    const coordinates = nodes
+      .filter(n => n.classList.contains('parent-node'))
+      .map(n => (n.firstElementChild as HTMLElement))
+      .map((n => ({
+        x: n.getBoundingClientRect().left,
+        y: n.getBoundingClientRect().top,
+        width: n.getBoundingClientRect().width,
+        height: n.getBoundingClientRect().height,
+        offsetLeft: fromPx(n.style.left),
+        offsetTop: fromPx(n.style.top),
+      })));
+
+    const maxWidth = Math.max(...coordinates.map(c => c.x + c.width));
+    const minWidth = Math.min(...coordinates.map(c => c.x));
+    const minOffsetLeft = Math.min(...coordinates.map(c => c.offsetLeft));
+
+    const maxHeight = Math.max(...coordinates.map(c => c.y + c.height));
+    const minHeight = Math.min(...coordinates.map(c => c.y));
+    const minHeightLeft = Math.min(...coordinates.map(c => c.offsetTop));
+
+    // offset elements into the most left and top position
+    Array.from(cp.children).forEach((n: HTMLElement) => {
+      n.style.marginLeft = `${-1 * minOffsetLeft}px`;
+      if (n.classList.contains('parent-node')) {
+        n.style.marginTop = `${-1 * minHeightLeft}px`;
+      }
+    });
+
+
+    return toSvg(cp, {
+      width: maxWidth - minWidth + 48,
+      height: maxHeight - minHeight + 48
+    }).then(dataUrl => {
+      cp.remove();
+      return dataUrl;
+    }).catch(() => {
+      cp.remove();
+      return undefined;
+    });
   }
 
   protected get isIframe(): boolean {

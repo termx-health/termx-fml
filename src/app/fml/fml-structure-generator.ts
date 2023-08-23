@@ -106,7 +106,7 @@ export class FmlStructureGenerator {
     Object.values(fml.objects)
       .filter(o => o.mode === 'target')
       .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
-      .filter((v, idx, self) => self.findIndex(el => el.join('|') === v.join('|')) === idx)
+      .filter((v, idx, self) => self.findIndex(el => el.join('_') === v.join('_')) === idx)
       .forEach(([target, field]) => {
         const subFml = fml.subFML(target, field);
         this.generateRule(subFml, smGroup);

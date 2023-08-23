@@ -2,6 +2,9 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject} from 'rxjs';
 import {EditorContext} from './editor.context';
 
+type ExportFormat = 'json' | 'json+svg' | string;
+
+
 type Requests = LoadRequest | ExportRequest;
 
 interface LoadRequest {
@@ -12,7 +15,7 @@ interface LoadRequest {
 
 interface ExportRequest {
   action: 'export',
-  format: 'json' | string
+  format: ExportFormat
 }
 
 
@@ -29,7 +32,7 @@ interface SaveMessage {
 interface ExportMessage {
   event: 'export',
   data: string,
-  format: 'json' | string
+  format: ExportFormat
 }
 
 interface ExitMessage {
@@ -48,7 +51,9 @@ export class IframeContext implements EditorContext {
   }
 
 
-  public constructor(private opt: {exportMap: () => StructureMap}) {
+  public constructor(private opt: {
+    exportMap: (format: ExportFormat) => Promise<StructureMap>
+  }) {
     this._attachListener();
     this._postMessage({event: 'init'});
   }
@@ -68,8 +73,9 @@ export class IframeContext implements EditorContext {
             this.bundle$.next(msg.bundle);
             break;
           case 'export': {
-            const sm = this.opt.exportMap();
-            this._postMessage({event: 'export', data: JSON.stringify(sm), format: msg.format});
+            this.opt.exportMap(msg.format).then(sm => {
+              this._postMessage({event: 'export', data: JSON.stringify(sm), format: msg.format});
+            });
             break;
           }
         }
