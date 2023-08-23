@@ -1,9 +1,12 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
 
 export class FMLCopyRuleRenderer extends FMLRuleRenderer {
   public action = 'copy';
 
+  /**
+   * Copy's port CAN have only one connection.
+   */
   public override onInputConnectionCreate(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode, nodePort: number,

@@ -1,8 +1,8 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
-import {FMLRuleParserVariables} from './rule-parsers/parser';
+import {FMLRuleParserVariables} from './rule/parsers/parser';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject} from './fml-structure';
-import {getRuleParser} from './rule-parsers/_parsers';
+import {getRuleParser} from './rule/parsers/_parsers';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 

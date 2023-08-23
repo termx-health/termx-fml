@@ -3,7 +3,7 @@ import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGro
 import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getAlphabet, SEQUENCE, substringBeforeLast, VARIABLE_SEP} from './fml.utils';
 import {FMLGraph} from './fml-graph';
-import {getRuleGenerator} from './rule-generators/_generators';
+import {getRuleGenerator} from './rule/generators/_generators';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 

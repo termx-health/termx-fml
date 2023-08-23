@@ -1,6 +1,6 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {FMLStructure} from '../fml-structure';
+import {FMLStructure} from '../../fml-structure';
 import {isDefined} from '@kodality-web/core-util';
 
 export class FMLCreateRuleParser extends FMLRuleParser {

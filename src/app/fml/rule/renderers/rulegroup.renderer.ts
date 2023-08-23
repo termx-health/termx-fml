@@ -1,6 +1,6 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLStructureRule} from '../fml-structure';
-import {FMLEditor} from '../fml-editor';
+import {FMLStructureRule} from '../../fml-structure';
+import {FMLEditor} from '../../fml-editor';
 
 export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
   public action = 'rulegroup';
@@ -10,7 +10,7 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
     const fmlKey = rule.parameters.filter(p => p.type === 'const').map(p => p.value).find(v => keys.includes(v));
 
     return `
-      ${super.renderMeta(rule)}
+      ${super.renderMeta(editor, rule)}
 
       <div class="m-items-middle">
         <ce-icon m-code="folder" style="display: inline-flex; width: 1rem; height: 1rem;"></ce-icon>

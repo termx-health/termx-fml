@@ -1,9 +1,9 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {FMLStructure} from '../fml-structure';
+import {FMLStructure} from '../../fml-structure';
 
-export class FMLUuidRuleParser extends FMLRuleParser {
-  public action = 'uuid';
+export class FMLDefaultRuleParser extends FMLRuleParser {
+  public action = 'default';
 
   public override parse(
     fml: FMLStructure,
@@ -13,7 +13,7 @@ export class FMLUuidRuleParser extends FMLRuleParser {
     variables: FMLRuleParserVariables
   ): FMLRuleParserResult {
     const rule = this.create(fml, ruleName, fhirRuleSource, fhirRuleTarget, variables);
-    const conn = this.connectTarget(fml, rule, fhirRuleTarget, variables);
-    return {rule, connections: conn};
+    const connections = this.connect(fml, rule, fhirRuleSource, fhirRuleTarget, variables);
+    return {rule, connections};
   }
 }

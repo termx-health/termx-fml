@@ -1,18 +1,21 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLStructureRule} from '../fml-structure';
-import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {FMLStructureRule} from '../../fml-structure';
+import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
 
 export class FMLConstantRuleRenderer extends FMLRuleRenderer {
   public action = 'constant';
 
   public override render(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
-      ${this.renderMeta(rule)}
+      ${this.renderMeta(editor, rule)}
 
       <h5>const ${rule.parameters.map(p => this.renderParam(p)).join(',')}</h5>
     `;
   }
 
+  /**
+   * Removes all non 'const' type parameters.
+   */
   public override onInputConnectionCreate(editor: FMLEditor, node: FMLDrawflowRuleNode, nodePort: number, source: FMLDrawflowNode, sourcePort: number): void {
     super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);
 

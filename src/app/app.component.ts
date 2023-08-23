@@ -166,8 +166,7 @@ export class AppComponent implements OnInit {
     // create container
     const cp = document.createElement('div');
     cp.classList.add('drawflow');
-    cp.style.top = '0px';
-    cp.style.padding = `24px`;
+    cp.style.padding = `12px`;
     document.body.appendChild(cp);
 
     // add copies to new container
@@ -206,10 +205,13 @@ export class AppComponent implements OnInit {
       }
     });
 
+    // remove meta information
+    Array.from(cp.getElementsByClassName('node-meta')).forEach(n => n.remove());
 
+    // magic
     return toSvg(cp, {
-      width: maxWidth - minWidth + 48,
-      height: maxHeight - minHeight + 48
+      width: maxWidth - minWidth + 24,
+      height: maxHeight - minHeight + 24
     }).then(dataUrl => {
       cp.remove();
       return dataUrl;

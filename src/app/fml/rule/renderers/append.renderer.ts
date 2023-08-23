@@ -1,22 +1,33 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLStructureRule} from '../fml-structure';
-import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../fml-editor';
+import {FMLStructureRule} from '../../fml-structure';
+import {FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
 
 export class FMLAppendRuleRenderer extends FMLRuleRenderer {
+  protected override renderExpandToggle = true;
+
   public action = 'append';
 
   public override render(editor: FMLEditor, rule: FMLStructureRule): string {
     const {el} = editor._getNodeElementByName(rule.name)
-    el?.classList.add('node--rule--with-title');
+    if (rule.expanded) {
+      el?.classList.add('node--rule--with-title');
+    } else {
+      el?.classList.remove('node--rule--with-title');
+    }
 
     return `
       ${super.render(editor, rule)}
+
       <ul class="description">
         ${rule.parameters.map(p => `<li>${this.renderParam(p)}</li>`).join('\n')}
       </ul>
     `;
   }
 
+  /**
+   * Creates connection only with free (no connections) port.
+   * When new connection is created, the new port is created.
+   */
   public override onInputConnectionCreate(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode, nodePort: number,
@@ -30,6 +41,9 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     }
   }
 
+  /**
+   * Removes port when no connections left.
+   */
   public override onInputConnectionRemove(
     editor: FMLEditor,
     node: FMLDrawflowRuleNode, nodePort: number,

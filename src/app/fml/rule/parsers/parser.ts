@@ -1,7 +1,7 @@
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../fml-structure';
+import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {isDefined, isNil} from '@kodality-web/core-util';
-import {asResourceVariable, substringAfterLast, substringBeforeLast} from '../fml.utils';
+import {asResourceVariable, substringAfterLast, substringBeforeLast} from '../../fml.utils';
 
 
 export interface FMLRuleParserResult {

@@ -1,8 +1,8 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {isDefined} from '@kodality-web/core-util';
-import {FMLStructure} from '../fml-structure';
-import {substringAfterLast, substringBeforeLast} from '../fml.utils';
+import {FMLStructure} from '../../fml-structure';
+import {substringAfterLast, substringBeforeLast} from '../../fml.utils';
 
 export class FMLAppendRuleParser extends FMLRuleParser {
   public action = 'append';

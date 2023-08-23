@@ -1,9 +1,10 @@
 import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
-import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureObjectRenderer, FMLStructureRule} from './fml-structure';
-import {isDefined, remove} from '@kodality-web/core-util';
+import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {isDefined, isNil, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
-import {asResourceVariable, getPortNumber} from './fml.utils';
-import {getRuleRenderer} from './rule-renderers/_renderers';
+import {asResourceVariable, getPortNumber, renderExpand} from './fml.utils';
+import {getRuleRenderer} from './rule/renderers/_renderers';
+import {FMLStructureObjectRenderer} from './object/object-renderer';
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
   data: {
@@ -318,29 +319,49 @@ export class FMLEditor extends Drawflow {
       return;
     }
 
+
+    // rerender objects
     Object.keys(this._fml.objects).forEach(name => {
       const {el, nodeId} = this._getNodeElementByName(name);
-      if (isDefined(el)) {
-        const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = FMLStructureObjectRenderer.html(this._fml, this._fml.objects[name]);
-        this.updateConnectionNodes(`node-${nodeId}`);
-
-
-        Array.from(document.getElementsByClassName(`node_out_node-${nodeId} output_1`)).forEach(svg => {
-          (svg.firstElementChild as SVGPathElement).style.setProperty('--stroke-color', 'var(--color-borders)');
-        });
+      if (isNil(el)) {
+        return;
       }
+
+      // update HTML content
+      const content = el.getElementsByClassName('drawflow_content_node')[0];
+      content.innerHTML = FMLStructureObjectRenderer.render(this, name);
+      // recalculate connection positions
+      this.updateConnectionNodes(`node-${nodeId}`);
+
+      // desaturate connections going from $this of current object
+      Array.from(document.getElementsByClassName(`node_out_node-${nodeId} output_1`))
+        .map(wrapper => wrapper.firstElementChild)
+        .forEach((svg: SVGPathElement) => svg.style.setProperty('--stroke-color', 'var(--color-borders)'));
+
+      // expand
+      renderExpand(this, name);
     });
 
+
+    // rerender rules
     this._fml.rules.forEach(rule => {
       const {el, nodeId} = this._getNodeElementByName(rule.name);
-      if (isDefined(el)) {
-        const content = el.getElementsByClassName('drawflow_content_node')[0];
-        content.innerHTML = getRuleRenderer(rule.action).render(this, rule);
-        this.updateConnectionNodes(`node-${nodeId}`);
+      if (isNil(el)) {
+        return;
       }
+
+      // update HTML content
+      const content = el.getElementsByClassName('drawflow_content_node')[0];
+      content.innerHTML = getRuleRenderer(rule.action).render(this, rule);
+      // recalculate connection positions
+      this.updateConnectionNodes(`node-${nodeId}`);
+
+      // expand
+      renderExpand(this, rule.name);
     });
 
+
+    // highlight ports that have any connection
     Object.values(this.drawflow.drawflow.Home.data).forEach(node => {
       const el = document.getElementById(`node-${node.id}`);
 

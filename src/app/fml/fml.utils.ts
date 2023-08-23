@@ -3,29 +3,42 @@ import {FMLEditor} from './fml-editor';
 
 /* FML  */
 
-export function setExpand(editor: FMLEditor, id: string, isExpanded: boolean): void {
-  const node = editor.getNodeFromId(editor._getNodeId(id));
+export function renderExpand(editor: FMLEditor, name: string): void {
+  const {el, nodeId} = editor._getNodeElementByName(name);
+  const node = editor.getNodeFromId(nodeId);
+  const isExpanded = editor._isObj(node) ? node.data.obj.expanded : editor._isRule(node) ? node.data.rule.expanded : true;
 
-  const max = Math.max(Object.keys(node.inputs).length, Object.keys(node.outputs).length);
+  const inputs = el.getElementsByClassName('inputs').item(0).children;
+  const outputs = el.getElementsByClassName('outputs').item(0).children;
+  const contents = el.getElementsByClassName('drawflow_content_node').item(0).children;
 
-  const nodeEl = document.getElementById(`node-${node.id}`);
-  const inputEls = nodeEl.getElementsByClassName('inputs').item(0).children;
-  const outputEls = nodeEl.getElementsByClassName('outputs').item(0).children;
-  const contentEls = nodeEl.getElementsByClassName('drawflow_content_node').item(0).children;
+  const max = Math.max(
+    Object.keys(node.inputs).length,
+    Object.keys(node.outputs).length
+  );
 
   for (let i = 0; i < max; i++) {
-    inputEls.item(i)?.classList.remove('hidden');
-    outputEls.item(i)?.classList.remove('hidden');
-    contentEls.item(i + 1).classList.remove('hidden');
+    inputs.item(i)?.classList.remove('hidden');
+    outputs.item(i)?.classList.remove('hidden');
+    contents.item(i + 1)?.classList.remove('hidden');
 
     if (
       !node.inputs[`input_${i + 1}`]?.connections?.length &&
       !node.outputs[`output_${i + 1}`]?.connections?.length &&
       !isExpanded
     ) {
-      inputEls.item(i)?.classList.add('hidden');
-      outputEls.item(i)?.classList.add('hidden');
-      contentEls.item(i + 1).classList.add('hidden');
+      inputs.item(i)?.classList.add('hidden');
+      outputs.item(i)?.classList.add('hidden');
+      contents.item(i + 1)?.classList.add('hidden');
+    }
+  }
+
+  if (editor._isRule(node)) {
+    const sibl = el.getElementsByClassName('node-header').item(0)?.nextElementSibling;
+    sibl?.classList.remove('hidden');
+
+    if (!isExpanded) {
+      sibl?.classList.add('hidden');
     }
   }
 

@@ -1,5 +1,5 @@
 import {FMLRuleGenerator} from './generator';
-import {FMLStructureObject, FMLStructureRule} from '../fml-structure';
+import {FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {StructureMapGroupRuleTarget} from 'fhir/r5';
 
 export class FMLDefaultRuleGenerator extends FMLRuleGenerator {
