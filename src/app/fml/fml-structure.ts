@@ -243,7 +243,7 @@ export class FMLStructure {
     o.name = path;
     o.mode = mode;
     o.rawFields = selfFields.map(e => ({
-      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],  // fixme: wtf [x] part? could be done differently?
+      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],
       types: e.type?.map(t => t.code) ?? [],
       multiple: e.max !== '1',
       required: e.min === 1,

@@ -34,16 +34,16 @@
     <div class="m-items-middle">
       <m-icon-button mIcon="block" m-tooltip mTitle="Collapse elements" (mClick)="collapseAll()"/>
       <m-icon-button mIcon="expand" m-tooltip mTitle="Expand elements" (mClick)="expandAll()"/>
-
       <m-divider mVertical/>
+
       Animation
       <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
-
       <m-divider mVertical/>
-      <m-icon-button mIcon="zoom-out" (mClick)="zoomOut()"/>
-      <m-icon-button mIcon="zoom-in" (mClick)="zoomIn()"/>
 
+      <m-icon-button mIcon="zoom-out" m-tooltip mTitle="Zoom Out" (mClick)="zoomOut()"/>
+      <m-icon-button mIcon="zoom-in" m-tooltip mTitle="Zoom In" (mClick)="zoomIn()"/>
       <m-divider mVertical/>
+
       <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
       <m-button (mClick)="topology()" mSize="small">Topology</m-button>
 

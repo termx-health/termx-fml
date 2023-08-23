@@ -3,7 +3,7 @@ import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGro
 import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getAlphabet, SEQUENCE, substringBeforeLast, VARIABLE_SEP} from './fml.utils';
 import {FMLGraph} from './fml-graph';
-import {getRuleGenerator} from './rule/generators/_generators';
+import {getRuleComposer} from './rule/composers/_composers';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
@@ -20,7 +20,7 @@ interface FmlStructureGeneratorOptions {
   mapName?: string
 }
 
-export class FmlStructureGenerator {
+export class FmlStructureComposer {
   private static MAIN = 'main';
 
   public static generate(fmls: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap;
@@ -151,7 +151,7 @@ export class FmlStructureGenerator {
     topologicalOrder.forEach(name => {
       const rule = subFml.rules.find(r => r.name === name);
       if (rule) {
-        smRule.target.push(getRuleGenerator(rule.action).generate(rule, ctx, vars));
+        smRule.target.push(getRuleComposer(rule.action).generate(rule, ctx, vars));
       }
 
       const obj = subFml.objects[name];

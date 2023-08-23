@@ -45,9 +45,9 @@ export abstract class FMLRuleRenderer {
 
 
     return `
-      <span class="m-clickable"  style="padding-inline: 0.5rem 4px; margin-left: 7px;" onclick="_ruleExpand('${rule.name}')">
-        <span style="display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; transform: rotate(${rule.expanded ? '-90deg' : '90deg'}); color: var(--color-text-secondary)">
-          <svg xmlns="http://www.w3.org/2000/svg" height="12px" width="12px" viewBox="0 0 185.343 185.343" style="fill: currentColor">
+      <span class="m-clickable"  style="padding-inline: 0.5rem 4px;" onclick="_ruleExpand('${rule.name}')">
+        <span style="display: flex; align-items: center; justify-content: center; width: 1em; height: 1em; transform: rotate(${rule.expanded ? '-90deg' : '90deg'}); color: var(--color-text-secondary)">
+          <svg xmlns="http://www.w3.org/2000/svg" height="10px" width="10px" viewBox="0 0 185.343 185.343" style="fill: currentColor">
             <path d="M51.707,185.343c-2.741,0-5.493-1.044-7.593-3.149c-4.194-4.194-4.194-10.981,0-15.175 l74.352-74.347L44.114,18.32c-4.194-4.194-4.194-10.987,0-15.175c4.194-4.194,10.987-4.194,15.18,0l81.934,81.934 c4.194,4.194,4.194,10.987,0,15.175l-81.934,81.939C57.201,184.293,54.454,185.343,51.707,185.343z"/>
           </svg>
         </span>

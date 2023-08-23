@@ -256,7 +256,7 @@ export class FMLEditor extends Drawflow {
   public _autoLayout(): void {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path'});
+    dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path', nodesep: 20, marginx: 20, marginy: 30});
 
     // objects
     Object.keys(this._fml.objects).forEach(name => {

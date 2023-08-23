@@ -4,7 +4,7 @@ import {StructureMap} from 'fhir/r5';
 import {HttpCacheService, isDefined} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
-import {FmlStructureGenerator} from './fml/fml-structure-generator';
+import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {EditorComponent} from './editor.component';
@@ -57,7 +57,7 @@ export class AppComponent implements OnInit {
 
   // New
   protected initFromWizard(groupName: string, fml: FMLStructure): void {
-    const sm = FmlStructureGenerator.generate(fml, {mapName: groupName});
+    const sm = FmlStructureComposer.generate(fml, {mapName: groupName});
     this.ctx.importMap(sm);
   }
 
@@ -81,17 +81,17 @@ export class AppComponent implements OnInit {
   protected viewAsFML(m: MuiModalContainerComponent): void {
     const map = this.export();
 
-    this.http.post('http://localhost:8200/transformation-definitions/generate-fml', {structureMap: JSON.stringify(map)}, {responseType: 'text'})
-      .subscribe(resp => {
-        this.fml = {
-          text: resp
-            .replaceAll(',  ', ',\n    ')
-            .replaceAll(' ->  ', ' ->\n    ')
-            .replaceAll("#", "_"),
-          json: map
-        };
-        m.open();
-      });
+    const url = 'http://localhost:8200/transformation-definitions/generate-fml';
+    this.http.post<{fml: string}>(url, {structureMap: JSON.stringify(map)}).subscribe(resp => {
+      this.fml = {
+        text: resp.fml
+          .replaceAll(',  ', ',\n    ')
+          .replaceAll(' ->  ', ' ->\n    ')
+          .replaceAll("#", "_"),
+        json: map
+      };
+      m.open();
+    });
   }
 
   // Save
@@ -99,7 +99,9 @@ export class AppComponent implements OnInit {
     try {
       const sm = this.export();
       this.ctx.saveMap(sm);
-      this.notificationService.success("Saved", 'Check console for any errors!', {placement: 'top'});
+      if (!this.isIframe) {
+        this.notificationService.success("Saved", 'Check console for any errors!', {placement: 'top'});
+      }
     } catch (e) {
       /* empty */
     }

@@ -6,7 +6,7 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {isNil, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiIconComponent} from '@kodality-web/marina-ui';
-import {FmlStructureGenerator} from './fml/fml-structure-generator';
+import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
@@ -150,7 +150,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
   public export(): StructureMap {
     this.editor._rerenderNodes();
-    return FmlStructureGenerator.generate(this.fmls, {mapName: this.mapName});
+    return FmlStructureComposer.generate(this.fmls, {mapName: this.mapName});
   }
 
   public autoLayout(): void {

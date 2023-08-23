@@ -1,8 +1,8 @@
-import {FMLRuleGenerator} from './generator';
 import {FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {StructureMapGroupRuleTarget} from 'fhir/r5';
+import {FMLRuleComposer} from './composer';
 
-export class FMLDefaultRuleGenerator extends FMLRuleGenerator {
+export class FMLDefaultRuleComposer extends FMLRuleComposer {
   public action = 'default';
 
   public generate(rule: FMLStructureRule, ctx: FMLStructureObject, vars: {[value: string]: string}): StructureMapGroupRuleTarget {
