@@ -1,6 +1,6 @@
 import {copyDeep, isDefined, isNil} from '@kodality-web/core-util';
 import {StructureMap, StructureMapGroup, StructureMapGroupInput, StructureMapGroupRule, StructureMapGroupRuleTarget, StructureMapStructure} from 'fhir/r5';
-import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
+import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getAlphabet, SEQUENCE, substringBeforeLast, VARIABLE_SEP} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleComposer} from './rule/composers/_composers';
@@ -141,8 +141,12 @@ export class FmlStructureComposer {
           }));
         }
 
+        const target = subFml.getTargets(obj.name).find(t => t.field);
+
         // full create, e.g. "create('Resource') as r"
         return [{
+          context: normalize(vars[target.targetObject] ?? target.targetObject),
+          element: target.field,
           variable: vars[`${obj.name}`] = nextVar(),
           transform: 'create',
           parameter: [{
@@ -219,6 +223,12 @@ export class FmlStructureComposer {
             }
 
             const {sourceObject, field} = fieldSources[0];
+            if (field === $THIS) {
+              // do not assign when connection comes from $this.
+              // assumes this is object creation, the assignment is done above;
+              return;
+            }
+
             if (FMLStructure.isBackboneElement(subFml.objects[sourceObject]?.resource)) {
               // fixme: previously returned here, but seems like it is redundant now?
               console.warn("backbone element", subFml.objects[sourceObject]);

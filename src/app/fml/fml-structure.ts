@@ -1,6 +1,7 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {group, isNil, remove, unique} from '@kodality-web/core-util';
 
+export const $THIS = "$this";
 
 export interface FMLPosition {
   x: number,
@@ -251,7 +252,7 @@ export class FMLStructure {
     }));
 
     o.rawFields.unshift({
-      name: "$this",
+      name: $THIS,
       types: [],
       multiple: false,
       required: true,
