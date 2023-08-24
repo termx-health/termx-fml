@@ -28,7 +28,7 @@
           (click)="selectGroup(key)"
         >
           <div class="m-items-middle">
-            <m-icon mCode="file"/>
+            <m-icon [mCode]="key === FML_MAIN ? key === groupName ? 'folder-open' : 'folder' : 'block'"/>
             <span>{{key}}</span>
           </div>
           <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
@@ -52,7 +52,7 @@
             <m-list mSeparated>
               <m-list-item *ngFor="let rg of ruleGroups" class="m-clickable" draggable="true" (dragstart)="onGroupDragStart($event, rg)">
                 <div class="m-items-middle">
-                  <m-icon mCode="folder"/>
+                  <m-icon mCode="block"/>
                   <m-divider mVertical></m-divider>
                   {{rg.groupName}}
                 </div>

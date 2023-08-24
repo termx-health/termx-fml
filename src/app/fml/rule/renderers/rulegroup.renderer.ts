@@ -46,7 +46,7 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
 
     return `
       <div class="m-items-middle">
-        <ce-icon m-code="folder" style="display: inline-flex; width: 1rem; height: 1rem;"></ce-icon>
+        <ce-icon m-code="block" style="display: inline-flex; width: 1rem; height: 1rem;"></ce-icon>
 
         <div>
           <h5>${fmlKey ?? 'unknown'}</h5>
