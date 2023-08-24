@@ -1,17 +1,18 @@
-import {FMLStructureObject, FMLStructureRule} from '../../fml-structure';
-import {StructureMapGroupRuleTarget} from 'fhir/r5';
-import {FMLRuleComposer} from './composer';
+import {FMLStructure, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
+import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
 
 export class FMLDefaultRuleComposer extends FMLRuleComposer {
   public action = 'default';
 
-  public generate(rule: FMLStructureRule, ctx: FMLStructureObject, vars: {[value: string]: string}): StructureMapGroupRuleTarget {
+  public generate(fml: FMLStructure, rule: FMLStructureRule, ctx: FMLStructureObject, vars: {[value: string]: string}): FMLRuleComposerReturnType {
     return {
-      transform: rule.action as any,
-      variable: rule.name,
-      parameter: rule.parameters.map(p => {
-        return p.type === 'var' ? ({valueId: vars[p.value] ?? p.value}) : ({valueString: p.value});
-      })
+      target: {
+        transform: rule.action as any,
+        variable: rule.name,
+        parameter: rule.parameters.map(p => {
+          return p.type === 'var' ? ({valueId: vars[p.value] ?? p.value}) : ({valueString: p.value});
+        })
+      }
     };
   }
 }

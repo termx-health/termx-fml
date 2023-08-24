@@ -38,7 +38,11 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
 
     const keys = Object.keys(editor._fmls);
     const fmlKey = rule.parameters.filter(p => p.type === 'const').map(p => p.value).find(v => keys.includes(v));
-    const objects = collect(Object.values(editor._fmls[fmlKey]?.objects), o => o.mode as FMLStructureEntityMode, o => o.element.id);
+    const objects = collect(
+      Object.values(editor._fmls[fmlKey]?.objects),
+      o => o.mode as FMLStructureEntityMode,
+      o => o.element.id
+    );
 
     return `
       <div class="m-items-middle">

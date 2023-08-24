@@ -17,7 +17,7 @@ export function renderExpand(editor: FMLEditor, name: string): void {
     Object.keys(node.outputs).length
   );
 
-  for (let i = 0; i < max; i++) {
+  for (let i = max > 1 ? 0 : 1; i < max; i++) {
     inputs.item(i)?.classList.remove('hidden');
     outputs.item(i)?.classList.remove('hidden');
     contents.item(i + 1)?.classList.remove('hidden');

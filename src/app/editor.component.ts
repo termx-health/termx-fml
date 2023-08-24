@@ -210,7 +210,8 @@ export class EditorComponent implements OnInit, OnChanges {
 
   protected deleteGroup(name: string): void {
     if (name !== this.FML_MAIN) {
-      this.fmls = {...this.fmls, [name]: undefined};
+      delete this.fmls[name];
+      this.fmls = {...this.fmls};
       this.setFML(this.FML_MAIN, this.fmls[this.FML_MAIN]);
     }
   }
