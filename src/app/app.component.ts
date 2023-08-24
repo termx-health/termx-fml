@@ -24,6 +24,9 @@ export class AppComponent implements OnInit {
   protected isDev = isDevMode();
   protected isAnimated = true;
 
+  @ViewChild('changeModal') public changeModal: MuiModalContainerComponent;
+  protected changes: {text: string, apply: () => void}[] = [];
+
   @ViewChild(EditorComponent) public editor: EditorComponent;
 
   constructor(
@@ -95,7 +98,37 @@ export class AppComponent implements OnInit {
   }
 
   // Save
-  protected save(): void {
+  protected save(force = false): void {
+    this.changes = [];
+    if (!force) {
+      const fml = this.editor.fml;
+      const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
+
+      const unlinkedRules = fml.rules.filter(rule => fml.getSources(rule.name).length === 0 && fml.getTargets(rule.name).length > 0);
+      if (unlinkedRules.length) {
+        if (sources.length >= 2) {
+          console.log(`Aborting automatic source settings, multiple (${sources.length}) sources found`);
+          return;
+        }
+
+        unlinkedRules.forEach(rule => {
+          this.changes.push({
+            text: `Connection from <b>${sources[0].name}</b> to <b>${rule.name}</b>`,
+            apply: () => {
+              const conn = fml.newFMLConnection(sources[0].name, 0, rule.name, 0);
+              fml.putConnection(conn);
+              this.editor.editor._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
+            }
+          });
+        });
+      }
+
+      if (this.changes.length) {
+        this.changeModal.open();
+        return;
+      }
+    }
+
     try {
       const sm = this.export();
       this.ctx.saveMap(sm);
@@ -105,6 +138,17 @@ export class AppComponent implements OnInit {
     } catch (e) {
       /* empty */
     }
+  }
+
+  protected applyChanges(): void {
+    this.changes.forEach(c => c.apply());
+    this.changes = [];
+    this.changeModal.close();
+  }
+
+  protected cancelChanges(): void {
+    this.changes = [];
+    this.changeModal.close();
   }
 
 
@@ -190,14 +234,18 @@ export class AppComponent implements OnInit {
     const coordinates = nodes
       .filter(n => n.classList.contains('parent-node'))
       .map(n => (n.firstElementChild as HTMLElement))
-      .map((n => ({
-        x: n.getBoundingClientRect().left,
-        y: n.getBoundingClientRect().top,
-        width: n.getBoundingClientRect().width,
-        height: n.getBoundingClientRect().height,
-        offsetLeft: fromPx(n.style.left),
-        offsetTop: fromPx(n.style.top),
-      })));
+      .filter(Boolean)
+      .map((n => {
+        const {left, top, width, height} = n.getBoundingClientRect();
+        return ({
+          x: left,
+          y: top,
+          width: width,
+          height: height,
+          offsetLeft: fromPx(n.style.left),
+          offsetTop: fromPx(n.style.top),
+        });
+      }));
 
     const maxWidth = Math.max(...coordinates.map(c => c.x + c.width));
     const minWidth = Math.min(...coordinates.map(c => c.x));

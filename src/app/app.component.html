@@ -32,9 +32,6 @@
     </div>
 
     <div class="m-items-middle">
-      <m-icon-button mIcon="block" m-tooltip mTitle="Collapse elements" (mClick)="collapseAll()"/>
-      <m-icon-button mIcon="expand" m-tooltip mTitle="Expand elements" (mClick)="expandAll()"/>
-      <m-divider mVertical/>
 
       Animation
       <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
@@ -42,6 +39,10 @@
 
       <m-icon-button mIcon="zoom-out" m-tooltip mTitle="Zoom Out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" m-tooltip mTitle="Zoom In" (mClick)="zoomIn()"/>
+      <m-divider mVertical/>
+
+      <m-icon-button mIcon="block" m-tooltip mTitle="Collapse elements" (mClick)="collapseAll()"/>
+      <m-icon-button mIcon="expand" m-tooltip mTitle="Expand elements" (mClick)="expandAll()"/>
       <m-divider mVertical/>
 
       <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
@@ -90,6 +91,26 @@
   </div>
   <div *m-modal-content>
     <m-textarea [autosize]="{minRows: 10}" placeholder="JSON file content" (mChange)="importStructureMap(importer, $event)"></m-textarea>
+  </div>
+</m-modal>
+
+<!-- Changes modal-->
+<m-modal #changeModal mPlacement="top" (mClose)="changeModal.close()">
+  <div *m-modal-header>
+    Changes
+  </div>
+  <div *m-modal-content>
+    <ul>
+      <li *ngFor="let change of changes" [innerHTML]="change.text"></li>
+    </ul>
+  </div>
+
+  <div *m-modal-footer class="m-justify-between">
+    <m-button mDisplay="text" (mClick)="changeModal.close(); save(true)">Save without changes</m-button>
+    <div class="m-items-middle">
+      <m-button mDisplay="text" (mClick)="cancelChanges()">Cancel</m-button>
+      <m-button mDisplay="primary" (mClick)="applyChanges()">Apply</m-button>
+    </div>
   </div>
 </m-modal>
 

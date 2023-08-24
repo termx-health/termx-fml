@@ -175,7 +175,7 @@ export class FMLEditor extends Drawflow {
 
   /* Creator */
 
-  public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number, outputs?: number}): number {
+  public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number}): number {
     if (isDefined(this._getNodeId(obj.name))) {
       throw Error(`Object node with name "${obj.name}" is already created`);
     }
@@ -188,7 +188,7 @@ export class FMLEditor extends Drawflow {
       object: fieldCount,
       element: 1
     }[obj.mode];
-    const outputs = options?.outputs ?? {
+    const outputs =  {
       source: fieldCount,
       target: 0,
       object: 1,

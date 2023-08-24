@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, isDevMode, Output, ViewChild} from '@angular/core';
 import {FMLStructure, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {unique} from '@kodality-web/core-util';
@@ -14,7 +14,7 @@ import {unique} from '@kodality-web/core-util';
           {{rule.action}}
         </m-form-item>
 
-        <m-form-item [mLabel]="clbl">
+        <m-form-item [mLabel]="clbl" *ngIf="isDev">
           <ng-template #clbl>
             Condition
             <m-icon-button mIcon="edit" (mClick)="editCondition()"/>
@@ -113,7 +113,7 @@ import {unique} from '@kodality-web/core-util';
 
           <ng-container *ngIf="_cp.name | apply: ctxVariables as ctxVars">
             <m-form-item mLabel="Context variables"
-              *ngIf="ctxVars.length"
+                *ngIf="ctxVars.length"
             >
               <div class="m-items-middle">
                 <kbd *ngFor="let v of ctxVars | reverse" class="description">{{v}}</kbd>
@@ -138,6 +138,7 @@ export class RuleViewComponent {
   @ViewChild('parameterModal') private parameterModal: MuiModalContainerComponent;
   @ViewChild('conditionModal') private conditionModal: MuiModalContainerComponent;
   protected _cp: FMLStructureRule;
+  protected isDev = isDevMode();
 
   public editParameter(): void {
     this._cp = structuredClone(this.rule);

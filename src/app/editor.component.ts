@@ -35,9 +35,19 @@ const RULES: RuleDescription[] = [
     name: 'copy'
   },
   {
+    action: 'evaluate',
+    name: 'evaluate',
+    description: 'Execute the supplied FHIRPath expression and use the value returned by that.'
+  },
+  {
     action: 'truncate',
     name: 'truncate',
     description: 'Source must be some stringy type that has some meaningful length property.'
+  },
+  {
+    action: 'cast',
+    name: 'cast',
+    description: 'Cast source from one type to another. target type can be left as implicit if there is one and only one target type known.'
   },
   {
     action: 'append',
@@ -45,9 +55,14 @@ const RULES: RuleDescription[] = [
     description: 'Element or string - just append them all together'
   },
   {
-    action: 'evaluate',
-    name: 'evaluate',
-    description: 'Execute the supplied FHIRPath expression and use the value returned by that.'
+    action: 'reference',
+    name: 'reference',
+    description: 'Return a string that references the provided tree properly'
+  },
+  {
+    action: 'pointer',
+    name: 'pointer',
+    description: 'Return the appropriate string to put in a Reference that refers to the resource provided as a parameter'
   },
   {
     action: 'cc',
@@ -80,7 +95,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   // FML editor
-  private editor: FMLEditor;
+  public editor: FMLEditor;
   protected fmls: {[key: string]: FMLStructure} = {};
   protected groupName = this.FML_MAIN;
   protected nodeSelected: DrawflowNode;
@@ -241,8 +256,7 @@ export class EditorComponent implements OnInit, OnChanges {
     Object.values(fml.objects).forEach(obj => {
       editor._createObjectNode(obj, {
         x: obj.position?.x,
-        y: obj.position?.y,
-        outputs: obj.mode === 'object' ? 1 : undefined
+        y: obj.position?.y
       });
     });
 
@@ -250,7 +264,7 @@ export class EditorComponent implements OnInit, OnChanges {
     fml.rules.forEach(rule => {
       editor._createRuleNode(rule, {
         x: rule.position?.x,
-        y: rule.position?.y,
+        y: rule.position?.y
       });
     });
 
