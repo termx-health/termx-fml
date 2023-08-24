@@ -1,13 +1,9 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLStructureRule} from '../../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
 
-export class FMLConstantRuleRenderer extends FMLRuleRenderer {
-  public action = 'constant';
+export class FMLUuidRuleRenderer extends FMLRuleRenderer {
+  public action = 'uuid';
 
-  public override template(editor: FMLEditor, rule: FMLStructureRule): string {
-    return `<h5>const ${rule.parameters.map(p => this._renderParam(p)).join(',')}</h5>`;
-  }
 
   /**
    * Removes all non 'const' type parameters.
