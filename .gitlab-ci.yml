@@ -39,4 +39,4 @@ publish:
     - docker build -t docker.kodality.com/termx-web:latest --build-arg BUILD_TIME=$BUILD_TIME .
     - docker push docker.kodality.com/termx-web:latest
   only:
-    - main
+    - master
