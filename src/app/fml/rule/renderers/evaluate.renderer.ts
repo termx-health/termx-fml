@@ -7,12 +7,12 @@ export class FMLEvaluateRuleRenderer extends FMLRuleRenderer {
 
   public action = 'evaluate';
 
-  public override render(editor: FMLEditor, rule: FMLStructureRule): string {
+  public override template(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
-      ${super.render(editor, rule)}
+      ${super._renderTitle(editor, rule)}
 
-      <div class="description">
-        ${rule.parameters.map(p => `<div>${this.renderParam(p)}</div>`).join('\n')}
+      <div class="hideable description">
+        ${rule.parameters.map(p => `<div>${this._renderParam(p)}</div>`).join('\n')}
       </div>
     `;
   }

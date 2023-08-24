@@ -188,7 +188,7 @@ export class FMLEditor extends Drawflow {
       object: fieldCount,
       element: 1
     }[obj.mode];
-    const outputs =  {
+    const outputs = {
       source: fieldCount,
       target: 0,
       object: 1,
@@ -210,14 +210,14 @@ export class FMLEditor extends Drawflow {
     return nodeId;
   }
 
-  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number, inputs?: number, outputs?: number}): number {
+  public _createRuleNode(rule: FMLStructureRule, options?: {y?: number, x?: number}): number {
     if (isDefined(this._getNodeId(rule.name))) {
       throw Error(`Rule node with name "${rule.name}" is already created`);
     }
 
     const nodeId = this.addNode(
       rule.name,
-      options?.inputs ?? 1, options?.outputs ?? 1,
+      1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       'node--rule', {rule},
@@ -226,6 +226,8 @@ export class FMLEditor extends Drawflow {
     );
 
     this._updateRule(nodeId, rule.name, r => r['_nodeId'] = nodeId);
+
+    getRuleRenderer(rule.action).init(this, rule);
     return nodeId;
   }
 

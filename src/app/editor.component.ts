@@ -413,8 +413,8 @@ export class EditorComponent implements OnInit, OnChanges {
       this.editor._createRuleNode(rule, {
         ...rule.position,
         // fixme: should not be set like that, cannot save and restore
-        inputs: objects.filter(o => o.mode === 'source').length,
-        outputs: objects.filter(o => o.mode === 'target').length,
+        // inputs: objects.filter(o => o.mode === 'source').length,
+        // outputs: objects.filter(o => o.mode === 'target').length,
       });
 
       this.editor._rerenderNodes();

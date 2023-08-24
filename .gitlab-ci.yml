@@ -11,6 +11,7 @@ image: registry.gitlab.com/kodality/gitlab-builders/ng
 
 stages:
   - build
+  - release
 
 build:
   stage: build
@@ -27,3 +28,15 @@ build:
   only:
     - branches
     - tags
+
+publish:
+  stage: release
+  image: docker:stable
+  before_script:
+    - docker login -u $KODALITY_NEXUS_USER -p $KODALITY_NEXUS_PASSWORD docker.kodality.com
+  script:
+    - export BUILD_TIME=$(date +%s)
+    - docker build -t docker.kodality.com/termx-web:latest --build-arg BUILD_TIME=$BUILD_TIME .
+    - docker push docker.kodality.com/termx-web:latest
+  only:
+    - main

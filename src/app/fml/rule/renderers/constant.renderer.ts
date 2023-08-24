@@ -5,12 +5,8 @@ import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor'
 export class FMLConstantRuleRenderer extends FMLRuleRenderer {
   public action = 'constant';
 
-  public override render(editor: FMLEditor, rule: FMLStructureRule): string {
-    return `
-      ${this.renderMeta(editor, rule)}
-
-      <h5>const ${rule.parameters.map(p => this.renderParam(p)).join(',')}</h5>
-    `;
+  public override template(editor: FMLEditor, rule: FMLStructureRule): string {
+    return `<h5>const ${rule.parameters.map(p => this._renderParam(p)).join(',')}</h5>`;
   }
 
   /**

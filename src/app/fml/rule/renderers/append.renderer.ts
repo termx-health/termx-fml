@@ -7,8 +7,8 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
 
   public action = 'append';
 
-  public override render(editor: FMLEditor, rule: FMLStructureRule): string {
-    const {el} = editor._getNodeElementByName(rule.name)
+  protected override template(editor: FMLEditor, rule: FMLStructureRule): string {
+    const {el} = editor._getNodeElementByName(rule.name);
     if (rule.expanded) {
       el?.classList.add('node--rule--with-title');
     } else {
@@ -16,10 +16,10 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     }
 
     return `
-      ${super.render(editor, rule)}
+      ${super._renderTitle(editor, rule)}
 
-      <ul class="description">
-        ${rule.parameters.map(p => `<li>${this.renderParam(p)}</li>`).join('\n')}
+      <ul class="hideable description">
+        ${rule.parameters.map(p => `<li>${this._renderParam(p)}</li>`).join('\n')}
       </ul>
     `;
   }

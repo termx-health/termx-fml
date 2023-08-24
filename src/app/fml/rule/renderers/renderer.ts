@@ -6,24 +6,39 @@ export abstract class FMLRuleRenderer {
 
   abstract action: string;
 
+  public init(
+    editor: FMLEditor,
+    rule: FMLStructureRule
+  ): void {
+    /* empty */
+  }
+
   public render(
     editor: FMLEditor,
     rule: FMLStructureRule
   ): string {
     return `
-      ${this.renderMeta(editor, rule)}
+      ${this._renderMeta(editor, rule)}
+      ${this.template(editor, rule)}
+    `;
+  }
 
+  protected template(
+    editor: FMLEditor,
+    rule: FMLStructureRule
+  ): string {
+    return `
       <h5 class="node-header">
-        <div class="m-justify-between">${rule.action} ${this.renderExpandToggle ? this.renderExpand(editor, rule) : ''}</div>
+        <div class="m-justify-between">${rule.action} ${this.renderExpandToggle ? this._renderExpand(editor, rule) : ''}</div>
         ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
       </h5>
     `;
   }
 
-  public renderMeta(
-    editor: FMLEditor,
-    rule: FMLStructureRule
-  ): string {
+
+  /* Render blocks */
+
+  protected _renderMeta(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
       <div class="node-meta" style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
         ${rule.name}
@@ -31,10 +46,16 @@ export abstract class FMLRuleRenderer {
     `;
   }
 
-  public renderExpand(
-    editor: FMLEditor,
-    rule: FMLStructureRule
-  ): string {
+  protected _renderTitle(editor: FMLEditor, rule: FMLStructureRule): string {
+    return `
+      <h5>
+        <div class="m-justify-between">${rule.action} ${this.renderExpandToggle ? this._renderExpand(editor, rule) : ''}</div>
+        ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
+      </h5>
+    `;
+  }
+
+  protected _renderExpand(editor: FMLEditor, rule: FMLStructureRule): string {
     window['_ruleExpand'] = (name: string): void => {
       const node = editor._getNodeByName(name);
       const expanded = !node.data.rule.expanded;
@@ -43,10 +64,10 @@ export abstract class FMLRuleRenderer {
       editor._rerenderNodes();
     };
 
-
     return `
       <span class="m-clickable"  style="padding-inline: 0.5rem 4px;" onclick="_ruleExpand('${rule.name}')">
-        <span style="display: flex; align-items: center; justify-content: center; width: 1em; height: 1em; transform: rotate(${rule.expanded ? '-90deg' : '90deg'}); color: var(--color-text-secondary)">
+        <span style="display: flex; align-items: center; justify-content: center; width: 1em; height: 1em; transform: rotate(${rule.expanded ? '-90deg' :
+      '90deg'}); color: var(--color-text-secondary)">
           <svg xmlns="http://www.w3.org/2000/svg" height="10px" width="10px" viewBox="0 0 185.343 185.343" style="fill: currentColor">
             <path d="M51.707,185.343c-2.741,0-5.493-1.044-7.593-3.149c-4.194-4.194-4.194-10.981,0-15.175 l74.352-74.347L44.114,18.32c-4.194-4.194-4.194-10.987,0-15.175c4.194-4.194,10.987-4.194,15.18,0l81.934,81.934 c4.194,4.194,4.194,10.987,0,15.175l-81.934,81.939C57.201,184.293,54.454,185.343,51.707,185.343z"/>
           </svg>
@@ -55,9 +76,12 @@ export abstract class FMLRuleRenderer {
     `;
   }
 
-  public renderParam(p: FMLStructureRuleParameter): string {
+  protected _renderParam(p: FMLStructureRuleParameter): string {
     return p.type === 'const' ? `'${p.value}'` : `<kbd>${p.value}</kbd>`;
   }
+
+
+  /* Connections */
 
   public onInputConnectionCreate(
     editor: FMLEditor,
