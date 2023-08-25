@@ -13,6 +13,7 @@ export class FMLCopyRuleRenderer extends FMLRuleRenderer {
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
     if (editor._getNodeInputConnections(node.id, nodePort).length > 1) {
+      console.warn("'copy' rule can have only 1 source");
       editor.removeSingleConnection(source.id, node.id, `output_${sourcePort}`, `input_${nodePort}`);
     } else {
       super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);

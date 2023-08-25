@@ -170,8 +170,25 @@ export class FMLEditor extends Drawflow {
 
       this._rerenderNodes();
     });
+
+
+    const _removeNodeId = this.removeNodeId;
+    this.removeNodeId = function (id: string): void {
+      const node = this.getNodeFromId(id.slice('node-'.length));
+      if (this._isObj(node) && ['source', 'target'].includes(node.data.obj.mode)) {
+        console.warn("source/target node deletion is forbidden!");
+        return;
+      }
+      return _removeNodeId.bind(this)(id);
+    };
   }
 
+  // public override removeNodeId(id: string): void {
+  //   // const deleteNode = confirm("Confirm Delete");
+  //   // if (deleteNode == true) {
+  //   //   this._removeNodeId(id)
+  //   // }
+  // }
 
   /* Creator */
 

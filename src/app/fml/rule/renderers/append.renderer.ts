@@ -34,6 +34,7 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
     if (editor._getNodeInputConnections(node.id, nodePort).length > 1) {
+      console.warn("cannot connect to the port that already has a connection");
       editor.removeSingleConnection(source.id, node.id, `output_${sourcePort}`, `input_${nodePort}`);
     } else {
       super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);

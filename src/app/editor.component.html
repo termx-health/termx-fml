@@ -1,5 +1,3 @@
-
-
 <div style="display: grid; grid-template-columns: auto 1fr">
   <!-- LEFT PANEL -->
   <m-collapse-panel
@@ -50,7 +48,7 @@
             <h5>Groups</h5>
 
             <m-list mSeparated>
-              <m-list-item *ngFor="let rg of ruleGroups" class="m-clickable" draggable="true" (dragstart)="onGroupDragStart($event, rg)">
+              <m-list-item *ngFor="let rg of ruleGroups" class="m-clickable" draggable="true" (dragstart)="onDragStart($event, 'group', rg)">
                 <div class="m-items-middle">
                   <m-icon mCode="block"/>
                   <m-divider mVertical></m-divider>
@@ -63,7 +61,7 @@
           <div style="padding: 1rem; border-bottom: var(--border-table);">
             <h5>Transformers</h5>
             <m-list mSeparated>
-              <m-list-item *ngFor="let rd of ruleDescriptions" class="m-clickable" draggable="true" (dragstart)="onRuleDragStart($event, rd)">
+              <m-list-item *ngFor="let rd of ruleDescriptions" class="m-clickable" draggable="true" (dragstart)="onDragStart($event, 'rule', rd)">
                 <div class="m-items-middle">
                   <m-icon mCode="experiment"/>
                   <m-divider mVertical></m-divider>

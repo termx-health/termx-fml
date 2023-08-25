@@ -107,7 +107,7 @@ export class AppComponent implements OnInit {
       const unlinkedRules = fml.rules.filter(rule => fml.getSources(rule.name).length === 0 && fml.getTargets(rule.name).length > 0);
       if (unlinkedRules.length) {
         if (sources.length >= 2) {
-          console.log(`Aborting automatic source settings, multiple (${sources.length}) sources found`);
+          console.log(`Aborting automatic source setting, multiple (${sources.length}) sources found`);
           return;
         }
 

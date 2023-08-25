@@ -26,6 +26,10 @@ const RULES: RuleDescription[] = [
     name: 'constant'
   },
   {
+    action: 'where',
+    name: 'where'
+  },
+  {
     action: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase).'
@@ -89,7 +93,6 @@ export class EditorComponent implements OnInit, OnChanges {
   @Input() public structureMap: StructureMap;
   @Input() public mapName: string;
 
-
   public get fml(): FMLStructure {
     return this.editor?._fml;
   }
@@ -104,7 +107,6 @@ export class EditorComponent implements OnInit, OnChanges {
   protected ruleDescriptions: RuleDescription[] = RULES;
   protected ruleGroups: RuleGroup[] = [];
   protected isAnimated = true;
-
 
   @ViewChild(RuleViewComponent) private ruleViewComponent: RuleViewComponent;
   @ViewChild(ObjectViewComponent) private objectViewComponent: ObjectViewComponent;
@@ -132,13 +134,13 @@ export class EditorComponent implements OnInit, OnChanges {
     });
   }
 
-  protected init(): void {
+  private init(): void {
     const fml = FMLStructureMapper.map(this.resourceBundle, this.structureMap);
     this.fmls = fml;
     this.setFML(this.FML_MAIN, fml[this.FML_MAIN]);
   }
 
-  protected setFML(groupName: string, fml: FMLStructure): void {
+  private setFML(groupName: string, fml: FMLStructure): void {
     this.nodeSelected = undefined;
     this.groupName = groupName;
     this.fmls = {...this.fmls, [groupName]: fml};
@@ -180,7 +182,7 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor.zoom_out();
   }
 
-  public setExpanded(expanded = true): void {
+  public setExpanded(expanded: boolean): void {
     Object.keys(this.fml.objects).forEach(name => {
       const node = this.editor._getNodeByName(name);
       this.editor._updateObject(node.id, node.name, obj => obj.expanded = expanded);
@@ -194,9 +196,8 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._rerenderNodes();
   }
 
-
-  public setAnimation(isAnimated: boolean): void {
-    this.isAnimated = isAnimated;
+  public setAnimation(animated: boolean): void {
+    this.isAnimated = animated;
   }
 
 
@@ -362,18 +363,8 @@ export class EditorComponent implements OnInit, OnChanges {
 
   /* Drag & drop */
 
-  protected onRuleDragStart(ev: DragEvent, ruleDescription: RuleDescription): void {
-    ev.dataTransfer.setData("application/json", JSON.stringify({
-      type: 'rule',
-      data: ruleDescription
-    }));
-  }
-
-  protected onGroupDragStart(ev: DragEvent, ruleGroup: RuleGroup): void {
-    ev.dataTransfer.setData("application/json", JSON.stringify({
-      type: 'group',
-      data: ruleGroup
-    }));
+  protected onDragStart(ev: DragEvent, type: 'rule' | 'group', data: RuleDescription | RuleGroup): void {
+    ev.dataTransfer.setData("application/json", JSON.stringify({type, data}));
   }
 
   protected onDragOver(ev: DragEvent): void {
@@ -410,14 +401,7 @@ export class EditorComponent implements OnInit, OnChanges {
         value: datum.data.groupName
       }];
 
-      const objects = Object.values(this.fmls[datum.data.groupName].objects);
-      this.editor._createRuleNode(rule, {
-        ...rule.position,
-        // fixme: should not be set like that, cannot save and restore
-        // inputs: objects.filter(o => o.mode === 'source').length,
-        // outputs: objects.filter(o => o.mode === 'target').length,
-      });
-
+      this.editor._createRuleNode(rule, {...rule.position});
       this.editor._rerenderNodes();
     }
   }
