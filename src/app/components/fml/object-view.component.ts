@@ -1,7 +1,8 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
 import {MuiNotificationService} from '@kodality-web/marina-ui';
-import {StructureDefinition} from 'fhir/r5';
+import {Bundle, StructureDefinition} from 'fhir/r5';
+import {isDefined} from '@kodality-web/core-util';
 
 @Component({
   selector: 'app-object-view',
@@ -18,9 +19,9 @@ import {StructureDefinition} from 'fhir/r5';
         </div>
 
         <app-structure-definition-tree
-          *ngIf="treeView"
-          [definition]="object | apply: findDefinition: fml"
-          [definitionBase]="object.element.path"
+            *ngIf="treeView"
+            [definition]="object | apply: findDefinition: fml"
+            [definitionBase]="object.element.path"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -34,11 +35,14 @@ import {StructureDefinition} from 'fhir/r5';
                   <div class="description">{{f.types | join: ', '}}</div>
                 </div>
                 <ng-template #name>
-                  <span [mPopover]="f | apply: isBackboneElementField"
-                    [mTitle]="backboneRawFields"
-                    [mTitleContext]="{base: f.name}"
-                    mPosition="left"
-                  >{{f.name}}</span>
+                  <span
+                      [mPopover]="f | apply: isBackboneElementField"
+                      [mTitle]="backboneRawFields"
+                      [mTitleContext]="{base: f.name}"
+                      mPosition="left"
+                  >
+                    {{f.name}}
+                  </span>
                 </ng-template>
 
                 <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
@@ -79,7 +83,12 @@ import {StructureDefinition} from 'fhir/r5';
 
           <div *m-modal-content>
             <m-form-item mName="sources" required>
-              <app-structure-definition-select name="sources" [(ngModel)]="resourceModal.resource" [bundle]="fml.bundle" required/>
+              <app-structure-definition-select
+                  name="sources"
+                  [(ngModel)]="resourceModal.resource"
+                  [bundle]="fml.bundle | apply: bundle: resourceModal.types"
+                  required
+              />
             </m-form-item>
           </div>
 
@@ -102,11 +111,11 @@ export class ObjectViewComponent {
   @Output() fieldSelect = new EventEmitter<{
     object: FMLStructureObject,
     field: string,
-    type?: string
+    type?: string,
   }>();
 
   protected treeView = sessionStorage.getItem('object-view-as-tree') === 'true';
-  protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition} = {
+  protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition, types?: string[]} = {
     visible: false
   };
 
@@ -119,10 +128,9 @@ export class ObjectViewComponent {
     const types = object.fields.find(f => f.name === field).types;
     if (types.includes("Resource")) {
       this.resourceModal = {visible: true, field};
+    } else if (types.length > 1) {
+      this.resourceModal = {visible: true, field, types};
     } else {
-      if (types.length > 1) {
-        this.notifications.warning("Unknown type", "Selected the first one", {placement: 'top'});
-      }
       this.fieldSelect.emit({object, field});
     }
   }
@@ -135,11 +143,23 @@ export class ObjectViewComponent {
     sessionStorage.setItem('object-view-as-tree', String(isTree));
   }
 
+
   /* Resource modal */
 
   protected resourceConfirm(field: string, sd: StructureDefinition): void {
     this.fieldSelect.emit({object: this.object, field, type: sd.type});
     this.resourceModal = {visible: false};
+  }
+
+  protected bundle(bundle: Bundle<StructureDefinition>, types: string[]): Bundle<StructureDefinition> {
+    if (isDefined(types)) {
+      return <Bundle<StructureDefinition>>{
+        entry: bundle.entry
+          .filter(e => types.includes(e.resource.type))
+          .sort((a, b) => types.indexOf(a.resource.type) - types.indexOf(b.resource.type))
+      };
+    }
+    return bundle;
   }
 
 

@@ -201,7 +201,7 @@ export class FMLEditor extends Drawflow {
       inputs, outputs,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
-      'node--with-title', {obj},
+      `node--with-title node--${obj.mode}`, {obj},
       '',
       false
     );
@@ -220,7 +220,7 @@ export class FMLEditor extends Drawflow {
       1, 1,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
-      'node--rule', {rule},
+      `node--rule node--${rule.action}`, {rule},
       '',
       false
     );
