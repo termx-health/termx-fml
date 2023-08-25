@@ -201,7 +201,7 @@ export class FMLEditor extends Drawflow {
       inputs, outputs,
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
-      `node--with-title node--${obj.mode}`, {obj},
+      `node--atom node--${obj.mode}`, {obj},
       '',
       false
     );
@@ -369,24 +369,20 @@ export class FMLEditor extends Drawflow {
 
       Object.keys(node.inputs).forEach(k => {
         const inputEl = el.getElementsByClassName(k).item(0) as HTMLElement;
-        inputEl.style.background = '';
-        inputEl.style.borderColor = '';
+        inputEl.classList.remove('has-input-connection');
 
         if (node.inputs[k].connections?.length) {
-          inputEl.style.background = 'var(--color-green-0)';
-          inputEl.style.borderColor = 'var(--color-green-7)';
+          inputEl.classList.add('has-input-connection');
         }
       });
 
       if (this._isObj(node) && ['source', 'element'].includes(node.data.obj.mode)) {
         Object.keys(node.outputs).forEach(k => {
           const inputEl = el.getElementsByClassName(k).item(0) as HTMLElement;
-          inputEl.style.background = '';
-          inputEl.style.borderColor = '';
+          inputEl.classList.remove('has-output-connection');
 
           if (node.outputs[k].connections?.length) {
-            inputEl.style.background = 'var(--color-primary-1)';
-            inputEl.style.borderColor = 'var(--color-primary-6)';
+            inputEl.classList.add('has-output-connection');
           }
         });
       }

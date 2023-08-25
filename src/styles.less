@@ -85,46 +85,67 @@ li {
     align-items: flex-start;
 
     background: white;
-    border: @mui-border;
-    box-shadow: @mui-shadow-large;
-
-    .output, .input {
-      width: 1.2rem;
-      height: 1.2rem;
-      margin-bottom: 0.3rem;
-      border: @mui-border;
-      transition: 150ms;
-    }
-
-    .output {
-      right: -0.5rem;
-
-      &:hover {
-        box-shadow: @mui-border-color 0 0 10px;
-      }
-    }
-
-    .input {
-      left: -1.7rem;
-      background: @mui-primary-color-1;
-      border-color: @mui-primary-color-6;
-
-      &:hover {
-        background: @mui-primary-color-2;
-        box-shadow: @mui-primary-color-4 0 0 10px;
-      }
-    }
+    border: 1px solid;
+    border-color: var(--node-border, @mui-border-color);
+    box-shadow: 0 4px 10px var(--node-shadow, rgba(0, 0, 0, 0.1));
 
     &.selected {
       background: white;
-      box-shadow: @mui-primary-color-2 0 0 12px;
-      border-color: @mui-primary-color-5;
-
-      .output, .input {
-        //border-color: @mui-primary-color-6;
-      }
+      box-shadow: var(--node-selected-shadow, @mui-primary-color-2) 0 0 12px;
+      border-color: var(--node-selected-border, @mui-primary-color-5);
     }
   }
+
+  .drawflow-node {
+    .input, .output {
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-bottom: 0.3rem;
+      border: 1px solid;
+      transition: 150ms;
+    }
+
+
+    /* Input */
+
+    .input {
+      left: -1.7rem;
+      background: var(--node-input-background, @mui-primary-color-1);
+      border-color: var(--node-input-border, @mui-primary-color-6);
+
+      &:hover {
+        background: var(--node-input-background-hover, @mui-primary-color-2);
+        box-shadow: var(--node-input-shadow-hover, @mui-primary-color-4) 0 0 10px;
+      }
+    }
+
+    /* Output */
+
+    .output {
+      right: -0.5rem;
+      background: var(--node-output-background, @mui-bg-component);
+      border-color: var(--node-output-border, @mui-border-color);
+
+      &:hover {
+        background: var(--node-output-background-hover, @mui-bg-component);
+        box-shadow: var(--node-output-shadow-hover, @mui-border-color) 0 0 10px;
+      }
+    }
+
+
+    .has-input-connection {
+      background: @mui-primary-color-2;
+      border-color: @mui-primary-color-7;
+    }
+
+    .has-output-connection {
+      background: @mui-primary-color-1;
+      border-color: @mui-primary-color-6;
+    }
+  }
+
+
+  /* Connection */
 
   .connection .main-path {
     stroke-width: 1px;
@@ -135,6 +156,9 @@ li {
       filter: drop-shadow(0px 1px 2px @mui-primary-color-2);
     }
   }
+
+
+  /* Misc */
 
   &--animated {
     .connection .main-path {
@@ -151,32 +175,50 @@ li {
   border-radius: 4px;
 }
 
-.drawflow .node--with-title {
-  border-color: @mui-primary-color-6;
-  box-shadow: 0 4px 10px @mui-primary-color-1;
+.drawflow {
+  .node--atom {
+    --node-border: @mui-primary-color-6;
+    --node-shadow: @mui-primary-color-1;
 
-  .node-title {
-    height: 1.2rem
-  }
+    .node-title {
+      height: 1.2rem
+    }
 
-  .inputs, .outputs {
-    display: block;
-    margin-top: 1.7rem;
-  }
-}
-
-.drawflow .node--rule {
-  padding-block: 6px;
-  min-height: initial;
-
-  &--with-title {
-    .inputs {
-      margin-top: 1rem;
+    .inputs, .outputs {
+      display: block;
+      margin-top: 1.7rem;
     }
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    margin: 0;
+  .node--rule {
+    padding-block: 6px;
+    min-height: initial;
+
+    //--node-border: #16a34a; // 600
+    //--node-shadow: #f0fdf4; // 50
+
+    --node-selected-border: #16a34a; // 600
+    --node-selected-shadow: #dcfce7; // 100
+
+    .has-input-connection {
+      border-color: #16a34a; // 600
+      background: #f0fdf4; // 50
+
+      &:hover {
+        --node-input-background-hover: #dcfce7; // 100
+        --node-input-shadow-hover: #4ade80; // 400
+      }
+    }
+
+    &--with-title {
+      .inputs {
+        margin-top: 1rem;
+      }
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+    }
   }
 }
 
