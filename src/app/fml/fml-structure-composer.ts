@@ -60,13 +60,32 @@ export class FmlStructureComposer {
         alias: o.name
       }));
 
-
     // structure groups
     Object.keys(fmls).forEach(groupName => {
       const group = this.generateGroup(groupName, fmls[groupName]);
       sm.group.push(group);
     });
 
+
+    // structure container resources (ConceptMap)
+    sm.contained = fmls[this.MAIN].maps
+      .filter(m => m.mode === 'internal')
+      .map(m => ({
+        resourceType: 'ConceptMap',
+        id: m.name,
+        status: 'draft',
+        group: m.mappings.map(mapping => ({
+          source: m.source,
+          target: m.target,
+          element: [{
+            code: mapping.source,
+            target: [{
+              code: mapping.target,
+              relationship: 'related-to'
+            }]
+          }]
+        }))
+      }));
 
     console.log("#### STRUCTURE MAP ####");
     console.log(sm);

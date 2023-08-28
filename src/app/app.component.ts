@@ -89,8 +89,7 @@ export class AppComponent implements OnInit {
       this.fml = {
         text: resp.fml
           .replaceAll(',  ', ',\n    ')
-          .replaceAll(' ->  ', ' ->\n    ')
-          .replaceAll("#", "_"),
+          .replaceAll(' ->  ', ' ->\n    '),
         json: map
       };
       m.open();

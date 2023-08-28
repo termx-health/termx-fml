@@ -1,11 +1,11 @@
 import {Component, EnvironmentInjector, Input, OnChanges, OnInit, SimpleChanges, ViewChild} from '@angular/core';
-import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
+import {FMLStructure, FMLStructureConceptMap, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {isNil, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
-import {MuiIconComponent} from '@kodality-web/marina-ui';
+import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
@@ -107,6 +107,9 @@ export class EditorComponent implements OnInit, OnChanges {
   protected ruleDescriptions: RuleDescription[] = RULES;
   protected ruleGroups: RuleGroup[] = [];
   protected isAnimated = true;
+
+  @ViewChild('conceptMapModal') public conceptMapModal: MuiModalContainerComponent;
+  protected conceptMap: FMLStructureConceptMap;
 
   @ViewChild(RuleViewComponent) private ruleViewComponent: RuleViewComponent;
   @ViewChild(ObjectViewComponent) private objectViewComponent: ObjectViewComponent;
@@ -219,6 +222,45 @@ export class EditorComponent implements OnInit, OnChanges {
 
   protected createGroup(groupName: string, fml: FMLStructure): void {
     this.setFML(groupName, fml);
+  }
+
+
+  /* Concept Map */
+
+  protected conceptMapEdit(cm = new FMLStructureConceptMap()): void {
+    this.conceptMap = structuredClone(cm);
+    this.conceptMap['_origin'] = cm;
+    this.conceptMap.mappings ??= [];
+    this.conceptMapModal.open();
+  }
+
+  protected conceptMapRemove(idx: number): void {
+    this.fmls[this.FML_MAIN].maps.splice(idx, 1);
+  }
+
+  protected conceptMapReset(): void {
+    if (this.conceptMap) {
+      this.conceptMap.source = undefined;
+      this.conceptMap.target = undefined;
+      this.conceptMap.mappings = [];
+    }
+  }
+
+  protected conceptMapCancel(): void {
+    this.conceptMapModal.close();
+    this.conceptMap = undefined;
+  }
+
+  protected conceptMapApply(): void {
+    const idx = this.fmls[this.FML_MAIN].maps.indexOf(this.conceptMap['_origin']);
+    if (idx !== -1) {
+      this.fmls[this.FML_MAIN].maps.splice(idx, 1, this.conceptMap);
+    } else {
+      this.fmls[this.FML_MAIN].maps.push(this.conceptMap);
+    }
+
+    this.conceptMapModal.close();
+    this.conceptMap = undefined;
   }
 
 
@@ -363,7 +405,11 @@ export class EditorComponent implements OnInit, OnChanges {
 
   /* Drag & drop */
 
-  protected onDragStart(ev: DragEvent, type: 'rule' | 'group', data: RuleDescription | RuleGroup): void {
+  protected onDragStart(
+    ev: DragEvent,
+    type: 'rule' | 'group' | 'conceptMap',
+    data: RuleDescription | RuleGroup | FMLStructureConceptMap
+  ): void {
     ev.dataTransfer.setData("application/json", JSON.stringify({type, data}));
   }
 
@@ -372,7 +418,11 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected onDrop(ev: DragEvent): void {
-    const datum: {type: 'rule', data: RuleDescription} | {type: 'group', data: RuleGroup} = JSON.parse(ev.dataTransfer.getData('application/json'));
+    const datum:
+      {type: 'rule', data: RuleDescription} |
+      {type: 'group', data: RuleGroup} |
+      {type: 'conceptMap', data: FMLStructureConceptMap}
+      = JSON.parse(ev.dataTransfer.getData('application/json'));
     const {top, left} = this.editor._getOffsets();
 
     const rule = new FMLStructureRule();
@@ -383,27 +433,31 @@ export class EditorComponent implements OnInit, OnChanges {
       x: ev.x - left
     };
 
-    if (datum.type === 'rule') {
-      rule.action = datum.data.action;
-      rule.name = asResourceVariable(datum.data.action);
-
-      this.editor._createRuleNode(rule, {...rule.position});
-      this.editor._rerenderNodes();
-      return;
+    switch (datum.type) {
+      case 'rule':
+        rule.action = datum.data.action;
+        rule.name = asResourceVariable(datum.data.action);
+        break;
+      case 'group':
+        rule.action = 'rulegroup';
+        rule.name = asResourceVariable('rulegroup');
+        rule.parameters = [{
+          type: 'const',
+          value: datum.data.groupName
+        }];
+        break;
+      case 'conceptMap':
+        rule.action = 'translate';
+        rule.name = asResourceVariable('translate');
+        rule.parameters = [
+          {type: 'const', value: datum.data.name},
+          {type: 'const', value: 'code'}
+        ];
+        break;
     }
 
-
-    if (datum.type === 'group') {
-      rule.action = 'rulegroup';
-      rule.name = asResourceVariable('rulegroup');
-      rule.parameters = [{
-        type: 'const',
-        value: datum.data.groupName
-      }];
-
-      this.editor._createRuleNode(rule, {...rule.position});
-      this.editor._rerenderNodes();
-    }
+    this.editor._createRuleNode(rule, {...rule.position});
+    this.editor._rerenderNodes();
   }
 
 

@@ -1,12 +1,13 @@
 import {group} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition} from 'fhir/r5';
-import {FMLStructure, FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLStructure, FMLStructureConceptMap, FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {plainToInstance} from 'class-transformer';
 
 export interface FMLStructureSimple {
   objects: {[name: string]: Omit<FMLStructureObject, 'rawFields'>},
   rules: FMLStructureRule[],
-  connections: FMLStructureConnection[]
+  connections: FMLStructureConnection[],
+  maps: FMLStructureConceptMap[]
 }
 
 export class FMLStructureSimpleMapper {
@@ -21,6 +22,7 @@ export class FMLStructureSimpleMapper {
         rawFields: _fml.objects[k].fields
       }));
       fml.rules = plainToInstance(FMLStructureRule, _fml.rules);
+      fml.maps = plainToInstance(FMLStructureConceptMap, _fml.maps);
       fml._connections = plainToInstance(FMLStructureConnection, _fml.connections);
       return fml;
     });
@@ -38,6 +40,7 @@ export class FMLStructureSimpleMapper {
       return <FMLStructureSimple>{
         objects: group(simpleObjects, o => o.name),
         rules: fml.rules,
+        maps: fml.maps,
         connections: fml.connections
       };
     });

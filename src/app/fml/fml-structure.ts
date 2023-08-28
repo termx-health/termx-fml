@@ -87,12 +87,30 @@ export class FMLStructureConnection {
 }
 
 
+/* Concept Map */
+
+export class FMLStructureConceptMap {
+  mode: 'internal' | 'external';
+  name: string;
+
+  source?: string;
+  target?: string;
+  mappings?: FMLStructureConceptMapMapping[];
+}
+
+export class FMLStructureConceptMapMapping {
+  source: string;
+  target: string;
+}
+
+
 /* Structure */
 
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
+  maps: FMLStructureConceptMap[] = [];
   _connections: FMLStructureConnection[] = [];
 
   public get connections(): readonly FMLStructureConnection[] {
@@ -104,6 +122,7 @@ export class FMLStructure {
     const _rules = group(this.rules, r => r.name);
 
     const _fml = new FMLStructure();
+    // _fml.maps = structuredClone(this.maps);
     // _fml.bundle = structuredClone(this.bundle); // fixme: revert
 
     const traverse = (o: string, f?) => {
