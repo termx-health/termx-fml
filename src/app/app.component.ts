@@ -264,7 +264,6 @@ export class AppComponent implements OnInit {
 
     // remove redundant classes on objects
     nodes
-      .filter(n => n.classList.contains('parent-node'))
       .map(n => n.firstElementChild as HTMLElement)
       .forEach(n => n.classList.remove('selected'));
 
