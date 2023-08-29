@@ -1,5 +1,5 @@
 import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
-import {FMLStructure} from './fml/fml-structure';
+import {FMLStructureGroup} from './fml/fml-structure';
 import {StructureMap} from 'fhir/r5';
 import {HttpCacheService, isDefined} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
@@ -59,7 +59,9 @@ export class AppComponent implements OnInit {
   /* Left side */
 
   // New
-  protected initFromWizard(groupName: string, fml: FMLStructure): void {
+  protected initFromWizard(groupName: string, group: FMLStructureGroup): void {
+    const fml= this.editor.initFmlFromGroup(group)
+
     const sm = FmlStructureComposer.generate(fml, {mapName: groupName});
     this.ctx.importMap(sm);
   }
@@ -100,7 +102,7 @@ export class AppComponent implements OnInit {
   protected save(force = false): void {
     this.changes = [];
     if (!force) {
-      const fml = this.editor.fml;
+      const fml = this.editor.fmlGroup;
       const sources = Object.values(fml.objects).filter(o => o.mode === 'source');
 
       const unlinkedRules = fml.rules.filter(rule => fml.getSources(rule.name).length === 0 && fml.getTargets(rule.name).length > 0);
@@ -178,7 +180,7 @@ export class AppComponent implements OnInit {
   }
 
   protected topology(): void {
-    const sorted = FMLGraph.fromFML(this.editor.fml).topologySort();
+    const sorted = FMLGraph.fromFML(this.editor.fmlGroup).topologySort();
     const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
 
     const nodeEls = Array.from(document.getElementsByClassName('node-meta'));

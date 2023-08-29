@@ -90,7 +90,7 @@ export abstract class FMLRuleRenderer {
     source: FMLDrawflowNode,
     sourcePort: number
   ): void {
-    editor._fml.putConnection(editor._fml.newFMLConnection(
+    editor._fmlGroup.putConnection(editor._fmlGroup.newFMLConnection(
       source.name, sourcePort - 1,
       node.name, nodePort - 1,
     ));
@@ -112,7 +112,7 @@ export abstract class FMLRuleRenderer {
     target: FMLDrawflowNode,
     targetPort: number
   ): void {
-    editor._fml.putConnection(editor._fml.newFMLConnection(
+    editor._fmlGroup.putConnection(editor._fmlGroup.newFMLConnection(
       node.name, nodePort - 1,
       target.name, targetPort - 1
     ));
@@ -125,7 +125,7 @@ export abstract class FMLRuleRenderer {
     source: FMLDrawflowNode,
     sourcePort: number
   ): void {
-    editor._fml.removeConnection(source.name, sourcePort - 1, node.name, nodePort - 1);
+    editor._fmlGroup.removeConnection(source.name, sourcePort - 1, node.name, nodePort - 1);
 
     // removes parameter if exists
     const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
@@ -144,6 +144,6 @@ export abstract class FMLRuleRenderer {
     target: FMLDrawflowNode,
     targetPort: number
   ): void {
-    editor._fml.removeConnection(node.name, nodePort - 1, target.name, targetPort - 1);
+    editor._fmlGroup.removeConnection(node.name, nodePort - 1, target.name, targetPort - 1);
   }
 }

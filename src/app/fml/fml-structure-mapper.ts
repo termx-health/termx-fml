@@ -3,39 +3,53 @@ import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, Struct
 import {FMLRuleParserVariables} from './rule/parsers/parser';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getRuleParser} from './rule/parsers/_parsers';
-import {FMLStructureSimpleMapper} from './fml-structure-simple';
+import {FMLStructureExportSimple, FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
 export class FMLStructureMapper {
   private static MAIN = 'main';
 
-  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructureGroup {
+  public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
 
     if (exported) {
       let parsed = JSON.parse(exported);
-      if (isNil(parsed[this.MAIN])) {
+
+      if (isNil(parsed['version']) && isNil(parsed[this.MAIN])) {
+        console.warn("v0: from flat to nested");
         parsed = {[this.MAIN]: parsed};
+      }
+
+      if (isNil(parsed['version'])) {
+        console.warn("v1: from simple nested to complex");
+        parsed = <FMLStructureExportSimple>{
+          groups: parsed,
+          maps: Object.values(parsed).flatMap(o => o['maps'] || []),
+          version: '1'
+        };
       }
       return FMLStructureSimpleMapper.toFML(bundle, parsed);
     }
 
-    return {
-      [this.MAIN]: this.mapEach(bundle, fhir)
-    };
+    const fml = new FMLStructure();
+    fml.bundle = bundle;
+    // todo: map local concept maps
+    fml.setGroup(this.mapGroup(bundle, fhir), this.MAIN);
+    return fml;
   }
 
-  private static mapEach(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
+  private static mapGroup(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructureGroup {
     // finds the correct resource type based on URL
     const getKey = ({url}: StructureMapStructure) => bundle.entry.find(c => c.resource.url === url)?.resource?.id;
 
-    const struc = new FMLStructure();
-    struc.bundle = bundle;
+    const fmlGroup = new FMLStructureGroup();
+    // fixme: temporary workaround for newFMLObject to work
+    fmlGroup.bundle = (): Bundle<StructureDefinition> => bundle;
 
-    // [alias | resource] -> FMLStructureObject
-    struc.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
+    // [alias || resource] -> FMLStructureObject
+    fmlGroup.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
       const resource = getKey(s);
-      return struc.newFMLObject(resource, s.alias ?? getKey(s), s.mode as FMLStructureEntityMode);
+      return fmlGroup.newFMLObject(resource, s.alias ?? getKey(s), s.mode as FMLStructureEntityMode);
     });
 
 
@@ -76,16 +90,16 @@ export class FMLStructureMapper {
               rule,
               object,
               connections
-            } = getRuleParser(fhirRuleTarget.transform).parse(struc, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
+            } = getRuleParser(fhirRuleTarget.transform).parse(fmlGroup, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
 
             if (isDefined(object)) {
-              struc.objects[object.name] = object;
+              fmlGroup.objects[object.name] = object;
             }
             if (isDefined(rule)) {
-              struc.putRule(rule);
+              fmlGroup.putRule(rule);
             }
             if (isDefined(connections)) {
-              connections.forEach(c => struc.putConnection(c));
+              connections.forEach(c => fmlGroup.putConnection(c));
             }
 
             if (isNil(fhirRuleTarget.context)) {
@@ -103,12 +117,12 @@ export class FMLStructureMapper {
 
 
     // validate
-    this.validate(struc, fhir);
+    this.validate(fmlGroup, fhir);
 
-    return struc;
+    return fmlGroup;
   }
 
-  private static validate(struc: FMLStructure, fhir: StructureMap): void {
+  private static validate(struc: FMLStructureGroup, fhir: StructureMap): void {
     const merged = {
       ...struc.objects,
       ...group(struc.rules, r => r.name)

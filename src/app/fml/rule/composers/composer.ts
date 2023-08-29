@@ -1,4 +1,4 @@
-import {FMLStructure, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
+import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {StructureMapGroupRuleDependent, StructureMapGroupRuleTarget} from 'fhir/r5';
 
 
@@ -7,6 +7,7 @@ export abstract class FMLRuleComposer {
 
   public abstract generate(
     fml: FMLStructure,
+    fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
     ctx: FMLStructureObject,
     vars: {[p: string]: string}

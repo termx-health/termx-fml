@@ -15,12 +15,12 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
     const fmlKey = rule.parameters
       .filter(p => p.type === 'const')
       .map(p => p.value)
-      .find(v => v in editor._fmls);
-    const fml = editor._fmls[fmlKey];
+      .find(v => v in editor._fml.groups);
 
+    const fml = editor._fml.groups[fmlKey];
     if (isDefined(fml)) {
       const node = (): DrawflowNode => editor._getNodeByName(rule.name);
-      const objects = collect(Object.values(fml?.objects), o => o.mode as FMLStructureEntityMode);
+      const objects = collect(Object.values(fml.objects), o => o.mode as FMLStructureEntityMode);
 
       while (Object.keys(node().inputs).length < objects.source.length) {
         editor.addNodeInput(node().id);
@@ -36,10 +36,10 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
     const {el} = editor._getNodeElementByName(rule.name);
     el.style.alignItems = 'center';
 
-    const keys = Object.keys(editor._fmls);
+    const keys = Object.keys(editor._fml.groups);
     const fmlKey = rule.parameters.filter(p => p.type === 'const').map(p => p.value).find(v => keys.includes(v));
     const objects = collect(
-      Object.values(editor._fmls[fmlKey]?.objects),
+      Object.values(editor._fml.groups[fmlKey]?.objects),
       o => o.mode as FMLStructureEntityMode,
       o => o.element.id
     );

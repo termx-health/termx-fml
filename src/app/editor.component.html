@@ -6,21 +6,21 @@
     [mResizableMaxWidth]="400"
     style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 10"
   >
-    <app-fml-view [fml]="fml"/>
+    <app-fml-view [fml]="fmlGroup"/>
   </m-collapse-panel>
 
 
   <!-- MAIN PANEL -->
   <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
-      <div *ngIf="!fmls[FML_MAIN]" class="editor-tab m-items-middle">
+      <div *ngIf="!fml.groups[FML_MAIN]" class="editor-tab m-items-middle">
         <m-icon mCode="loading"/>
         <span>loading...</span>
       </div>
 
-      <ng-container *ngIf="fmls[FML_MAIN]">
+      <ng-container *ngIf="fml.groups[FML_MAIN]">
         <div
-          *ngFor="let key of fmls | keys"
+          *ngFor="let key of fml.groups | keys"
           class="editor-tab m-justify-between"
           [class.editor-tab--selected]="key === groupName"
           (click)="selectGroup(key)"
@@ -73,10 +73,10 @@
             </m-list>
           </div>
 
-          <div style="padding: 1rem; border-bottom: var(--border-table);" *ngIf="false">
+          <div style="padding: 1rem; border-bottom: var(--border-table);">
             <h5>ConceptMap <span class="description">(translate)</span></h5>
             <m-list mSeparated>
-              <m-list-item *ngFor="let cm of fmls[FML_MAIN].maps; let idx = index"
+              <m-list-item *ngFor="let cm of fml.maps; let idx = index"
                 style="cursor: grab;"
                 draggable="true"
                 (dragstart)="onDragStart($event, 'conceptMap', cm)"
@@ -111,12 +111,12 @@
         <ng-container *ngIf="nodeSelected as node">
           <!-- Resource -->
           <div *ngIf="node.data.obj as obj">
-            <app-object-view [object]="obj" [fml]="fml" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
+            <app-object-view [object]="obj" [fml]="fmlGroup" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
           </div>
 
           <!-- Rule -->
           <div *ngIf="node.data.rule as rule">
-            <app-rule-view [rule]="rule" [fml]="fml" (ruleChange)="applyRule($event)"/>
+            <app-rule-view [rule]="rule" [fml]="fmlGroup" (ruleChange)="applyRule($event)"/>
           </div>
         </ng-container>
       </div>

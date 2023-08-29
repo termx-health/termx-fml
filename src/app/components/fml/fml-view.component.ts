@@ -1,5 +1,5 @@
 import {Component, Input, isDevMode} from '@angular/core';
-import {FMLStructure, FMLStructureConnection, FMLStructureObject, FMLStructureRule} from '../../fml/fml-structure';
+import {FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml/fml-structure';
 import {group, isDefined} from '@kodality-web/core-util';
 
 @Component({
@@ -83,7 +83,7 @@ import {group, isDefined} from '@kodality-web/core-util';
   `
 })
 export class FmlViewComponent {
-  @Input() fml: FMLStructure;
+  @Input() fml: FMLStructureGroup;
   protected _dev = isDevMode();
 
 

@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {FMLStructure} from '../../fml/fml-structure';
+import {FMLStructureGroup} from '../../fml/fml-structure';
 import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 
 @Component({
@@ -62,7 +62,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
 
   private _composeTree = (sm: StructureDefinition, base: string): MuiTreeNodeOptions[] => {
     const isBackboneElement = (f: ElementDefinition): boolean => {
-      return f.type?.some(t => FMLStructure.isBackboneElement(t.code));
+      return f.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
     };
 
     const elements = sm.snapshot.element

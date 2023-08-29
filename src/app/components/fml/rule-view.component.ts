@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, isDevMode, Output, ViewChild} from '@angular/core';
-import {FMLStructure, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
+import {FMLStructureGroup, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {unique} from '@kodality-web/core-util';
 
@@ -131,7 +131,7 @@ import {unique} from '@kodality-web/core-util';
   `
 })
 export class RuleViewComponent {
-  @Input() fml: FMLStructure;
+  @Input() fml: FMLStructureGroup;
   @Input() rule: FMLStructureRule;
   @Output() ruleChange = new EventEmitter<FMLStructureRule>();
 

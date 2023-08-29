@@ -1,10 +1,16 @@
-import {FMLStructure, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
+import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
 
 export class FMLDefaultRuleComposer extends FMLRuleComposer {
   public action = 'default';
 
-  public generate(fml: FMLStructure, rule: FMLStructureRule, ctx: FMLStructureObject, vars: {[value: string]: string}): FMLRuleComposerReturnType {
+  public generate(
+    fml: FMLStructure,
+    fmlGroup: FMLStructureGroup,
+    rule: FMLStructureRule,
+    ctx: FMLStructureObject,
+    vars: {[p: string]: string}
+  ): FMLRuleComposerReturnType {
     return {
       target: {
         transform: rule.action as any,

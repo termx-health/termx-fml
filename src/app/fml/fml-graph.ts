@@ -1,13 +1,13 @@
-import {FMLStructure} from './fml-structure';
+import {FMLStructureGroup} from './fml-structure';
 
 export class FMLGraph {
   private adjacencyList: {[vertex: string]: string[]} = {};
 
-  public static fromFML(fml: FMLStructure): FMLGraph {
+  public static fromFML(fmlGroup: FMLStructureGroup): FMLGraph {
     const g = new FMLGraph();
-    Object.keys(fml.objects).forEach(name => g.addVertex(name));
-    fml.rules.forEach(rule => g.addVertex(rule.name));
-    fml.connections.forEach(c => g.addEdge(c.sourceObject, c.targetObject));
+    Object.keys(fmlGroup.objects).forEach(name => g.addVertex(name));
+    fmlGroup.rules.forEach(rule => g.addVertex(rule.name));
+    fmlGroup.connections.forEach(c => g.addEdge(c.sourceObject, c.targetObject));
     return g;
   }
 

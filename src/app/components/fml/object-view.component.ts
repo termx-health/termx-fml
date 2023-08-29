@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {FMLStructure, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
+import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
 import {MuiNotificationService} from '@kodality-web/marina-ui';
 import {Bundle, StructureDefinition} from 'fhir/r5';
 import {isDefined} from '@kodality-web/core-util';
@@ -106,7 +106,7 @@ import {isDefined} from '@kodality-web/core-util';
   `
 })
 export class ObjectViewComponent {
-  @Input() fml: FMLStructure;
+  @Input() fml: FMLStructureGroup;
   @Input() object: FMLStructureObject;
   @Output() fieldSelect = new EventEmitter<{
     object: FMLStructureObject,
@@ -135,8 +135,8 @@ export class ObjectViewComponent {
     }
   }
 
-  protected findDefinition(obj: FMLStructureObject, fml: FMLStructure): StructureDefinition {
-    return fml.bundle.entry.find(e => e.resource.url === obj.url)?.resource;
+  protected findDefinition(obj: FMLStructureObject, fml: FMLStructureGroup): StructureDefinition {
+    return fml.bundle().entry.find(e => e.resource.url === obj.url)?.resource;
   }
 
   protected setTreeView(isTree: boolean): void {
@@ -169,7 +169,7 @@ export class ObjectViewComponent {
     return this.fml.isFieldSelectable(f);
   };
 
-  protected isBackboneElementField = FMLStructure.isBackboneElementField;
+  protected isBackboneElementField = FMLStructureGroup.isBackboneElementField;
 
   protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
     return fields.filter(f => f.name.startsWith(base));

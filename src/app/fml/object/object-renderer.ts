@@ -15,7 +15,7 @@ export class FMLStructureObjectRenderer {
     };
 
 
-    const o = editor._fml.objects[name];
+    const o = editor._fmlGroup.objects[name];
 
     const renderMeta = (): string => `
       <div class="node-meta" style="position: absolute; top: -1.5rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
@@ -45,7 +45,7 @@ export class FMLStructureObjectRenderer {
         ${o.fields.map(f => `
           <div class="m-justify-between" style="height: 1.5rem; border-bottom: 1px solid var(--color-borders)">
             <span>${f.name}</span>
-            ${editor._fml.isFieldSelectable(f) ?
+            ${editor._fmlGroup.isFieldSelectable(f) ?
       `<span class="m-clickable" style="padding-inline: 0.5rem" onclick="_fieldSelect('${o.name}', '${f.name}')">+</span>` : ''}
           </div>
         `).join('\n')}

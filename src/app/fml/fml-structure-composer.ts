@@ -23,16 +23,18 @@ interface FmlStructureGeneratorOptions {
 export class FmlStructureComposer {
   private static MAIN = 'main';
 
-  public static generate(fmls: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap;
-  public static generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap;
-  public static generate(fmls: FMLStructure | FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
-    if (fmls instanceof FMLStructure) {
-      fmls = {[this.MAIN]: fmls};
+  // public static generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap;
+  public static generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap;
+  public static generate(fml: FMLStructureGroup | FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
+    if (fml instanceof FMLStructureGroup) {
+      const _fml = new FMLStructure();
+      _fml.groups[this.MAIN] = fml;
+      return this.generate(_fml, options);
     }
-    return this._generate(fmls, options);
+    return this._generate(fml, options);
   }
 
-  private static _generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap {
+  private static _generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
     varCnt = -1;
     const mapName = options?.mapName ?? 'fml-compose';
 
@@ -45,30 +47,8 @@ export class FmlStructureComposer {
       group: []
     };
 
-    // fml as extension
-    sm.extension = [{
-      url: 'fml-export',
-      valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fmls))
-    }];
-
-    // structure inputs
-    sm.structure = Object.values(fmls[this.MAIN].objects)
-      .filter(o => ['source', 'target'].includes(o.mode))
-      .map(o => ({
-        url: o.url,
-        mode: o.mode as StructureMapStructure['mode'],
-        alias: o.name
-      }));
-
-    // structure groups
-    Object.keys(fmls).forEach(groupName => {
-      const group = this.generateGroup(groupName, fmls[groupName]);
-      sm.group.push(group);
-    });
-
-
     // structure container resources (ConceptMap)
-    sm.contained = fmls[this.MAIN].maps
+    sm.contained = fml.maps
       .filter(m => m.mode === 'internal')
       .map(m => ({
         resourceType: 'ConceptMap',
@@ -87,21 +67,43 @@ export class FmlStructureComposer {
         }))
       }));
 
+    // fml as extension
+    sm.extension = [{
+      url: 'fml-export',
+      valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fml))
+    }];
+
+    // structure inputs
+    sm.structure = Object.values(fml.groups[this.MAIN].objects)
+      .filter(o => ['source', 'target'].includes(o.mode))
+      .map(o => ({
+        url: o.url,
+        mode: o.mode as StructureMapStructure['mode'],
+        alias: o.name
+      }));
+
+    // structure groups
+    Object.keys(fml.groups).forEach(groupName => {
+      const fmlGroup = fml.groups[groupName];
+      const smGroup = this.generateGroup(fml, groupName, fmlGroup);
+      sm.group.push(smGroup);
+    });
+
+
     console.log("#### STRUCTURE MAP ####");
     console.log(sm);
     return sm;
   }
 
-  private static generateGroup(groupName: string, fml: FMLStructure): StructureMapGroup {
+  private static generateGroup(fml: FMLStructure, groupName: string, fmlGroup: FMLStructureGroup): StructureMapGroup {
     const smGroup = {
       name: groupName,
       input: [],
       rule: []
     };
 
-
     // group inputs
-    smGroup.input = Object.values(fml.objects)
+    smGroup.input = Object.values(fmlGroup.objects)
       .filter(o => ['source', 'target'].includes(o.mode))
       .map(o => ({
         name: normalize(o.name),
@@ -112,7 +114,7 @@ export class FmlStructureComposer {
 
     // group rules
     if (groupName !== this.MAIN) {
-      this.generateRule(fml, smGroup);
+      this.generateRule(fml, fmlGroup, smGroup);
       return smGroup;
     }
 
@@ -128,39 +130,39 @@ export class FmlStructureComposer {
        after:
        [[AModel, field-1], [AModel, field-3]]
      */
-    Object.values(fml.objects)
+    Object.values(fmlGroup.objects)
       .filter(o => o.mode === 'target')
-      .flatMap(o => o.fields.filter(f => fml.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
+      .flatMap(o => o.fields.filter(f => fmlGroup.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
       .filter((v, idx, self) => self.findIndex(el => el.join('_') === v.join('_')) === idx)
       .forEach(([target, field]) => {
-        const subFml = fml.subFML(target, field);
-        this.generateRule(subFml, smGroup);
+        const subFml = fml.subFML(groupName, target, field);
+        this.generateRule(subFml, subFml.groups[groupName], smGroup);
       });
 
     return smGroup;
   }
 
-  private static generateRule(subFml: FMLStructure, smGroup: StructureMapGroup): void {
-    const topology = FMLGraph.fromFML(subFml).topologySort();
+  private static generateRule(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
+    const topology = FMLGraph.fromFML(fmlGroup).topologySort();
     const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
     const vars = {};
 
     // creates objects in reverse order, starting from target
     const newObjects = copyDeep(topologicalOrder).reverse()
-      .filter(name => 'object' === subFml.objects[name]?.mode)
+      .filter(name => 'object' === fmlGroup.objects[name]?.mode)
       .flatMap<StructureMapGroupRuleTarget>(name => {
-        const obj = subFml.objects[name];
+        const obj = fmlGroup.objects[name];
 
-        if (FMLStructure.isBackboneElement(obj.resource)) {
+        if (FMLStructureGroup.isBackboneElement(obj.resource)) {
           // sub element select, e.g. "objekti.v2li as field"
-          return subFml.getTargets(obj.name).map(n => ({
+          return fmlGroup.getTargets(obj.name).map(n => ({
             context: vars[n.targetObject] ?? n.targetObject,
             element: n.field,
             variable: vars[`${obj.name}`] = nextVar(),
           }));
         }
 
-        const target = subFml.getTargets(obj.name).find(t => t.field);
+        const target = fmlGroup.getTargets(obj.name).find(t => t.field);
 
         // full create, e.g. "create('Resource') as r"
         return [{
@@ -179,9 +181,9 @@ export class FmlStructureComposer {
     let ctx: FMLStructureObject;
 
     topologicalOrder.forEach(name => {
-      const rule = subFml.rules.find(r => r.name === name);
+      const rule = fmlGroup.rules.find(r => r.name === name);
       if (rule) {
-        const {target, dependent} = getRuleComposer(rule.action).generate(subFml, rule, ctx, vars);
+        const {target, dependent} = getRuleComposer(rule.action).generate(fml, fmlGroup, rule, ctx, vars);
         if (isDefined(target)) {
           smRule.target.push(target);
         }
@@ -191,7 +193,7 @@ export class FmlStructureComposer {
       }
 
 
-      const obj = subFml.objects[name];
+      const obj = fmlGroup.objects[name];
       if (obj) {
         ctx = obj;
 
@@ -217,7 +219,7 @@ export class FmlStructureComposer {
         if (['source', 'element'].includes(obj.mode)) {
           // initialize (puts into vars) fields that are used as source in other objects/rules
           // e.g. "evaluate(srcObject, subfield) as a"
-          subFml.outputFields(obj).forEach(n => {
+          fmlGroup.outputFields(obj).forEach(n => {
             // source object's name should remain the same
             const baseName = obj.mode === 'source' ? obj.name : substringBeforeLast(obj.name, VARIABLE_SEP);
 
@@ -235,8 +237,8 @@ export class FmlStructureComposer {
 
         if (['target', 'object'].includes(obj.mode)) {
           // variable assignment, e.g. "tgtObject.subfield = a"
-          subFml.inputFields(obj).forEach(n => {
-            const fieldSources = subFml.getSources(obj.name, n.name);
+          fmlGroup.inputFields(obj).forEach(n => {
+            const fieldSources = fmlGroup.getSources(obj.name, n.name);
             if (fieldSources.length >= 2) {
               console.warn("Has multiple sources");
             }
@@ -248,9 +250,9 @@ export class FmlStructureComposer {
               return;
             }
 
-            if (FMLStructure.isBackboneElement(subFml.objects[sourceObject]?.resource)) {
+            if (FMLStructureGroup.isBackboneElement(fmlGroup.objects[sourceObject]?.resource)) {
               // fixme: previously returned here, but seems like it is redundant now?
-              console.warn("backbone element", subFml.objects[sourceObject]);
+              console.warn("backbone element", fmlGroup.objects[sourceObject]);
             }
 
             if (smRule.dependent.length > 0) {

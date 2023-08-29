@@ -106,22 +106,21 @@ export class FMLStructureConceptMapMapping {
 
 /* Structure */
 
-export class FMLStructure {
-  bundle: Bundle<StructureDefinition>;
+export class FMLStructureGroup {
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
-  maps: FMLStructureConceptMap[] = [];
   _connections: FMLStructureConnection[] = [];
 
   public get connections(): readonly FMLStructureConnection[] {
     return this._connections;
   }
 
+  public bundle: () => Bundle<StructureDefinition>;
 
-  public subFML(target: string, field: string): FMLStructure {
+  public subFMLs(target: string, field: string): FMLStructureGroup {
     const _rules = group(this.rules, r => r.name);
 
-    const _fml = new FMLStructure();
+    const _fml = new FMLStructureGroup();
     // _fml.maps = structuredClone(this.maps);
     // _fml.bundle = structuredClone(this.bundle); // fixme: revert
 
@@ -242,7 +241,7 @@ export class FMLStructure {
     const selfFields = elements.slice(1);
 
     // double check whether inline definition assumption was correct
-    if (inlineDefinition && !FMLStructure.isBackboneElement(selfResourceType)) {
+    if (inlineDefinition && !FMLStructureGroup.isBackboneElement(selfResourceType)) {
       // self definition's element MUST be the BackboneElement, but if you got here, it is not!
       return this.newFMLObject(selfResourceType, path, mode);
     }
@@ -253,7 +252,7 @@ export class FMLStructure {
     }
 
     const backboneElementPaths = selfFields
-      .filter(f => f.type?.some(t => FMLStructure.isBackboneElement(t.code)))
+      .filter(f => f.type?.some(t => FMLStructureGroup.isBackboneElement(t.code)))
       .map(f => f.path);
 
     const o = new FMLStructureObject();
@@ -299,13 +298,13 @@ export class FMLStructure {
       ? anyPath.slice(0, anyPath.indexOf('.'))
       : anyPath;
 
-    return this.bundle.entry
+    return this.bundle().entry
       .map(e => e.resource)
       .find(e => e.id === base);
   }
 
   public isFieldSelectable = (f: FMLStructureObjectField): boolean => {
-    return FMLStructure.isBackboneElementField(f) || this.bundle?.entry.some(e => f.types?.includes(e.resource.type));
+    return FMLStructureGroup.isBackboneElementField(f) || this.bundle()?.entry.some(e => f.types?.includes(e.resource.type));
   };
 
   public static isBackboneElement(resourceType: string): boolean {
@@ -313,10 +312,48 @@ export class FMLStructure {
   }
 
   public static isBackboneElementField = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => FMLStructure.isBackboneElement(t));
+    return f.types?.some(t => FMLStructureGroup.isBackboneElement(t));
   };
 }
 
-export interface FMLStructureGroup {
-  [groupName: string]: FMLStructure
+export class FMLStructure {
+  bundle: Bundle<StructureDefinition>;
+  groups: {[groupName: string]: FMLStructureGroup} = {};
+  maps: FMLStructureConceptMap[] = [];
+
+  public setGroup(group: FMLStructureGroup, name: string): void {
+    group.bundle = () => this.bundle;
+    this.groups = {...this.groups, [name]: group};
+  }
+
+  public subFML(groupName: string, target: string, field: string): FMLStructure {
+    const _fmlGroup = this.groups[groupName];
+    const _rules = group(_fmlGroup.rules, r => r.name);
+    const _objects = _fmlGroup.objects;
+
+    const fmlGroup = new FMLStructureGroup();
+    const traverse = (o: string, f?) => {
+      if (_objects[o]) {
+        fmlGroup.objects[o] = _objects[o];
+      } else if (_rules[o] && !fmlGroup.rules.some(r => r.name === o)) {
+        fmlGroup.putRule(_rules[o]);
+      }
+
+      return _fmlGroup.connections
+        .filter(c => c.targetObject === o)
+        .filter(c => isNil(f) || f === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+        .forEach(e => {
+          fmlGroup.putConnection(e);
+          traverse(e.sourceObject);
+        });
+    };
+    traverse(target, field);
+
+
+    const fml = new FMLStructure();
+    fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: revert
+    fml.maps = structuredClone(this.maps);
+    fml.setGroup(fmlGroup, groupName);
+    return fml;
+  }
 }

@@ -29,25 +29,25 @@ export class FMLEditor extends Drawflow {
 
   // object
   public _updateObject = (nodeId: number, name: string, fn: FMLStructureObject | ((obj: FMLStructureObject) => void)): void => {
-    const obj = this._fml.objects[name];
+    const obj = this._fmlGroup.objects[name];
     if (typeof fn === 'function') {
       fn(obj);
       this.updateNodeDataFromId(nodeId, {obj});
     } else {
       this.updateNodeDataFromId(nodeId, {obj: fn});
-      this._fml.objects[name] = fn;
+      this._fmlGroup.objects[name] = fn;
     }
   };
 
   // rule
   public _updateRule = (nodeId: number, name: string, fn: FMLStructureRule | ((rule: FMLStructureRule) => void)): void => {
-    const rule = this._fml.rules.find(r => r.name === name);
+    const rule = this._fmlGroup.rules.find(r => r.name === name);
     if (typeof fn === 'function') {
       fn(rule);
       this.updateNodeDataFromId(nodeId, {rule});
     } else {
       this.updateNodeDataFromId(nodeId, {rule: fn});
-      this._fml.rules.splice(this._fml.rules.indexOf(rule), 1, fn);
+      this._fmlGroup.rules.splice(this._fmlGroup.rules.indexOf(rule), 1, fn);
     }
   };
 
@@ -60,13 +60,13 @@ export class FMLEditor extends Drawflow {
     this._rerenderNodes();
   }
 
-  public get _fml(): FMLStructure {
-    return this._fmls?.[this._selectedFml];
+  public get _fmlGroup(): FMLStructureGroup {
+    return this._fml?.groups?.[this._groupName];
   }
 
   constructor(
-    public _fmls: FMLStructureGroup,
-    public _selectedFml: string,
+    public _fml: FMLStructure,
+    private _groupName: string,
     public element: HTMLElement,
     options?: {render?: object, parent?: object}
   ) {
@@ -93,15 +93,15 @@ export class FMLEditor extends Drawflow {
 
 
     this.on('nodeRemoved', nodeId => {
-      Object.values(this._fml.objects).forEach(o => {
+      Object.values(this._fmlGroup.objects).forEach(o => {
         if (o['_nodeId'] === Number(nodeId)) {
-          delete this._fml.objects[o.name];
+          delete this._fmlGroup.objects[o.name];
         }
       });
 
-      this._fml.rules.forEach(r => {
+      this._fmlGroup.rules.forEach(r => {
         if (r['_nodeId'] === Number(nodeId)) {
-          remove(this._fml.rules, r);
+          remove(this._fmlGroup.rules, r);
         }
       });
     });
@@ -134,8 +134,8 @@ export class FMLEditor extends Drawflow {
         rule.name = asResourceVariable(action);
         rule.action = action;
 
-        const conn = this._fml.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
-        this._fml.putConnection(conn);
+        const conn = this._fmlGroup.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
+        this._fmlGroup.putConnection(conn);
         this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
 
       }
@@ -165,7 +165,7 @@ export class FMLEditor extends Drawflow {
         const sourceFieldIdx = getPortNumber(e.output_class);
         const targetFieldIdx = getPortNumber(e.input_class);
 
-        this._fml.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
+        this._fmlGroup.removeConnection(source.name, sourceFieldIdx - 1, target.name, targetFieldIdx - 1);
       }
 
       this._rerenderNodes();
@@ -255,8 +255,8 @@ export class FMLEditor extends Drawflow {
     targetField: string | number
   ): void {
     // field name OR port number same as field index + 1
-    const oIdx = typeof sourceField === 'string' ? this._fml.objects[source].fieldIndex(sourceField) + 1 : sourceField;
-    const iIdx = typeof targetField === 'string' ? this._fml.objects[target].fieldIndex(targetField) + 1 : targetField;
+    const oIdx = typeof sourceField === 'string' ? this._fmlGroup.objects[source].fieldIndex(sourceField) + 1 : sourceField;
+    const iIdx = typeof targetField === 'string' ? this._fmlGroup.objects[target].fieldIndex(targetField) + 1 : targetField;
 
     try {
       this.addConnection(
@@ -278,7 +278,7 @@ export class FMLEditor extends Drawflow {
     dagreGraph.setGraph({rankdir: 'LR', align: 'UL', ranker: 'longest-path', nodesep: 20, marginx: 20, marginy: 30});
 
     // objects
-    Object.keys(this._fml.objects).forEach(name => {
+    Object.keys(this._fmlGroup.objects).forEach(name => {
       const {el} = this._getNodeElementByName(name);
       if (isDefined(el)) {
         dagreGraph.setNode(name, {
@@ -289,7 +289,7 @@ export class FMLEditor extends Drawflow {
     });
 
     // rules
-    this._fml.rules.forEach(rule => {
+    this._fmlGroup.rules.forEach(rule => {
       const {el} = this._getNodeElementByName(rule.name);
       if (isDefined(el)) {
         dagreGraph.setNode(rule.name, {
@@ -300,7 +300,7 @@ export class FMLEditor extends Drawflow {
     });
 
     // connections
-    this._fml.connections.forEach(c => {
+    this._fmlGroup.connections.forEach(c => {
       dagreGraph.setEdge(c.sourceObject, c.targetObject);
     });
 
@@ -322,12 +322,12 @@ export class FMLEditor extends Drawflow {
       return {nodeId, y, x};
     };
 
-    Object.keys(this._fml.objects).forEach(name => {
+    Object.keys(this._fmlGroup.objects).forEach(name => {
       const {nodeId, ...position} = setHTMLPosition(name);
       this._updateObject(nodeId, name, obj => obj.position = position);
     });
 
-    this._fml.rules.forEach(rule => {
+    this._fmlGroup.rules.forEach(rule => {
       const {nodeId, ...position} = setHTMLPosition(rule.name);
       this._updateRule(nodeId, rule.name, obj => obj.position = position);
     });
@@ -340,7 +340,7 @@ export class FMLEditor extends Drawflow {
 
 
     // rerender objects
-    Object.keys(this._fml.objects).forEach(name => {
+    Object.keys(this._fmlGroup.objects).forEach(name => {
       const {el, nodeId} = this._getNodeElementByName(name);
       if (isNil(el)) {
         return;
@@ -363,7 +363,7 @@ export class FMLEditor extends Drawflow {
 
 
     // rerender rules
-    this._fml.rules.forEach(rule => {
+    this._fmlGroup.rules.forEach(rule => {
       const {el, nodeId} = this._getNodeElementByName(rule.name);
       if (isNil(el)) {
         return;

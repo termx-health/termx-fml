@@ -93,13 +93,17 @@ export class EditorComponent implements OnInit, OnChanges {
   @Input() public structureMap: StructureMap;
   @Input() public mapName: string;
 
-  public get fml(): FMLStructure {
-    return this.editor?._fml;
+  public get fmlGroup(): FMLStructureGroup {
+    return this.editor?._fmlGroup;
+  }
+
+  public get fmlGroups(): {[groupName: string]: FMLStructureGroup} {
+    return this.editor?._fml.groups;
   }
 
   // FML editor
   public editor: FMLEditor;
-  protected fmls: {[key: string]: FMLStructure} = {};
+  protected fml: FMLStructure;
   protected groupName = this.FML_MAIN;
   protected nodeSelected: DrawflowNode;
 
@@ -133,26 +137,27 @@ export class EditorComponent implements OnInit, OnChanges {
       // Freaking event kung fu! Seems like wild hack, but works!
       // Imitates the object view component behaviour.
       const {name, field} = evt.detail;
-      this.objectViewComponent.onFieldClick(this.fml.objects[name], field);
+      this.objectViewComponent.onFieldClick(this.fmlGroup.objects[name], field);
     });
   }
 
   private init(): void {
     const fml = FMLStructureMapper.map(this.resourceBundle, this.structureMap);
-    this.fmls = fml;
-    this.setFML(this.FML_MAIN, fml[this.FML_MAIN]);
+    this.fml = fml;
+    this.setFmlGroup(this.FML_MAIN, fml.groups[this.FML_MAIN]);
   }
 
-  private setFML(groupName: string, fml: FMLStructure): void {
+  private setFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
     this.nodeSelected = undefined;
     this.groupName = groupName;
-    this.fmls = {...this.fmls, [groupName]: fml};
+    this.fml.setGroup(fmlGroup, groupName);
+    const fmlGroups = this.fml.groups
 
-    this.ruleGroups = Object.keys(this.fmls)
+    this.ruleGroups = Object.keys(fmlGroups)
       .filter(n => ![this.FML_MAIN, groupName].includes(n))
       .map(n => ({groupName: n}));
 
-    SEQUENCE.current = Math.max(0, ...Object.values(this.fmls)
+    SEQUENCE.current = Math.max(0, ...Object.values(fmlGroups)
       .flatMap(f => [
         ...Object.keys(f.objects),
         ...f.rules.map(r => r.name)
@@ -162,7 +167,7 @@ export class EditorComponent implements OnInit, OnChanges {
       .map(Number)
       .filter(unique));
 
-    this.initEditor(this.fmls, groupName);
+    this.initEditor(this.fml, groupName);
   }
 
 
@@ -170,7 +175,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
   public export(): StructureMap {
     this.editor._rerenderNodes();
-    return FmlStructureComposer.generate(this.fmls, {mapName: this.mapName});
+    return FmlStructureComposer.generate(this.fml, {mapName: this.mapName});
   }
 
   public autoLayout(): void {
@@ -186,12 +191,12 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   public setExpanded(expanded: boolean): void {
-    Object.keys(this.fml.objects).forEach(name => {
+    Object.keys(this.fmlGroup.objects).forEach(name => {
       const node = this.editor._getNodeByName(name);
       this.editor._updateObject(node.id, node.name, obj => obj.expanded = expanded);
     });
 
-    this.fml.rules.forEach(rule => {
+    this.fmlGroup.rules.forEach(rule => {
       const node = this.editor._getNodeByName(rule.name);
       this.editor._updateRule(node.id, node.name, r => r.expanded = expanded);
     });
@@ -203,25 +208,31 @@ export class EditorComponent implements OnInit, OnChanges {
     this.isAnimated = animated;
   }
 
+  public initFmlFromGroup(group: FMLStructureGroup): FMLStructure {
+    const fml = new FMLStructure();
+    fml.bundle = this.resourceBundle;
+    fml.groups[this.FML_MAIN] = group;
+    return fml;
+  }
 
   /* Editor bar */
 
   protected selectGroup(name: string): void {
-    if (this.fmls[name]) {
-      this.setFML(name, this.fmls[name]);
+    if (this.fmlGroups[name]) {
+      this.setFmlGroup(name, this.fmlGroups[name]);
     }
   }
 
   protected deleteGroup(name: string): void {
     if (name !== this.FML_MAIN) {
-      delete this.fmls[name];
-      this.fmls = {...this.fmls};
-      this.setFML(this.FML_MAIN, this.fmls[this.FML_MAIN]);
+      delete this.fmlGroups[name];
+      this.fml.groups = {...this.fmlGroups};
+      this.setFmlGroup(this.FML_MAIN, this.fmlGroups[this.FML_MAIN]);
     }
   }
 
-  protected createGroup(groupName: string, fml: FMLStructure): void {
-    this.setFML(groupName, fml);
+  protected createGroup(groupName: string, fml: FMLStructureGroup): void {
+    this.setFmlGroup(groupName, fml);
   }
 
 
@@ -235,7 +246,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapRemove(idx: number): void {
-    this.fmls[this.FML_MAIN].maps.splice(idx, 1);
+    this.fml.maps.splice(idx, 1);
   }
 
   protected conceptMapReset(): void {
@@ -252,11 +263,11 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapApply(): void {
-    const idx = this.fmls[this.FML_MAIN].maps.indexOf(this.conceptMap['_origin']);
+    const idx = this.fml.maps.indexOf(this.conceptMap['_origin']);
     if (idx !== -1) {
-      this.fmls[this.FML_MAIN].maps.splice(idx, 1, this.conceptMap);
+      this.fml.maps.splice(idx, 1, this.conceptMap);
     } else {
-      this.fmls[this.FML_MAIN].maps.push(this.conceptMap);
+      this.fml.maps.push(this.conceptMap);
     }
 
     this.conceptMapModal.close();
@@ -266,7 +277,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
   /* Editor */
 
-  private initEditor(fmls: FMLStructureGroup, groupName = this.FML_MAIN): void {
+  private initEditor(fml: FMLStructure, groupName = this.FML_MAIN): void {
     this.editor?.element.remove();
 
     const parent = document.getElementById("drawflow-parent");
@@ -276,7 +287,7 @@ export class EditorComponent implements OnInit, OnChanges {
     parent.appendChild(element);
 
 
-    const editor = this.editor = new FMLEditor(fmls, groupName, element);
+    const editor = this.editor = new FMLEditor(fml, groupName, element);
     editor.start();
 
     editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id));
@@ -294,10 +305,10 @@ export class EditorComponent implements OnInit, OnChanges {
       editor.zoom_refresh();
     }
 
-    const fml = editor._fml;
+    const fmlGroup = editor._fmlGroup;
 
     // render objects
-    Object.values(fml.objects).forEach(obj => {
+    Object.values(fmlGroup.objects).forEach(obj => {
       editor._createObjectNode(obj, {
         x: obj.position?.x,
         y: obj.position?.y
@@ -305,7 +316,7 @@ export class EditorComponent implements OnInit, OnChanges {
     });
 
     // render rules
-    fml.rules.forEach(rule => {
+    fmlGroup.rules.forEach(rule => {
       editor._createRuleNode(rule, {
         x: rule.position?.x,
         y: rule.position?.y
@@ -313,12 +324,12 @@ export class EditorComponent implements OnInit, OnChanges {
     });
 
     // render connections
-    fml.connections.forEach(c => {
+    fmlGroup.connections.forEach(c => {
       editor._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1);
     });
 
     // auto layout
-    if (Object.values(fml.objects).some(o => isNil(o.position))) {
+    if (Object.values(fmlGroup.objects).some(o => isNil(o.position))) {
       // schedule after nodes are rendered, fixme: maybe it's better to provided initial HTML to DrawFlow node?
       setTimeout(() => editor._autoLayout());
     }
@@ -349,10 +360,10 @@ export class EditorComponent implements OnInit, OnChanges {
         _rule.action = rule.action;
         _rule.parameters = structuredClone(rule.parameters);
         _rule.condition = rule.condition;
-        fml.putRule(_rule);
+        fmlGroup.putRule(_rule);
 
         const nodeId = this.editor._createRuleNode(_rule, {..._rule.position});
-        fml.getSources(rule.name).forEach(({sourceObject, field}, idx) => {
+        fmlGroup.getSources(rule.name).forEach(({sourceObject, field}, idx) => {
           // fixme: idx + 1 is very sus
           this.editor._createConnection(sourceObject, field ?? 1, _rule.name, idx + 1);
         });
@@ -380,19 +391,19 @@ export class EditorComponent implements OnInit, OnChanges {
       mode = 'element';
     }
 
-    const structureDefinition = this.fml.findStructureDefinition(parentObj.element.id);
+    const structureDefinition = this.fmlGroup.findStructureDefinition(parentObj.element.id);
 
     const fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
 
     let fieldType = type ?? fieldElement.type?.[0]?.code;
-    if (FMLStructure.isBackboneElement(fieldType)) {
+    if (FMLStructureGroup.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
 
-    const obj = this.fml.newFMLObject(fieldType, fieldPath, mode);
+    const obj = this.fmlGroup.newFMLObject(fieldType, fieldPath, mode);
     obj.name = asResourceVariable(`${parentObj.name}.${field}`);
-    this.fml.objects[obj.name] = obj;
+    this.fmlGroup.objects[obj.name] = obj;
 
     this.editor._createObjectNode(obj);
     if (mode === 'object') {
@@ -426,7 +437,7 @@ export class EditorComponent implements OnInit, OnChanges {
     const {top, left} = this.editor._getOffsets();
 
     const rule = new FMLStructureRule();
-    this.fml.putRule(rule);
+    this.fmlGroup.putRule(rule);
     rule.parameters = [];
     rule.position = {
       y: ev.y - top,

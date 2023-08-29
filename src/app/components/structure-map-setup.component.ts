@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {FMLStructure, FMLStructureEntityMode} from '../fml/fml-structure';
+import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
 import {asResourceVariable} from '../fml/fml.utils';
 import {group} from '@kodality-web/core-util';
 
@@ -89,7 +89,7 @@ interface ModalData {
 })
 export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
-  @Output() public created = new EventEmitter<{name: string, fml: FMLStructure}>();
+  @Output() public created = new EventEmitter<{name: string, fml: FMLStructureGroup}>();
 
   protected modalData: {
     visible: boolean,
@@ -110,13 +110,11 @@ export class StructureMapSetupComponent {
   }
 
   protected selectableBackbone = (e: ElementDefinition): boolean => {
-    return e.type?.some(t => FMLStructure.isBackboneElement(t.code));
+    return e.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
   };
 
   protected initFromWizard(data: Partial<ModalData>): void {
-    const fml = new FMLStructure();
-    fml.bundle = this.bundle;
-
+    const fml = new FMLStructureGroup();
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
       const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings) [url];
 
@@ -125,7 +123,7 @@ export class StructureMapSetupComponent {
         obj.name = asResourceVariable(obj.name);
       }
       fml.objects[obj.name] = obj;
-    }
+    };
 
     data.sources.forEach(sd => createObject(sd.url, 'source'));
     data.targets.forEach(sd => createObject(sd.url, 'target'));
