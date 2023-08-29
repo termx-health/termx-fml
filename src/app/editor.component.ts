@@ -211,7 +211,7 @@ export class EditorComponent implements OnInit, OnChanges {
   public initFmlFromGroup(group: FMLStructureGroup): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = this.resourceBundle;
-    fml.groups[this.FML_MAIN] = group;
+    fml.setGroup(group, this.FML_MAIN);
     return fml;
   }
 
@@ -231,8 +231,8 @@ export class EditorComponent implements OnInit, OnChanges {
     }
   }
 
-  protected createGroup(groupName: string, fml: FMLStructureGroup): void {
-    this.setFmlGroup(groupName, fml);
+  protected createGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
+    this.setFmlGroup(groupName, fmlGroup);
   }
 
 

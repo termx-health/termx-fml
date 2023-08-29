@@ -115,7 +115,7 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromWizard($event.name, $event.fml)"/>
+<app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromWizard($event.name, $event.fmlGroup)"/>
 
 
 <app-update-version/>

@@ -34,7 +34,7 @@
 
         <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
           <m-icon mCode="file-add"/>
-          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fml)"/>
+          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fmlGroup)"/>
         </div>
       </ng-container>
     </div>

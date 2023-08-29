@@ -60,7 +60,7 @@ export class AppComponent implements OnInit {
 
   // New
   protected initFromWizard(groupName: string, group: FMLStructureGroup): void {
-    const fml= this.editor.initFmlFromGroup(group)
+    const fml= this.editor.initFmlFromGroup(group);
 
     const sm = FmlStructureComposer.generate(fml, {mapName: groupName});
     this.ctx.importMap(sm);

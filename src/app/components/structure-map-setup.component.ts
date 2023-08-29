@@ -89,7 +89,7 @@ interface ModalData {
 })
 export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
-  @Output() public created = new EventEmitter<{name: string, fml: FMLStructureGroup}>();
+  @Output() public created = new EventEmitter<{name: string, fmlGroup: FMLStructureGroup}>();
 
   protected modalData: {
     visible: boolean,
@@ -114,21 +114,24 @@ export class StructureMapSetupComponent {
   };
 
   protected initFromWizard(data: Partial<ModalData>): void {
-    const fml = new FMLStructureGroup();
+    const fmlGroup = new FMLStructureGroup();
+    // fixme: temporary workaround for newFMLObject to work
+    fmlGroup.bundle = (): Bundle<StructureDefinition> => this.bundle;
+
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
       const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings) [url];
 
-      const obj = fml.newFMLObject(mapping, mapping, mode);
+      const obj = fmlGroup.newFMLObject(mapping, mapping, mode);
       if (obj.resource !== obj.name) {
         obj.name = asResourceVariable(obj.name);
       }
-      fml.objects[obj.name] = obj;
+      fmlGroup.objects[obj.name] = obj;
     };
 
     data.sources.forEach(sd => createObject(sd.url, 'source'));
     data.targets.forEach(sd => createObject(sd.url, 'target'));
 
-    this.created.emit({name: data.name, fml});
+    this.created.emit({name: data.name, fmlGroup});
     this.close();
   }
 

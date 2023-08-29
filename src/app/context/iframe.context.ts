@@ -1,4 +1,4 @@
-import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
+import {Bundle, FhirResource, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject} from 'rxjs';
 import {EditorContext} from './editor.context';
 
@@ -10,7 +10,8 @@ type Requests = LoadRequest | ExportRequest;
 interface LoadRequest {
   action: 'load',
   bundle: Bundle<StructureDefinition>,
-  structureMap?: StructureMap
+  structureMap?: StructureMap,
+  contained?: FhirResource[],
 }
 
 interface ExportRequest {
@@ -44,6 +45,7 @@ export class IframeContext implements EditorContext {
   public maps$ = new BehaviorSubject<string[]>([]);
   public structureMap$ = new BehaviorSubject<StructureMap>(undefined);
   public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
+  public contained$ = new BehaviorSubject<FhirResource[]>([]);
 
 
   private _postMessage(msg: Messages): void {
@@ -69,6 +71,7 @@ export class IframeContext implements EditorContext {
         const msg: Requests = JSON.parse(event.data);
         switch (msg.action) {
           case 'load':
+            this.contained$.next(msg.contained ?? []);
             this.structureMap$.next(msg.structureMap);
             this.bundle$.next(msg.bundle);
             break;

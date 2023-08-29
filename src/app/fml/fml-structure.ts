@@ -117,33 +117,6 @@ export class FMLStructureGroup {
 
   public bundle: () => Bundle<StructureDefinition>;
 
-  public subFMLs(target: string, field: string): FMLStructureGroup {
-    const _rules = group(this.rules, r => r.name);
-
-    const _fml = new FMLStructureGroup();
-    // _fml.maps = structuredClone(this.maps);
-    // _fml.bundle = structuredClone(this.bundle); // fixme: revert
-
-    const traverse = (o: string, f?) => {
-      if (this.objects[o]) {
-        _fml.objects[o] = this.objects[o];
-      } else if (_rules[o] && !_fml.rules.some(r => r.name === o)) {
-        _fml.putRule(_rules[o]);
-      }
-
-      return this.connections
-        .filter(c => c.targetObject === o)
-        .filter(c => isNil(f) || f === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
-        .forEach(e => {
-          _fml.putConnection(e);
-          traverse(e.sourceObject);
-        });
-    };
-
-    traverse(target, field);
-    return _fml;
-  }
-
 
   /* Connections */
 
