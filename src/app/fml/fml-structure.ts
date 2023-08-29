@@ -220,7 +220,6 @@ export class FMLStructureGroup {
     }
 
     if (selfDefinition.type?.length > 1) {
-      // fixme: as for now, warn about multiple types, see fixme above
       console.warn(`Self definition "${selfDefinition.id}" has multiple types, using first`);
     }
 
@@ -294,11 +293,16 @@ export class FMLStructure {
   groups: {[groupName: string]: FMLStructureGroup} = {};
   maps: FMLStructureConceptMap[] = [];
 
-  public setGroup(group: FMLStructureGroup, name: string): void {
+  public setGroup(name: string, group: FMLStructureGroup): void {
     group.bundle = () => this.bundle;
     this.groups = {...this.groups, [name]: group};
   }
 
+  /**
+   * Creates the FMLStructure copy, containing objects, rules and connection that make up the chain to target.field.
+   *
+   * Bundle & concept maps are fully copied
+   */
   public subFML(groupName: string, target: string, field: string): FMLStructure {
     const _fmlGroup = this.groups[groupName];
     const _rules = group(_fmlGroup.rules, r => r.name);
@@ -322,11 +326,10 @@ export class FMLStructure {
     };
     traverse(target, field);
 
-
     const fml = new FMLStructure();
     fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: revert
     fml.maps = structuredClone(this.maps);
-    fml.setGroup(fmlGroup, groupName);
+    fml.setGroup(groupName, fmlGroup);
     return fml;
   }
 }

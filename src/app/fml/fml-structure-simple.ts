@@ -21,11 +21,11 @@ export class FMLStructureSimpleMapper {
     fml.bundle = bundle;
     fml.maps = exp.maps ?? [];
 
-    Object.keys(exp.groups).forEach(k => {
+    Object.keys(exp.groups).forEach(groupName => {
       const fmlGroup = new FMLStructureGroup();
-      fml.setGroup(fmlGroup, k);
+      fml.setGroup(groupName, fmlGroup);
 
-      const _fmlGroup = exp.groups[k];
+      const _fmlGroup = exp.groups[groupName];
       Object.keys(_fmlGroup.objects).forEach(k => {
         return fmlGroup.objects[k] = plainToInstance(FMLStructureObject, {
           ..._fmlGroup.objects[k],

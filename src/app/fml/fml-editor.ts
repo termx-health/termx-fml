@@ -2,7 +2,7 @@ import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, isNil, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
-import {asResourceVariable, getPortNumber, renderExpand} from './fml.utils';
+import {asResourceVariable, fromPx, getPortNumber, renderExpand} from './fml.utils';
 import {getRuleRenderer} from './rule/renderers/_renderers';
 import {FMLStructureObjectRenderer} from './object/object-renderer';
 
@@ -73,13 +73,13 @@ export class FMLEditor extends Drawflow {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
 
-    this.on('nodeCreated', event => event);
 
     this.on('nodeMoved', nodeId => {
       const el = document.getElementById(`node-${nodeId}`);
-      const y = el.style.top.replace('px', '');
-      const x = el.style.left.replace('px', '');
-      const position: FMLPosition = {x: Number(x), y: Number(y)};
+      const position: FMLPosition = {
+        x: fromPx(el.style.left),
+        y: fromPx(el.style.top)
+      };
 
       const node = this.getNodeFromId(nodeId);
       if (this._isObj(node)) {

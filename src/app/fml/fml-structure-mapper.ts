@@ -34,7 +34,7 @@ export class FMLStructureMapper {
     const fml = new FMLStructure();
     fml.bundle = bundle;
     // todo: map local concept maps
-    fml.setGroup(this.mapGroup(bundle, fhir), this.MAIN);
+    fml.setGroup(this.MAIN, this.mapGroup(bundle, fhir));
     return fml;
   }
 

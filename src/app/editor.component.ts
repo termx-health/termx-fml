@@ -59,6 +59,11 @@ const RULES: RuleDescription[] = [
     description: 'Element or string - just append them all together'
   },
   {
+    action: 'translate',
+    name: 'translate',
+    description: 'Source, map URI, output (code, system, display, Coding, or CodeableConcept)'
+  },
+  {
     action: 'reference',
     name: 'reference',
     description: 'Return a string that references the provided tree properly'
@@ -150,14 +155,11 @@ export class EditorComponent implements OnInit, OnChanges {
   private setFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
     this.nodeSelected = undefined;
     this.groupName = groupName;
-    this.fml.setGroup(fmlGroup, groupName);
-    const fmlGroups = this.fml.groups
-
-    this.ruleGroups = Object.keys(fmlGroups)
+    this.ruleGroups = Object.keys(this.fml.groups)
       .filter(n => ![this.FML_MAIN, groupName].includes(n))
       .map(n => ({groupName: n}));
 
-    SEQUENCE.current = Math.max(0, ...Object.values(fmlGroups)
+    SEQUENCE.current = Math.max(0, ...Object.values(this.fml.groups)
       .flatMap(f => [
         ...Object.keys(f.objects),
         ...f.rules.map(r => r.name)
@@ -167,6 +169,7 @@ export class EditorComponent implements OnInit, OnChanges {
       .map(Number)
       .filter(unique));
 
+    this.fml.setGroup(groupName, fmlGroup);
     this.initEditor(this.fml, groupName);
   }
 
@@ -208,10 +211,10 @@ export class EditorComponent implements OnInit, OnChanges {
     this.isAnimated = animated;
   }
 
-  public initFmlFromGroup(group: FMLStructureGroup): FMLStructure {
+  public initFmlFromGroup(bundle: Bundle<StructureDefinition>, group: FMLStructureGroup): FMLStructure {
     const fml = new FMLStructure();
-    fml.bundle = this.resourceBundle;
-    fml.setGroup(group, this.FML_MAIN);
+    fml.bundle = bundle;
+    fml.setGroup(this.FML_MAIN, group);
     return fml;
   }
 
@@ -246,6 +249,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapRemove(idx: number): void {
+    this.fml.groups
     this.fml.maps.splice(idx, 1);
   }
 

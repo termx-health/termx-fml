@@ -8,10 +8,11 @@ export class FMLTranslateRuleRenderer extends FMLRuleRenderer {
   public action = 'translate';
 
   protected override template(editor: FMLEditor, rule: FMLStructureRule): string {
+    const mapName = !rule.expanded ? rule.parameters.find(p => editor._fml.maps.some(m => m.name === p.value))?.value : undefined;
 
     return `
       ${super._renderTitle(editor, rule)}
-
+      ${mapName ? `<div class="description">${mapName}</div>` : ''}
       <ul class="hideable description">
         ${rule.parameters.map(p => `<li>${this._renderParam(p)}</li>`).join('\n')}
       </ul>
@@ -26,7 +27,6 @@ export class FMLTranslateRuleRenderer extends FMLRuleRenderer {
     }
 
     super.onInputConnectionCreate(editor, node, nodePort, source, sourcePort);
-
 
     editor._updateRule(node.id, node.name, rule => {
       if (editor._initialized) {

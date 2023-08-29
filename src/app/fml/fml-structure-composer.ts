@@ -23,14 +23,7 @@ interface FmlStructureGeneratorOptions {
 export class FmlStructureComposer {
   private static MAIN = 'main';
 
-  // public static generate(fmls: FMLStructureGroup, options?: FmlStructureGeneratorOptions): StructureMap;
-  public static generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap;
-  public static generate(fml: FMLStructureGroup | FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
-    if (fml instanceof FMLStructureGroup) {
-      const _fml = new FMLStructure();
-      _fml.groups[this.MAIN] = fml;
-      return this.generate(_fml, options);
-    }
+  public static generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
     return this._generate(fml, options);
   }
 
@@ -46,6 +39,12 @@ export class FmlStructureComposer {
       status: 'draft',
       group: []
     };
+
+    // fml as extension
+    sm.extension = [{
+      url: 'fml-export',
+      valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fml))
+    }];
 
     // structure container resources (ConceptMap)
     sm.contained = fml.maps
@@ -67,12 +66,6 @@ export class FmlStructureComposer {
         }))
       }));
 
-    // fml as extension
-    sm.extension = [{
-      url: 'fml-export',
-      valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fml))
-    }];
-
     // structure inputs
     sm.structure = Object.values(fml.groups[this.MAIN].objects)
       .filter(o => ['source', 'target'].includes(o.mode))
@@ -85,17 +78,14 @@ export class FmlStructureComposer {
     // structure groups
     Object.keys(fml.groups).forEach(groupName => {
       const fmlGroup = fml.groups[groupName];
-      const smGroup = this.generateGroup(fml, groupName, fmlGroup);
+      const smGroup = this.generateGroup(fml, fmlGroup, groupName);
       sm.group.push(smGroup);
     });
 
-
-    console.log("#### STRUCTURE MAP ####");
-    console.log(sm);
     return sm;
   }
 
-  private static generateGroup(fml: FMLStructure, groupName: string, fmlGroup: FMLStructureGroup): StructureMapGroup {
+  private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup, groupName: string): StructureMapGroup {
     const smGroup = {
       name: groupName,
       input: [],
@@ -123,12 +113,14 @@ export class FmlStructureComposer {
 
        before:
        # AModel (target)
-         * field-1 -> x
-         * field-2
-         * field-3 -> x
+         * x -> field-1
+         *      field-2
+         * y -> field-3
 
        after:
        [[AModel, field-1], [AModel, field-3]]
+
+       If field has multiple source objects, only unique fields are returned.
      */
     Object.values(fmlGroup.objects)
       .filter(o => o.mode === 'target')
@@ -221,7 +213,9 @@ export class FmlStructureComposer {
           // e.g. "evaluate(srcObject, subfield) as a"
           fmlGroup.outputFields(obj).forEach(n => {
             // source object's name should remain the same
-            const baseName = obj.mode === 'source' ? obj.name : substringBeforeLast(obj.name, VARIABLE_SEP);
+            const baseName = obj.mode === 'source'
+              ? obj.name
+              : substringBeforeLast(obj.name, VARIABLE_SEP);
 
             smRule.target.push({
               variable: vars[`${obj.name}.${n.name}`] = nextVar(),

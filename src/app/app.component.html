@@ -32,7 +32,6 @@
     </div>
 
     <div class="m-items-middle">
-
       Animation
       <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
       <m-divider mVertical/>
@@ -115,7 +114,7 @@
 </m-modal>
 
 <!-- Setup wizard -->
-<app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromWizard($event.name, $event.fmlGroup)"/>
+<app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromGroup($event.name, $event.fmlGroup)"/>
 
 
 <app-update-version/>

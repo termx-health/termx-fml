@@ -6,8 +6,8 @@ import {unique} from '@kodality-web/core-util';
 @Component({
   selector: 'app-rule-view',
   template: `
-    <div *ngIf="rule">
-      <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+    <ng-container *ngIf="rule">
+      <div class="form-view block">
         <h5>Rule</h5>
 
         <m-form-item mLabel="Action">
@@ -39,7 +39,7 @@ import {unique} from '@kodality-web/core-util';
         </m-form-item>
       </div>
 
-      <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+      <div class="form-view block">
         <m-form-item mLabel="Source" *ngIf="rule.name | apply: fml.getSources as srcs">
           <span *ngIf="!srcs?.length">-</span>
           <div *ngFor="let src of srcs">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
@@ -49,14 +49,7 @@ import {unique} from '@kodality-web/core-util';
           <div *ngFor="let tgt of tgts">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
         </m-form-item>
       </div>
-
-
-      <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
-        <m-form-item mLabel="Position">
-          x: {{rule.position?.x ?? '-'}}; y: {{rule.position?.y ?? '-'}}
-        </m-form-item>
-      </div>
-    </div>
+    </ng-container>
 
 
     <!-- RULE parameters modal -->

@@ -12,6 +12,7 @@ import {IframeContext} from './context/iframe.context';
 import {EditorContext} from './context/editor.context';
 import {LocalContext} from './context/local.context';
 import {toSvg} from 'html-to-image';
+import {fromPx} from './fml/fml.utils';
 
 
 @Component({
@@ -59,9 +60,8 @@ export class AppComponent implements OnInit {
   /* Left side */
 
   // New
-  protected initFromWizard(groupName: string, group: FMLStructureGroup): void {
-    const fml= this.editor.initFmlFromGroup(group);
-
+  protected initFromGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
+    const fml = this.editor.initFmlFromGroup(this.ctx.bundle$.getValue(), fmlGroup);
     const sm = FmlStructureComposer.generate(fml, {mapName: groupName});
     this.ctx.importMap(sm);
   }
@@ -213,8 +213,6 @@ export class AppComponent implements OnInit {
   }
 
   private async generateSvg(): Promise<string> {
-    const fromPx = (v: string): number => Number(v.replace('px', ''));
-
     const container = document.getElementById('drawflow');
     const wrapper = container.firstElementChild as HTMLElement;
 
@@ -224,14 +222,14 @@ export class AppComponent implements OnInit {
     cp.style.padding = `12px`;
     document.body.appendChild(cp);
 
-    // add copies to new container
+    // copy entities to new container
     Array.from(wrapper.children).forEach((c: HTMLElement) => {
       cp.append(c.cloneNode(true));
     });
 
     const nodes = Array.from(cp.children) as HTMLElement[];
 
-    // calculate position and dimensions of object node
+    // calculate position and dimensions of object nodes
     const coordinates = nodes
       .filter(n => n.classList.contains('parent-node'))
       .map(n => (n.firstElementChild as HTMLElement))
@@ -257,12 +255,18 @@ export class AppComponent implements OnInit {
     const minHeightLeft = Math.min(...coordinates.map(c => c.offsetTop));
 
     // offset elements into the most left and top position
-    Array.from(cp.children).forEach((n: HTMLElement) => {
+    nodes.forEach(n => {
       n.style.marginLeft = `${-1 * minOffsetLeft}px`;
       if (n.classList.contains('parent-node')) {
         n.style.marginTop = `${-1 * minHeightLeft}px`;
       }
     });
+
+    // remove redundant classes on objects
+    nodes
+      .filter(n => n.classList.contains('parent-node'))
+      .map(n => n.firstElementChild as HTMLElement)
+      .forEach(n => n.classList.remove('selected'));
 
     // remove meta information
     Array.from(cp.getElementsByClassName('node-meta')).forEach(n => n.remove());
@@ -272,15 +276,17 @@ export class AppComponent implements OnInit {
       width: maxWidth - minWidth + 24,
       height: maxHeight - minHeight + 24
     }).then(dataUrl => {
-      cp.remove();
+      // cp.remove();
       return dataUrl;
     }).catch(() => {
-      cp.remove();
+      // cp.remove();
       return undefined;
     });
   }
 
-  protected get isIframe(): boolean {
+  protected get isIframe()
+    :
+    boolean {
     try {
       return window.self !== window.top;
     } catch (e) {

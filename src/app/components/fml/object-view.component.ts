@@ -1,22 +1,19 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
-import {MuiNotificationService} from '@kodality-web/marina-ui';
 import {Bundle, StructureDefinition} from 'fhir/r5';
 import {isDefined} from '@kodality-web/core-util';
 
 @Component({
   selector: 'app-object-view',
   template: `
-    <div *ngIf="object">
-      <div style="padding: 1rem; border-bottom: var(--border-table)">
-        <div>
-          <h5 class="m-justify-between">
-            <span>Resource | {{object.mode}} </span>
-            <div>
-              <nz-switch [(ngModel)]="treeView" (ngModelChange)="setTreeView($event)" nzSize="small"></nz-switch>
-            </div>
-          </h5>
-        </div>
+    <ng-container *ngIf="object">
+      <div class="block">
+        <h5 class="m-justify-between">
+          <span>Resource | {{object.mode}} </span>
+          <div>
+            <nz-switch [(ngModel)]="treeView" (ngModelChange)="setTreeView($event)" nzSize="small"></nz-switch>
+          </div>
+        </h5>
 
         <app-structure-definition-tree
             *ngIf="treeView"
@@ -61,7 +58,7 @@ import {isDefined} from '@kodality-web/core-util';
         </ng-template>
       </div>
 
-      <div class="form-view" style="padding: 1rem; border-bottom: var(--border-table);">
+      <div class="form-view block">
         <m-form-item mLabel="Source" *ngIf="object.name | apply: fml.getSources as srcs">
           <span *ngIf="!srcs?.length">-</span>
           <div *ngFor="let src of srcs">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
@@ -71,7 +68,7 @@ import {isDefined} from '@kodality-web/core-util';
           <div *ngFor="let tgt of tgts">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
         </m-form-item>
       </div>
-    </div>
+    </ng-container>
 
 
     <m-modal #wizard [mVisible]="resourceModal.visible" (mClose)="resourceModal = {visible: false}">
@@ -118,10 +115,6 @@ export class ObjectViewComponent {
   protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition, types?: string[]} = {
     visible: false
   };
-
-  constructor(
-    private notifications: MuiNotificationService
-  ) { }
 
 
   public onFieldClick(object: FMLStructureObject, field: string): void {

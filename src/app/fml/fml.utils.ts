@@ -78,4 +78,11 @@ export const substringAfterLast = (str: string, sep: string): string => {
 export const getAlphabet = (): string[] => {
   const alpha = Array.from(Array(26)).map((e, i) => i + 65);
   return alpha.map((x) => String.fromCharCode(x));
-}
+};
+
+
+/* Style */
+
+export const fromPx = (v: string): number => {
+  return Number(v.replace('px', ''));
+};
