@@ -137,7 +137,6 @@ export class FMLEditor extends Drawflow {
         const conn = this._fmlGroup.newFMLConnection(source.data.obj.name, sourceFieldIdx - 1, target.data.obj.name, targetFieldIdx - 1);
         this._fmlGroup.putConnection(conn);
         this._createConnection(conn.sourceObject, conn.sourceFieldIdx + 1, conn.targetObject, conn.targetFieldIdx + 1);
-
       }
 
       this._rerenderNodes();

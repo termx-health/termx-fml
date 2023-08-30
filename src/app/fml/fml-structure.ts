@@ -178,7 +178,7 @@ export class FMLStructureGroup {
   public getTargets = (source: string, field?: string): {targetObject: string, field?: string}[] => {
     return this.connections
       .filter(c => c.sourceObject === source)
-      .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.sourceFieldIdx]?.name)
+      .filter(c => isNil(field) || field === this.objects[c.sourceObject].fields[c.sourceFieldIdx]?.name)
       .map(c => ({
         targetObject: c.targetObject,
         field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
@@ -303,33 +303,47 @@ export class FMLStructure {
    *
    * Bundle & concept maps are fully copied
    */
-  public subFML(groupName: string, target: string, field: string): FMLStructure {
+  public subFML(groupName: string, target: string, field: string): FMLStructure[] {
     const _fmlGroup = this.groups[groupName];
     const _rules = group(_fmlGroup.rules, r => r.name);
     const _objects = _fmlGroup.objects;
 
-    const fmlGroup = new FMLStructureGroup();
-    const traverse = (o: string, f?) => {
-      if (_objects[o]) {
-        fmlGroup.objects[o] = _objects[o];
-      } else if (_rules[o] && !fmlGroup.rules.some(r => r.name === o)) {
-        fmlGroup.putRule(_rules[o]);
-      }
 
-      return _fmlGroup.connections
-        .filter(c => c.targetObject === o)
-        .filter(c => isNil(f) || f === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
-        .forEach(e => {
-          fmlGroup.putConnection(e);
-          traverse(e.sourceObject);
-        });
-    };
-    traverse(target, field);
+    return _fmlGroup.connections
+      .filter(c => c.targetObject === target)
+      .filter(c => field === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+      .map(c => {
+        // for each connection create sub fml
+        const fmlGroup = new FMLStructureGroup();
+        const _copyResources = (obj): void => {
+          if (_objects[obj]) {
+            fmlGroup.objects[obj] = _objects[obj];
+          } else if (_rules[obj] && !fmlGroup.rules.some(r => r.name === obj)) {
+            fmlGroup.putRule(_rules[obj]);
+          }
+        };
 
-    const fml = new FMLStructure();
-    fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: revert
-    fml.maps = structuredClone(this.maps);
-    fml.setGroup(groupName, fmlGroup);
-    return fml;
+
+        // copy direct resource & connection from the target.field
+        _copyResources(c.targetObject);
+        fmlGroup.putConnection(c);
+
+        // traverse to source direction, copy every connection
+        const traverse = (objName: string): void => {
+          _copyResources(objName);
+          return _fmlGroup.connections.filter(c => c.targetObject === objName).forEach(e => {
+            fmlGroup.putConnection(e);
+            traverse(e.sourceObject);
+          });
+        };
+        traverse(c.sourceObject);
+
+
+        const fml = new FMLStructure();
+        fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: revert
+        fml.maps = structuredClone(this.maps);
+        fml.setGroup(groupName, fmlGroup);
+        return fml;
+      });
   }
 }

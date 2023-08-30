@@ -111,7 +111,12 @@
         <ng-container *ngIf="nodeSelected as node">
           <!-- Resource -->
           <div *ngIf="node.data.obj as obj">
-            <app-object-view [object]="obj" [fml]="fmlGroup" (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"/>
+            <app-object-view
+              [fmlGroup]="fmlGroup"
+              [object]="obj"
+              (objectChange)="applyObject($event)"
+              (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"
+            />
           </div>
 
           <!-- Rule -->

@@ -23,14 +23,12 @@ export class FMLGraph {
     const vertices = Object.keys(this.adjacencyList);
     const visited = {};
     const topNums = {};
-
     let n = vertices.length - 1;
     for (const v of vertices) {
       if (!visited[v]) {
         n = this.dfsHelper(v, n, visited, topNums);
       }
     }
-
     return topNums;
   }
 

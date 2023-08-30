@@ -15,10 +15,14 @@ import {isDefined} from '@kodality-web/core-util';
           </div>
         </h5>
 
+        <!--<m-form-item *ngIf="object | apply: isArrayElement" mLabel="List option">
+          <m-number-input [(ngModel)]="object.nth" (ngModelChange)="updateObject()"/>
+        </m-form-item>-->
+
         <app-structure-definition-tree
-            *ngIf="treeView"
-            [definition]="object | apply: findDefinition: fml"
-            [definitionBase]="object.element.path"
+          *ngIf="treeView"
+          [definition]="object | apply: findDefinition: fmlGroup"
+          [definitionBase]="object.element.path"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -33,10 +37,10 @@ import {isDefined} from '@kodality-web/core-util';
                 </div>
                 <ng-template #name>
                   <span
-                      [mPopover]="f | apply: isBackboneElementField"
-                      [mTitle]="backboneRawFields"
-                      [mTitleContext]="{base: f.name}"
-                      mPosition="left"
+                    [mPopover]="f | apply: isBackboneElementField"
+                    [mTitle]="backboneRawFields"
+                    [mTitleContext]="{base: f.name}"
+                    mPosition="left"
                   >
                     {{f.name}}
                   </span>
@@ -59,11 +63,11 @@ import {isDefined} from '@kodality-web/core-util';
       </div>
 
       <div class="form-view block">
-        <m-form-item mLabel="Source" *ngIf="object.name | apply: fml.getSources as srcs">
+        <m-form-item mLabel="Source" *ngIf="object.name | apply: fmlGroup.getSources as srcs">
           <span *ngIf="!srcs?.length">-</span>
           <div *ngFor="let src of srcs">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
         </m-form-item>
-        <m-form-item mLabel="Target" *ngIf="object.name | apply: fml.getTargets as tgts">
+        <m-form-item mLabel="Target" *ngIf="object.name | apply: fmlGroup.getTargets as tgts">
           <span *ngIf="!tgts?.length">-</span>
           <div *ngFor="let tgt of tgts">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
         </m-form-item>
@@ -81,10 +85,10 @@ import {isDefined} from '@kodality-web/core-util';
           <div *m-modal-content>
             <m-form-item mName="sources" required>
               <app-structure-definition-select
-                  name="sources"
-                  [(ngModel)]="resourceModal.resource"
-                  [bundle]="fml.bundle | apply: bundle: resourceModal.types"
-                  required
+                name="sources"
+                [(ngModel)]="resourceModal.resource"
+                [bundle]="fmlGroup.bundle() | apply: bundle: resourceModal.types"
+                required
               />
             </m-form-item>
           </div>
@@ -103,8 +107,9 @@ import {isDefined} from '@kodality-web/core-util';
   `
 })
 export class ObjectViewComponent {
-  @Input() fml: FMLStructureGroup;
+  @Input() fmlGroup: FMLStructureGroup;
   @Input() object: FMLStructureObject;
+  @Output() objectChange = new EventEmitter<FMLStructureObject>();
   @Output() fieldSelect = new EventEmitter<{
     object: FMLStructureObject,
     field: string,
@@ -126,6 +131,11 @@ export class ObjectViewComponent {
     } else {
       this.fieldSelect.emit({object, field});
     }
+  }
+
+
+  protected updateObject(): void {
+    this.objectChange.emit(this.object);
   }
 
   protected findDefinition(obj: FMLStructureObject, fml: FMLStructureGroup): StructureDefinition {
@@ -158,8 +168,24 @@ export class ObjectViewComponent {
 
   /* Utils */
 
+  /*protected isArrayElement = (obj: FMLStructureObject): boolean => {
+    if (obj.mode !== 'element') {
+      return;
+    }
+    const srcs = this.fmlGroup.getSources(obj.name);
+    const src = srcs[0];
+    if (isNil(src)) {
+      return false;
+    }
+    const srcObj = this.fmlGroup.objects[src.sourceObject];
+    if (isNil(srcObj)) {
+      return false;
+    }
+    return srcObj.fields.find(f => f.name === src.field)?.multiple;
+  };*/
+
   protected isResourceSelectable = (f: FMLStructureObjectField): boolean => {
-    return this.fml.isFieldSelectable(f);
+    return this.fmlGroup.isFieldSelectable(f);
   };
 
   protected isBackboneElementField = FMLStructureGroup.isBackboneElementField;

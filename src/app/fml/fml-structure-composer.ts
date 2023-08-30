@@ -127,8 +127,9 @@ export class FmlStructureComposer {
       .flatMap(o => o.fields.filter(f => fmlGroup.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
       .filter((v, idx, self) => self.findIndex(el => el.join('_') === v.join('_')) === idx)
       .forEach(([target, field]) => {
-        const subFml = fml.subFML(groupName, target, field);
-        this.generateRule(subFml, subFml.groups[groupName], smGroup);
+        fml.subFML(groupName, target, field).forEach(subFml => {
+          this.generateRule(subFml, subFml.groups[groupName], smGroup);
+        });
       });
 
     return smGroup;
@@ -190,7 +191,7 @@ export class FmlStructureComposer {
         ctx = obj;
 
         if (isNil(smRule)) {
-          // in ideal world, it would be the first step (in reality it may not)
+          // in ideal world, it would be the first step (in reality it mtay not)
           smRule = {
             name: `rule_${SEQUENCE.next()}`,
             source: [{context: normalize(obj.name)}],
@@ -217,12 +218,29 @@ export class FmlStructureComposer {
               ? obj.name
               : substringBeforeLast(obj.name, VARIABLE_SEP);
 
+
+            // main 'evaluate' expression
+            let exp = n.name;
+
+            // array element select
+            /*
+            const targets = fmlGroup.getTargets(obj.name, n.name);
+              if (targets.length === 1 && fmlGroup.objects[targets[0].targetObject]) {
+                const tgtObj = fmlGroup.objects[targets[0].targetObject];
+                if (isDefined(tgtObj.nth)) {
+                  exp += `[${tgtObj.nth}]`;
+                }
+              }
+            */
+
+
             smRule.target.push({
               variable: vars[`${obj.name}.${n.name}`] = nextVar(),
               transform: 'evaluate',
+
               parameter: [
                 {valueId: normalize(vars[baseName] ?? baseName)},
-                {valueString: n.name}
+                {valueString: exp}
               ]
             });
           });

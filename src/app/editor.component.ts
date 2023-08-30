@@ -26,10 +26,6 @@ const RULES: RuleDescription[] = [
     name: 'constant'
   },
   {
-    action: 'where',
-    name: 'where'
-  },
-  {
     action: 'uuid',
     name: 'uuid',
     description: 'Generate a random UUID (in lowercase).'
@@ -50,8 +46,7 @@ const RULES: RuleDescription[] = [
   },
   {
     action: 'cast',
-    name: 'cast',
-    description: 'Cast source from one type to another. target type can be left as implicit if there is one and only one target type known.'
+    name: 'cast'
   },
   {
     action: 'append',
@@ -481,6 +476,13 @@ export class EditorComponent implements OnInit, OnChanges {
   protected applyRule(rule: FMLStructureRule): void {
     if ('rule' in this.nodeSelected.data) {
       this.editor._updateRule(this.nodeSelected.id, this.nodeSelected.name, rule);
+    }
+    this.editor._rerenderNodes();
+  }
+
+  protected applyObject(obj: FMLStructureObject): void {
+    if ('obj' in this.nodeSelected.data) {
+      this.editor._updateObject(this.nodeSelected.id, this.nodeSelected.name, obj);
     }
     this.editor._rerenderNodes();
   }
