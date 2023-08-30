@@ -185,7 +185,7 @@ export class ObjectViewComponent {
   };*/
 
   protected isResourceSelectable = (f: FMLStructureObjectField): boolean => {
-    return this.fmlGroup.isFieldSelectable(f);
+    return this.fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource');
   };
 
   protected isBackboneElementField = FMLStructureGroup.isBackboneElementField;
