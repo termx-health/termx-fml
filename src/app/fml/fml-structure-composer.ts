@@ -97,7 +97,7 @@ export class FmlStructureComposer {
       .filter(o => ['source', 'target'].includes(o.mode))
       .map(o => ({
         name: normalize(o.name),
-        type: o.element.id.includes('.') ? 'Any' : o.element.id,
+        type: o.element.id.includes('.') ? 'Any' : o.name,
         mode: o.mode as StructureMapGroupInput['mode'],
       }));
 
@@ -191,7 +191,8 @@ export class FmlStructureComposer {
         ctx = obj;
 
         if (isNil(smRule)) {
-          // in ideal world, it would be the first step (in reality it mtay not)
+          // in ideal world, it would be the first step (in reality it may not)
+
           smRule = {
             name: `rule_${SEQUENCE.next()}`,
             source: [{context: normalize(obj.name)}],
