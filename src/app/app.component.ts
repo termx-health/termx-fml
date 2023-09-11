@@ -265,6 +265,7 @@ export class AppComponent implements OnInit {
     // remove redundant classes on objects
     nodes
       .map(n => n.firstElementChild as HTMLElement)
+      .filter(Boolean)
       .forEach(n => n.classList.remove('selected'));
 
     // remove meta information
