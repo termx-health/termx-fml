@@ -16,18 +16,18 @@ const nextVar = (): string => {
 };
 
 
-interface FmlStructureGeneratorOptions {
+interface FmlStructureComposeOptions {
   mapName?: string
 }
 
 export class FmlStructureComposer {
   private static MAIN = 'main';
 
-  public static generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
+  public static generate(fml: FMLStructure, options?: FmlStructureComposeOptions): StructureMap {
     return this._generate(fml, options);
   }
 
-  private static _generate(fml: FMLStructure, options?: FmlStructureGeneratorOptions): StructureMap {
+  private static _generate(fml: FMLStructure, options?: FmlStructureComposeOptions): StructureMap {
     varCnt = -1;
     const mapName = options?.mapName ?? 'fml-compose';
 
