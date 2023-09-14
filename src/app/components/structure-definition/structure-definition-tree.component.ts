@@ -48,7 +48,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
 
 
   protected composeTree = (sm: StructureDefinition, base: string): void => {
-    const name = base ?? sm.name;
+    const name = base ?? sm.id;
     this.options = [{
       key: sm.id,
       title: name,

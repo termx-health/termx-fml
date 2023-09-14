@@ -39,7 +39,7 @@ interface ModalData {
                     required
                   />
                 </m-form-item>
-                <ng-container *ngTemplateOutlet="asd; context: {defs: data.sources, mappings: data.sourceMappings, mode: 'source'}"></ng-container>
+                <ng-container *ngTemplateOutlet="tree; context: {defs: data.sources, mappings: data.sourceMappings, mode: 'source'}"></ng-container>
               </div>
 
               <div *m-form-col>
@@ -52,11 +52,11 @@ interface ModalData {
                     required
                   />
                 </m-form-item>
-                <ng-container *ngTemplateOutlet="asd; context: {defs: data.targets, mappings: data.targetMappings, mode: 'target'}"></ng-container>
+                <ng-container *ngTemplateOutlet="tree; context: {defs: data.targets, mappings: data.targetMappings, mode: 'target'}"></ng-container>
               </div>
             </m-form-row>
 
-            <ng-template #asd let-defs="defs" let-mappings="mappings" let-mode="mode">
+            <ng-template #tree let-defs="defs" let-mappings="mappings" let-mode="mode">
               <m-card mDisplay="bordered" *ngIf="defs?.length">
                 <ng-container *ngFor="let def of defs">
                   <m-form-item [mLabel]="def.url" *ngIf="{edit: false} as d">

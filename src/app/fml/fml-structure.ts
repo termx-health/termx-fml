@@ -104,7 +104,7 @@ export class FMLStructureConceptMapMapping {
 }
 
 
-/* Structure */
+/* Structure group */
 
 export class FMLStructureGroup {
   objects: {[name: string]: FMLStructureObject} = {};
@@ -287,6 +287,9 @@ export class FMLStructureGroup {
     return f.types?.some(t => FMLStructureGroup.isBackboneElement(t));
   };
 }
+
+
+/* Structure */
 
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
