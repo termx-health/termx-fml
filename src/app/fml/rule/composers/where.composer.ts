@@ -11,15 +11,6 @@ export class FMLWhereRuleComposer extends FMLRuleComposer {
     ctx: FMLStructureObject,
     vars: {[p: string]: string}
   ): FMLRuleComposerReturnType {
-    console.log({
-        transform: 'evaluate',
-        variable: rule.name,
-        parameter: [
-          ...fmlGroup.getSources(rule.name).map(s => ({valueId: vars[s.sourceObject] ?? s.sourceObject})),
-          ...fmlGroup.getSources(rule.name).map(s => ({valueId: vars[s.sourceObject] ?? s.sourceObject})),
-        ]
-      }
-    )
     return {
       target: {
         transform: 'evaluate',

@@ -392,11 +392,15 @@ export class EditorComponent implements OnInit, OnChanges {
 
     const structureDefinition = this.fmlGroup.findStructureDefinition(parentObj.element.id);
 
-    const fieldPath = `${parentObj.element.path}.${field}`;
+    let fieldPath = `${parentObj.element.path}.${field}`;
     const fieldElement = structureDefinition.snapshot.element.find(e => [fieldPath, `${fieldPath}[x]`].includes(e.path));
 
     let fieldType = type ?? fieldElement.type?.[0]?.code;
-    if (FMLStructureGroup.isBackboneElement(fieldType)) {
+    if (fieldElement.contentReference) {
+      const type = fieldElement.contentReference.substring(1);
+      fieldPath = type;
+      fieldType = type;
+    } else if (FMLStructureGroup.isBackboneElement(fieldType)) {
       fieldType = fieldPath;
     }
 

@@ -30,6 +30,9 @@ export class FMLStructureObject extends FMLStructureEntity {
   /** @example code, category, status etc. */
   rawFields: FMLStructureObjectField[] = [];
 
+  condition?: string;
+  listOption?: 'every' | 'first' | 'last';
+
   public get fields(): FMLStructureObjectField[] {
     return this.rawFields.filter(f => !f.part);
   }
@@ -110,6 +113,9 @@ export class FMLStructureGroup {
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
   _connections: FMLStructureConnection[] = [];
+
+  /* true = generate single rule */
+  shareContext = false;
 
   public get connections(): readonly FMLStructureConnection[] {
     return this._connections;
@@ -235,7 +241,8 @@ export class FMLStructureGroup {
     o.mode = mode;
     o.rawFields = selfFields.map(e => ({
       name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],
-      types: e.type?.map(t => t.code) ?? [],
+      // fixme: the contentReference logic is not very clear
+      types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
       multiple: e.max !== '1',
       required: e.min === 1,
       part: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
@@ -284,7 +291,7 @@ export class FMLStructureGroup {
   }
 
   public static isBackboneElementField = (f: FMLStructureObjectField): boolean => {
-    return f.types?.some(t => FMLStructureGroup.isBackboneElement(t));
+    return f.types?.some(t => FMLStructureGroup.isBackboneElement(t) || t.startsWith("#"));
   };
 }
 
