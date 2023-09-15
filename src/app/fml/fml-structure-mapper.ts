@@ -25,9 +25,16 @@ export class FMLStructureMapper {
         parsed = <FMLStructureExportSimple>{
           groups: parsed,
           maps: Object.values(parsed).flatMap(o => o['maps'] || []),
-          version: '1'
+          version: '1' as any
         };
       }
+
+      if (parsed['version'] === '1') {
+        console.warn("v1.1: adding shareContext param");
+        const _p = parsed as FMLStructureExportSimple;
+        Object.values(_p.groups).forEach(g => g.shareContext = true);
+      }
+
       return FMLStructureSimpleMapper.toFML(bundle, parsed);
     }
 

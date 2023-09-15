@@ -86,3 +86,24 @@ export const getAlphabet = (): string[] => {
 export const fromPx = (v: string): number => {
   return Number(v.replace('px', ''));
 };
+
+
+/* Tokens */
+
+export const tokenize = (str: string, tokens: string[]): {type: 'const' | 'var', value: string}[] => {
+  let temp: any[] = [str];
+
+  tokens.sort(n => n.length).reverse().forEach(objName => {
+    temp.forEach((token, idx) => {
+      if (typeof token === "string") {
+        temp[idx] = token.split(objName)
+          .flatMap(el => ['__var__', el])
+          .slice(1)
+          .map(el => el === '__var__' ? {type: 'var', value: objName} : el);
+      }
+    });
+    temp = temp.flat(Infinity);
+  });
+
+  return temp.map(el => typeof el === "string" ? {type: 'const', value: el} : el);
+};

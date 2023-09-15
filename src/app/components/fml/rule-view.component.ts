@@ -40,13 +40,13 @@ import {unique} from '@kodality-web/core-util';
       </div>
 
       <div class="form-view block">
-        <m-form-item mLabel="Source" *ngIf="rule.name | apply: fml.getSources as srcs">
+        <m-form-item mLabel="Source" *ngIf="rule.name | apply: fmlGroup.getSources as srcs">
           <span *ngIf="!srcs?.length">-</span>
-          <div *ngFor="let src of srcs">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
+          <div *ngFor="let src of srcs" style="word-wrap: break-word;">{{src.sourceObject}}<b *ngIf="src.field">:{{src.field}}</b></div>
         </m-form-item>
-        <m-form-item mLabel="Target" *ngIf="rule.name | apply: fml.getTargets as tgts">
+        <m-form-item mLabel="Target" *ngIf="rule.name | apply: fmlGroup.getTargets as tgts">
           <span *ngIf="!tgts?.length">-</span>
-          <div *ngFor="let tgt of tgts">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
+          <div *ngFor="let tgt of tgts" style="word-wrap: break-word;">{{tgt.targetObject}}<b *ngIf="tgt.field">:{{tgt.field}}</b></div>
         </m-form-item>
       </div>
     </ng-container>
@@ -106,7 +106,7 @@ import {unique} from '@kodality-web/core-util';
 
           <ng-container *ngIf="_cp.name | apply: ctxVariables as ctxVars">
             <m-form-item mLabel="Context variables"
-                *ngIf="ctxVars.length"
+              *ngIf="ctxVars.length"
             >
               <div class="m-items-middle">
                 <kbd *ngFor="let v of ctxVars | reverse" class="description">{{v}}</kbd>
@@ -124,7 +124,7 @@ import {unique} from '@kodality-web/core-util';
   `
 })
 export class RuleViewComponent {
-  @Input() fml: FMLStructureGroup;
+  @Input() fmlGroup: FMLStructureGroup;
   @Input() rule: FMLStructureRule;
   @Output() ruleChange = new EventEmitter<FMLStructureRule>();
 
@@ -188,11 +188,11 @@ export class RuleViewComponent {
   /* Utils */
 
   protected ctxVariables = (name: string): string[] => {
-    return this.fml.getSources(name)
+    return this.fmlGroup.getSources(name)
       .map(s => s.sourceObject)
       .flatMap(sn => [sn, ...this.ctxVariables(sn)])
       .filter(unique)
-      .filter(n => this.fml.objects[n]);
+      .filter(n => this.fmlGroup.objects[n]);
   };
 
 }

@@ -180,12 +180,27 @@ li {
     --node-shadow: @mui-primary-color-1;
 
     .node-title {
-      height: 1.2rem
+      height: 1.2rem;
     }
 
     .inputs, .outputs {
       display: block;
       margin-top: 1.7rem;
+    }
+
+    .node-field {
+      height: 1.5rem;
+      border-bottom: 1px solid var(--color-borders);
+    }
+
+    &--with-where {
+      .node-title {
+        height: 2.7rem;
+      }
+
+      .inputs, .outputs {
+        margin-top: 3.2rem;
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import dagre from "dagre";
 import {asResourceVariable, fromPx, getPortNumber, renderExpand} from './fml.utils';
 import {getRuleRenderer} from './rule/renderers/_renderers';
 import {FMLStructureObjectRenderer} from './object/object-renderer';
+import {plainToClass} from 'class-transformer';
 
 export interface FMLDrawflowRuleNode extends DrawflowNode {
   data: {
@@ -34,8 +35,9 @@ export class FMLEditor extends Drawflow {
       fn(obj);
       this.updateNodeDataFromId(nodeId, {obj});
     } else {
-      this.updateNodeDataFromId(nodeId, {obj: fn});
-      this._fmlGroup.objects[name] = fn;
+      const _fn = plainToClass(FMLStructureObject, fn);
+      this.updateNodeDataFromId(nodeId, {obj: _fn});
+      this._fmlGroup.objects[name] = _fn;
     }
   };
 
@@ -46,8 +48,9 @@ export class FMLEditor extends Drawflow {
       fn(rule);
       this.updateNodeDataFromId(nodeId, {rule});
     } else {
-      this.updateNodeDataFromId(nodeId, {rule: fn});
-      this._fmlGroup.rules.splice(this._fmlGroup.rules.indexOf(rule), 1, fn);
+      const _fn = plainToClass(FMLStructureRule, fn);
+      this.updateNodeDataFromId(nodeId, {rule: _fn});
+      this._fmlGroup.rules.splice(this._fmlGroup.rules.indexOf(rule), 1, _fn);
     }
   };
 

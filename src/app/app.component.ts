@@ -276,17 +276,15 @@ export class AppComponent implements OnInit {
       width: maxWidth - minWidth + 24,
       height: maxHeight - minHeight + 24
     }).then(dataUrl => {
-      // cp.remove();
+      cp.remove();
       return dataUrl;
     }).catch(() => {
-      // cp.remove();
+      cp.remove();
       return undefined;
     });
   }
 
-  protected get isIframe()
-    :
-    boolean {
+  protected get isIframe(): boolean {
     try {
       return window.self !== window.top;
     } catch (e) {
