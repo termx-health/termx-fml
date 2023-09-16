@@ -1,0 +1,84 @@
+{
+  "id": "step9",
+  "resourceType": "StructureMap",
+  "status": "draft",
+  "name": "step9",
+  "url": "http://hl7.org/fhir/StructureMap/step9",
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step9-left",
+      "mode": "source",
+      "alias": "TLeft"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step9-right",
+      "mode": "target",
+      "alias": "TRight"
+    }
+  ],
+  "group": [
+    {
+      "name": "main",
+      "input": [
+        {
+          "name": "src",
+          "type": "TLeft",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "TRight",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "i1",
+          "source": [
+            {
+              "context": "src",
+              "element": "i",
+              "variable": "L",
+              "condition": "src.m < 2"
+            }
+          ],
+          "target": [
+            {
+              "variable": "M",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "L"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "i2",
+              "source": [
+                {
+                  "context": "src",
+                  "condition": "src.m < 2"
+                }
+              ],
+              "target": [
+                {
+                  "context": "tgt",
+                  "element": "k",
+                  "variable": "N",
+                  "transform": "copy",
+                  "parameter": [
+                    {
+                      "valueId": "M"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

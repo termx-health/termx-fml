@@ -1,1 +1,259 @@
-/* You can add global styles to this file, and also import other style files */
+@import "../node_modules/drawflow/dist/drawflow.min.css";
+
+@import "../node_modules/ng-zorro-antd/ng-zorro-antd.less";
+@import "../node_modules/@kodality-web/marina-ui/mui.styles";
+@import "../node_modules/@kodality-web/marina-ui/src/style/themes/default";
+
+@primary-color: #e0218a;
+
+
+li {
+  word-break: break-all;
+}
+
+.description {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.1rem;
+}
+
+
+.form-view {
+  .ant-form-item-label {
+    overflow: initial;
+  }
+
+  .ant-form-item-label > label {
+    text-transform: uppercase;
+    color: @mui-text-color-secondary;
+    height: 1.5rem;
+
+
+    m-icon-button button {
+      color: currentColor;
+    }
+  }
+}
+
+
+.menu .ant-btn-text {
+  color: @mui-primary-color-7;
+}
+
+.editor-tabbar {
+  border-bottom: 1px solid var(--color-borders);
+  box-shadow: rgb(0 0 0 / 4%) 0px 4px 10px;
+  z-index: 1;
+
+  .editor-tab {
+    align-items: center;
+    background-color: var(--tab-background);
+    color: var(--tab-color);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    height: var(--tab-height, 32px);
+    line-height: var(--tab-height, 32px);
+    min-width: 110px;
+    padding-inline: 10px 6px;
+    position: relative;
+    transition: 100ms;
+    box-shadow: inset @mui-border-color-light 0px -11px 7px -11px;
+
+    &:not(:first-child) {
+      border-left: @mui-border;
+    }
+
+
+    &:not(&--selected):hover {
+      box-shadow: inset @mui-border-color 0px -11px 7px -11px;
+    }
+
+    &--selected {
+      --tab-background: white;
+      //--tab-color: @mui-primary-color;
+      box-shadow: unset;
+    }
+  }
+}
+
+
+.drawflow {
+  .drawflow-node {
+    width: max-content;
+    align-items: flex-start;
+
+    background: white;
+    border: 1px solid;
+    border-color: var(--node-border, @mui-border-color);
+    box-shadow: 0 4px 10px var(--node-shadow, rgba(0, 0, 0, 0.1));
+
+    &.selected {
+      background: white;
+      box-shadow: var(--node-selected-shadow, @mui-primary-color-2) 0 0 12px;
+      border-color: var(--node-selected-border, @mui-primary-color-5);
+    }
+  }
+
+  .drawflow-node {
+    .input, .output {
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-bottom: 0.3rem;
+      border: 1px solid;
+      transition: 150ms;
+    }
+
+
+    /* Input */
+
+    .input {
+      left: -1.7rem;
+      background: var(--node-input-background, @mui-primary-color-1);
+      border-color: var(--node-input-border, @mui-primary-color-6);
+
+      &:hover {
+        background: var(--node-input-background-hover, @mui-primary-color-2);
+        box-shadow: var(--node-input-shadow-hover, @mui-primary-color-4) 0 0 10px;
+      }
+    }
+
+    /* Output */
+
+    .output {
+      right: -0.5rem;
+      background: var(--node-output-background, @mui-bg-component);
+      border-color: var(--node-output-border, @mui-border-color);
+
+      &:hover {
+        background: var(--node-output-background-hover, @mui-bg-component);
+        box-shadow: var(--node-output-shadow-hover, @mui-border-color) 0 0 10px;
+      }
+    }
+
+
+    .has-input-connection {
+      background: @mui-primary-color-2;
+      border-color: @mui-primary-color-7;
+    }
+
+    .has-output-connection {
+      background: @mui-primary-color-1;
+      border-color: @mui-primary-color-6;
+    }
+  }
+
+
+  /* Connection */
+
+  .connection .main-path {
+    stroke-width: 1px;
+    stroke: var(--stroke-color, @mui-text-color-disabled);
+
+    &:hover {
+      stroke: @mui-primary-color;
+      filter: drop-shadow(0px 1px 2px @mui-primary-color-2);
+    }
+  }
+
+
+  /* Misc */
+
+  &--animated {
+    .connection .main-path {
+      stroke-width: 2px;
+      stroke-dasharray: 5;
+      animation: dashdraw .5s linear infinite;
+    }
+  }
+}
+
+.drawflow kbd {
+  color: var(--color-text-secondary);
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.drawflow {
+  .node--atom {
+    --node-border: @mui-primary-color-6;
+    --node-shadow: @mui-primary-color-1;
+
+    .node-title {
+      height: 1.2rem;
+    }
+
+    .inputs, .outputs {
+      display: block;
+      margin-top: 1.7rem;
+    }
+
+    .node-field {
+      height: 1.5rem;
+      border-bottom: 1px solid var(--color-borders);
+    }
+
+    &--with-where {
+      .node-title {
+        height: 2.7rem;
+      }
+
+      .inputs, .outputs {
+        margin-top: 3.2rem;
+      }
+    }
+  }
+
+  .node--source, .node--target {
+    .drawflow-delete {
+      display: none;
+    }
+  }
+
+  .node--rule {
+    padding-block: 6px;
+    min-height: initial;
+
+    //--node-border: #16a34a; // 600
+    //--node-shadow: #f0fdf4; // 50
+
+    --node-selected-border: #16a34a; // 600
+    --node-selected-shadow: #dcfce7; // 100
+
+    .has-input-connection {
+      border-color: #16a34a; // 600
+      background: #f0fdf4; // 50
+
+      &:hover {
+        --node-input-background-hover: #dcfce7; // 100
+        --node-input-shadow-hover: #4ade80; // 400
+      }
+    }
+
+    &--with-title {
+      .inputs {
+        margin-top: 1rem;
+      }
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+    }
+  }
+}
+
+
+.hidden {
+  display: none;
+}
+
+.block {
+  padding: 1rem;
+  border-bottom: var(--border-table);
+}
+
+@keyframes dashdraw {
+  0% {
+    stroke-dashoffset: 10
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "resourceType": "StructureMap",
+  "url": "http://termx.health/fhir/StructureMap/test-01",
+  "name": "test-01",
+  "status": "draft",
+  "group": [
+    {
+      "name": "main",
+      "input": [
+        {
+          "name": "TLeft",
+          "type": "TLeft",
+          "mode": "source"
+        },
+        {
+          "name": "TRight",
+          "type": "TRight",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_460",
+          "source": [
+            {
+              "context": "TLeft"
+            }
+          ],
+          "target": [
+            {
+              "variable": "a",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "TLeft"
+                },
+                {
+                  "valueString": "a1"
+                }
+              ]
+            },
+            {
+              "context": "TRight",
+              "element": "b1",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "a"
+                }
+              ]
+            }
+          ],
+          "rule": []
+        },
+        {
+          "name": "rule_461",
+          "source": [
+            {
+              "context": "TLeft"
+            }
+          ],
+          "target": [
+            {
+              "variable": "b",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "TLeft"
+                },
+                {
+                  "valueString": "a1"
+                }
+              ]
+            },
+            {
+              "variable": "c",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "TLeft"
+                },
+                {
+                  "valueString": "a2"
+                }
+              ]
+            },
+            {
+              "transform": "append",
+              "variable": "append#437",
+              "parameter": [
+                {
+                  "valueId": "b"
+                },
+                {
+                  "valueString": ", "
+                },
+                {
+                  "valueId": "c"
+                }
+              ]
+            },
+            {
+              "context": "TRight",
+              "element": "b3",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "append#437"
+                }
+              ]
+            }
+          ],
+          "rule": []
+        },
+        {
+          "name": "rule_462",
+          "source": [
+            {
+              "context": "TLeft"
+            }
+          ],
+          "target": [
+            {
+              "variable": "d",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Meta"
+                }
+              ]
+            },
+            {
+              "variable": "e",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "TLeft"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "variable": "f",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "TLeft"
+                },
+                {
+                  "valueString": "meta"
+                }
+              ]
+            },
+            {
+              "variable": "g",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "f"
+                },
+                {
+                  "valueString": "versionId"
+                }
+              ]
+            },
+            {
+              "variable": "h",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "f"
+                },
+                {
+                  "valueString": "source"
+                }
+              ]
+            },
+            {
+              "variable": "i",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "f"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "evaluate#447",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
+            },
+            {
+              "transform": "uuid",
+              "variable": "uuid#438",
+              "parameter": [
+                {
+                  "valueId": "e"
+                }
+              ]
+            },
+            {
+              "transform": "append",
+              "variable": "append#443",
+              "parameter": [
+                {
+                  "valueId": "uuid#438"
+                },
+                {
+                  "valueId": "g"
+                },
+                {
+                  "valueId": "h"
+                }
+              ]
+            },
+            {
+              "context": "d",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "uuid#438"
+                }
+              ]
+            },
+            {
+              "context": "d",
+              "element": "source",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "append#443"
+                }
+              ]
+            },
+            {
+              "context": "d",
+              "element": "lastUpdated",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "evaluate#447"
+                }
+              ]
+            },
+            {
+              "context": "TRight",
+              "element": "meta",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "d"
+                }
+              ]
+            }
+          ],
+          "rule": []
+        }
+      ]
+    }
+  ],
+  "extension": [
+    {
+      "url": "fml-export",
+      "valueString": "{\"objects\":{\"TLeft\":{\"rawFields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"a1\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"a2\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false}],\"element\":{\"max\":\"1\",\"path\":\"TLeft\",\"id\":\"TLeft\",\"min\":1},\"resource\":\"TLeft\",\"url\":\"http://hl7.org/fhir/StructureDefinition/step3-left\",\"name\":\"TLeft\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"x\":46,\"y\":114},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"a1\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"a2\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"TRight\":{\"rawFields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b1\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b2\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b3\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false}],\"element\":{\"max\":\"1\",\"path\":\"TRight\",\"id\":\"TRight\",\"min\":1},\"resource\":\"TRight\",\"url\":\"http://hl7.org/fhir/StructureDefinition/step3-right\",\"name\":\"TRight\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"x\":845,\"y\":129},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b1\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b2\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"b3\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"TLeft.meta#439\":{\"rawFields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"versionId\",\"types\":[\"id\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"lastUpdated\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"source\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"profile\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"security\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"tag\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false}],\"element\":{\"id\":\"Meta\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Meta\"},\"path\":\"Meta\",\"short\":\"Metadata about a resource\",\"mapping\":[{\"map\":\"n/a,N/A\",\"identity\":\"rim\"}],\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status\",\"valueCode\":\"normative\"},{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-normative-version\",\"valueCode\":\"4.0.0\"}],\"constraint\":[{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"The metadata about a resource. This is content in the resource that is maintained by the infrastructure. Changes to the content might not always be associated with version changes to the resource.\",\"isModifier\":false},\"resource\":\"Meta\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Meta\",\"name\":\"TLeft.meta#439\",\"mode\":\"element\",\"_nodeId\":5,\"position\":{\"x\":185,\"y\":417},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"versionId\",\"types\":[\"id\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"lastUpdated\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"source\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"profile\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"security\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"tag\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false}]},\"TRight.meta#441\":{\"rawFields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"versionId\",\"types\":[\"id\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"lastUpdated\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"source\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"profile\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"security\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"tag\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false}],\"element\":{\"id\":\"Meta\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Meta\"},\"path\":\"Meta\",\"short\":\"Metadata about a resource\",\"mapping\":[{\"map\":\"n/a,N/A\",\"identity\":\"rim\"}],\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status\",\"valueCode\":\"normative\"},{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-normative-version\",\"valueCode\":\"4.0.0\"}],\"constraint\":[{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"The metadata about a resource. This is content in the resource that is maintained by the infrastructure. Changes to the content might not always be associated with version changes to the resource.\",\"isModifier\":false},\"resource\":\"Meta\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Meta\",\"name\":\"TRight.meta#441\",\"mode\":\"object\",\"_nodeId\":6,\"position\":{\"x\":614,\"y\":401},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"versionId\",\"types\":[\"id\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"lastUpdated\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"source\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"profile\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"security\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"tag\",\"types\":[\"Coding\"],\"multiple\":true,\"required\":false,\"part\":false}]}},\"rules\":[{\"name\":\"append#437\",\"action\":\"append\",\"parameters\":[{\"type\":\"var\",\"value\":\"TLeft.a1\"},{\"type\":\"const\",\"value\":\", \"},{\"type\":\"var\",\"value\":\"TLeft.a2\"}],\"position\":{\"x\":540,\"y\":262},\"_nodeId\":3},{\"name\":\"uuid#438\",\"action\":\"uuid\",\"parameters\":[{\"type\":\"var\",\"value\":\"TLeft.$this\"}],\"position\":{\"x\":268,\"y\":337},\"_nodeId\":4},{\"name\":\"append#443\",\"action\":\"append\",\"parameters\":[{\"type\":\"var\",\"value\":\"uuid#438\"},{\"type\":\"var\",\"value\":\"TLeft.meta#439.versionId\"},{\"type\":\"var\",\"value\":\"TLeft.meta#439.source\"}],\"position\":{\"x\":355,\"y\":530},\"_nodeId\":7},{\"name\":\"evaluate#447\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"now()\"}],\"position\":{\"y\":459,\"x\":475},\"_nodeId\":8}],\"connections\":[{\"sourceObject\":\"TLeft\",\"sourceFieldIdx\":1,\"targetObject\":\"TRight\",\"targetFieldIdx\":1},{\"sourceObject\":\"TLeft\",\"sourceFieldIdx\":1,\"targetObject\":\"append#437\",\"targetFieldIdx\":0},{\"sourceObject\":\"TLeft\",\"sourceFieldIdx\":2,\"targetObject\":\"append#437\",\"targetFieldIdx\":1},{\"sourceObject\":\"append#437\",\"sourceFieldIdx\":0,\"targetObject\":\"TRight\",\"targetFieldIdx\":3},{\"sourceObject\":\"TLeft\",\"sourceFieldIdx\":3,\"targetObject\":\"TLeft.meta#439\",\"targetFieldIdx\":0},{\"sourceObject\":\"TRight.meta#441\",\"sourceFieldIdx\":0,\"targetObject\":\"TRight\",\"targetFieldIdx\":4},{\"sourceObject\":\"TLeft\",\"sourceFieldIdx\":0,\"targetObject\":\"uuid#438\",\"targetFieldIdx\":0},{\"sourceObject\":\"uuid#438\",\"sourceFieldIdx\":0,\"targetObject\":\"TRight.meta#441\",\"targetFieldIdx\":1},{\"sourceObject\":\"uuid#438\",\"sourceFieldIdx\":0,\"targetObject\":\"append#443\",\"targetFieldIdx\":0},{\"sourceObject\":\"TLeft.meta#439\",\"sourceFieldIdx\":3,\"targetObject\":\"append#443\",\"targetFieldIdx\":1},{\"sourceObject\":\"TLeft.meta#439\",\"sourceFieldIdx\":5,\"targetObject\":\"append#443\",\"targetFieldIdx\":2},{\"sourceObject\":\"append#443\",\"sourceFieldIdx\":0,\"targetObject\":\"TRight.meta#441\",\"targetFieldIdx\":5},{\"sourceObject\":\"evaluate#447\",\"sourceFieldIdx\":0,\"targetObject\":\"TRight.meta#441\",\"targetFieldIdx\":4},{\"sourceObject\":\"TLeft.meta#439\",\"sourceFieldIdx\":0,\"targetObject\":\"evaluate#447\",\"targetFieldIdx\":0}]}"
+    }
+  ],
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
+      "mode": "source",
+      "alias": "TLeft"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/step3-right",
+      "mode": "target",
+      "alias": "TRight"
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+<div style="display: grid; grid-template-columns: auto 1fr">
+  <!-- LEFT PANEL -->
+  <m-collapse-panel
+    mKey="fml-left-panel"
+    mResizable
+    [mResizableMaxWidth]="400"
+    style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 10"
+  >
+    <app-fml-view [fml]="fmlGroup"/>
+  </m-collapse-panel>
+
+
+  <!-- MAIN PANEL -->
+  <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
+    <div class="editor-tabbar">
+      <div *ngIf="!fml.groups[FML_MAIN]" class="editor-tab m-items-middle">
+        <m-icon mCode="loading"/>
+        <span>loading...</span>
+      </div>
+
+      <ng-container *ngIf="fml.groups[FML_MAIN]">
+        <div
+          *ngFor="let key of fml.groups | keys"
+          class="editor-tab m-justify-between"
+          [class.editor-tab--selected]="key === groupName"
+          (click)="selectGroup(key)"
+        >
+          <div class="m-items-middle">
+            <m-icon [mCode]="key === FML_MAIN ? key === groupName ? 'folder-open' : 'folder' : 'block'"/>
+            <span>{{key}}</span>
+          </div>
+          <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
+        </div>
+
+        <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
+          <m-icon mCode="file-add"/>
+          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fmlGroup)"/>
+        </div>
+      </ng-container>
+    </div>
+
+    <div style="flex: auto; display: grid; grid-template-columns: 8fr 2fr; max-height: calc(100% - 32px - 1px)">
+      <div id="drawflow-parent" [class.drawflow--animated]="isAnimated" (dragover)="onDragOver($event)" (drop)="onDrop($event)"></div>
+      <!-- RIGHT PANEL -->
+      <div style="border-left: 1px solid var(--color-borders); height: 100%; overflow: auto; background: var(--color-background-component)">
+        <ng-container *ngIf="!nodeSelected">
+          <div class="block" *ngIf="groupName !== FML_MAIN">
+            <h5>Settings</h5>
+
+            <div>
+              <m-checkbox [(ngModel)]="fmlGroup.shareContext">
+                <div>Share context</div>
+                <div class="description">Creates single rule. Result of rule transformation could be used by other rules</div>
+              </m-checkbox>
+            </div>
+          </div>
+
+          <div class="block" *ngIf="ruleGroups.length">
+            <h5>Groups</h5>
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rg of ruleGroups" style="cursor: grab;" draggable="true" (dragstart)="onDragStart($event, 'group', rg)">
+                <div class="m-items-middle">
+                  <m-icon mCode="block"/>
+                  <m-divider mVertical></m-divider>
+                  {{rg.groupName}}
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+
+          <div class="block">
+            <h5>Transformers</h5>
+            <m-list mSeparated>
+              <m-list-item *ngFor="let rd of ruleDescriptions" style="cursor: grab;" draggable="true" (dragstart)="onDragStart($event, 'rule', rd)">
+                <div class="m-items-middle">
+                  <m-icon mCode="experiment"/>
+                  <m-divider mVertical></m-divider>
+                  <div>
+                    <div>{{rd.name}}</div>
+                    <div class="description">{{rd.description}}</div>
+                  </div>
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+
+          <div class="block">
+            <h5>ConceptMap <span class="description">(translate)</span></h5>
+            <m-list mSeparated>
+              <m-list-item *ngFor="let cm of fml.maps; let idx = index"
+                style="cursor: grab;"
+                draggable="true"
+                (dragstart)="onDragStart($event, 'conceptMap', cm)"
+              >
+                <div class="m-items-middle">
+                  <m-icon mCode="file-done"/>
+                  <m-divider mVertical></m-divider>
+
+                  <div style="flex: 1">
+                    <div class="m-justify-between">
+                      <span style="word-break: break-word">{{cm.name}}</span>
+                      <m-tag *ngIf="cm.mode === 'internal'">local</m-tag>
+                    </div>
+                    <div class="description" style="display: flex">
+                      <a (mClick)="conceptMapEdit(cm)">edit</a>
+                      <m-divider mVertical/>
+                      <a (mClick)="conceptMapRemove(idx)">delete</a></div>
+                  </div>
+                </div>
+              </m-list-item>
+
+              <m-list-item mClickable (mClick)="conceptMapEdit()">
+                <div class="m-justify-center m-items-middle m-subtitle">
+                  new map
+                </div>
+              </m-list-item>
+            </m-list>
+          </div>
+        </ng-container>
+
+
+        <ng-container *ngIf="nodeSelected as node">
+          <!-- Resource -->
+          <div *ngIf="node.data.obj as obj">
+            <app-object-view
+              [fmlGroup]="fmlGroup"
+              [object]="obj"
+              (objectChange)="applyObject($event)"
+              (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"
+            />
+          </div>
+
+          <!-- Rule -->
+          <div *ngIf="node.data.rule as rule">
+            <app-rule-view [rule]="rule" [fmlGroup]="fmlGroup" (ruleChange)="applyRule($event)"/>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<m-modal #conceptMapModal (mClose)="conceptMapModal.close()">
+  <form #f="ngForm">
+    <div *m-modal-header>
+      ConceptMap
+    </div>
+
+    <div *m-modal-content>
+      <ng-container *ngIf="conceptMap">
+        <m-form-item mName="mode" mLabel="Mode" required>
+          <m-radio-group name="mode" [(ngModel)]="conceptMap.mode" (ngModelChange)="conceptMapReset()" required>
+            <label m-radio-button [mValue]="'internal'">Internal</label>
+            <label m-radio-button [mValue]="'external'">External</label>
+          </m-radio-group>
+        </m-form-item>
+
+        <m-form-item mName="cm-name" mLabel="URI" required>
+          <m-input name="cm-name" [(ngModel)]="conceptMap.name" required/>
+        </m-form-item>
+
+        <ng-container *ngIf="conceptMap.mode === 'internal'">
+          <m-form-row>
+            <m-form-item *m-form-col mName="cm-source" mLabel="Source" required>
+              <m-input name="cm-source" [(ngModel)]="conceptMap.source" required/>
+            </m-form-item>
+
+            <m-form-item *m-form-col mName="cm-target" mLabel="Target" required>
+              <m-input name="cm-target" [(ngModel)]="conceptMap.target" required/>
+            </m-form-item>
+          </m-form-row>
+
+
+          <m-form-item mLabel="Mappings">
+            <m-editable-table [mData]="conceptMap.mappings">
+              <m-editable-column mName="source" mTitle="Source field" mWidth="45%">
+                <ng-template #editTemplate let-m let-ngModelName="ngModelName">
+                  <m-input [name]="ngModelName" [(ngModel)]="m.source"/>
+                </ng-template>
+                <ng-template #viewTemplate let-m>
+                  {{m.source}}
+                </ng-template>
+              </m-editable-column>
+
+              <m-editable-column mName="target" mTitle="Target field" mWidth="45%">
+                <ng-template #editTemplate let-m let-ngModelName="ngModelName">
+                  <m-input [name]="ngModelName" [(ngModel)]="m.target"/>
+                </ng-template>
+                <ng-template #viewTemplate let-m>
+                  {{m.target}}
+                </ng-template>
+              </m-editable-column>
+            </m-editable-table>
+          </m-form-item>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <div *m-modal-footer class="m-justify-right">
+      <m-button mDisplay="text" (mClick)="conceptMapCancel()">Cancel</m-button>
+      <m-button mDisplay="primary" (mClick)="conceptMapApply()" [disabled]="f.invalid">Apply</m-button>
+    </div>
+  </form>
+</m-modal>

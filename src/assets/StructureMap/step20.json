@@ -1,0 +1,83 @@
+{
+  "id": "step20",
+  "resourceType": "StructureMap",
+  "status": "draft",
+  "name": "step20",
+  "url": "http://hl7.org/fhir/StructureMap/step20",
+  "structure": [
+    {
+      "url": "http://example.org/StructureDefinition/step20-left",
+      "mode": "source",
+      "alias": "Left"
+    },
+    {
+      "url": "http://example.org/StructureDefinition/step20-right",
+      "mode": "target",
+      "alias": "Right"
+    }
+  ],
+  "group": [
+    {
+      "name": "example",
+      "input": [
+        {
+          "name": "src",
+          "type": "Left",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "Right",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "b",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "date",
+              "variable": "dt",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "dateTime"
+                }
+              ]
+            }
+          ],
+          "rule": [
+            {
+              "name": "y",
+              "source": [
+                {
+                  "context": "src",
+                  "element": "year",
+                  "variable": "y"
+                }
+              ],
+              "target": [
+                {
+                  "context": "dt",
+                  "element": "value",
+                  "transform": "copy",
+                  "parameter": [
+                    {
+                      "valueId": "y"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

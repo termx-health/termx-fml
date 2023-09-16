@@ -1,0 +1,63 @@
+{
+  "resourceType": "StructureDefinition",
+  "name": "TLeft",
+  "snapshot": {
+    "element": [
+      {
+        "id": "TLeft",
+        "path": "TLeft",
+        "definition": "TLeft definition",
+        "max": "1",
+        "min": 1
+      },
+      {
+        "id": "TLeft.az1",
+        "path": "TLeft.az1",
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ],
+        "min": 0
+      },
+      {
+        "id": "TLeft.az1.az2",
+        "path": "TLeft.az1.az2",
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ],
+        "min": 1
+      },
+      {
+        "id": "TLeft.az1.az3",
+        "path": "TLeft.az1.az3",
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ],
+        "min": 0
+      }
+    ]
+  },
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace",
+      "valueUri": "http://hl7.org/fhir/tutorial"
+    }
+  ],
+  "status": "draft",
+  "id": "TLeft",
+  "derivation": "specialization",
+  "url": "http://hl7.org/fhir/StructureDefinition/step12-left",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
+  "fhirVersion": "4.0.1",
+  "type": "TLeft",
+  "kind": "logical",
+  "abstract": true
+}

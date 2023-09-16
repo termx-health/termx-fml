@@ -1,0 +1,822 @@
+{
+  "resourceType": "StructureMap",
+  "url": "http://termx.health/fhir/StructureMap/test33",
+  "name": "test33",
+  "status": "draft",
+  "group": [
+    {
+      "name": "main",
+      "input": [
+        {
+          "name": "Anamnesis",
+          "type": "Anamnesis",
+          "mode": "source"
+        },
+        {
+          "name": "Bundle",
+          "type": "Bundle",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_601",
+          "source": [
+            {
+              "context": "Anamnesis"
+            }
+          ],
+          "target": [
+            {
+              "variable": "a",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "transform": "uuid",
+              "variable": "uuid#534",
+              "parameter": []
+            },
+            {
+              "context": "Bundle",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "uuid#534"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_602",
+          "source": [
+            {
+              "context": "Anamnesis"
+            }
+          ],
+          "target": [
+            {
+              "variable": "b",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#595",
+              "parameter": [
+                {
+                  "valueString": "'transaction'"
+                }
+              ]
+            },
+            {
+              "context": "Bundle",
+              "element": "type",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#595"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_603",
+          "source": [
+            {
+              "context": "Anamnesis"
+            }
+          ],
+          "target": [
+            {
+              "context": "Bundle",
+              "element": "entry",
+              "variable": "c"
+            },
+            {
+              "context": "c",
+              "element": "resource",
+              "variable": "d",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Observation"
+                }
+              ]
+            },
+            {
+              "context": "Bundle",
+              "element": "entry",
+              "variable": "e"
+            },
+            {
+              "variable": "f",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": [
+            {
+              "name": "newHeartRate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueId": "e"
+                }
+              ]
+            },
+            {
+              "name": "newWeight",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueId": "d"
+                }
+              ]
+            },
+            {
+              "name": "setEntryUrl",
+              "parameter": [
+                {
+                  "valueId": "d"
+                },
+                {
+                  "valueId": "c"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "newHeartRate",
+      "input": [
+        {
+          "name": "Anamnesis",
+          "type": "Anamnesis",
+          "mode": "source"
+        },
+        {
+          "name": "Bundle_entry#505",
+          "type": "Any",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_604",
+          "source": [
+            {
+              "context": "Anamnesis"
+            }
+          ],
+          "target": [
+            {
+              "context": "Bundle_entry#505",
+              "element": "resource",
+              "variable": "g",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Observation"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "value",
+              "variable": "h",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Quantity"
+                }
+              ]
+            },
+            {
+              "variable": "i",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "variable": "j",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "performed"
+                }
+              ]
+            },
+            {
+              "variable": "k",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "patient"
+                }
+              ]
+            },
+            {
+              "variable": "l",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "heartrate"
+                }
+              ]
+            },
+            {
+              "transform": "cc",
+              "variable": "cc#532",
+              "parameter": [
+                {
+                  "valueString": "http://snomed.info/sct"
+                },
+                {
+                  "valueString": "364075005"
+                },
+                {
+                  "valueString": "Heart rate"
+                }
+              ]
+            },
+            {
+              "transform": "cc",
+              "variable": "cc#531",
+              "parameter": [
+                {
+                  "valueString": "http://terminology.hl7.org/CodeSystem/observation-category"
+                },
+                {
+                  "valueString": "vital-signs"
+                },
+                {
+                  "valueString": "Vital Signs"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#525",
+              "parameter": [
+                {
+                  "valueString": "'http://unitsofmeasure.org'"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#523",
+              "parameter": [
+                {
+                  "valueString": "'beats/min'"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#522",
+              "parameter": [
+                {
+                  "valueString": "'/min'"
+                }
+              ]
+            },
+            {
+              "context": "h",
+              "element": "unit",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#523"
+                }
+              ]
+            },
+            {
+              "context": "h",
+              "element": "code",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#522"
+                }
+              ]
+            },
+            {
+              "context": "h",
+              "element": "value",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "l"
+                }
+              ]
+            },
+            {
+              "context": "h",
+              "element": "system",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#525"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#516",
+              "parameter": [
+                {
+                  "valueString": "'final'"
+                }
+              ]
+            },
+            {
+              "transform": "uuid",
+              "variable": "uuid#514",
+              "parameter": [
+                {
+                  "valueId": "i"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "uuid#514"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "status",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#516"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "effective",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "j"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "subject",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "k"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "code",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "cc#532"
+                }
+              ]
+            },
+            {
+              "context": "g",
+              "element": "category",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "cc#531"
+                }
+              ]
+            },
+            {
+              "transform": "append",
+              "variable": "append#515",
+              "parameter": [
+                {
+                  "valueString": "http://example.org/fhir/Observation/"
+                },
+                {
+                  "valueId": "uuid#514"
+                }
+              ]
+            },
+            {
+              "context": "Bundle_entry#505",
+              "element": "fullUrl",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "append#515"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        }
+      ]
+    },
+    {
+      "name": "setEntryUrl",
+      "input": [
+        {
+          "name": "Observation",
+          "type": "Observation",
+          "mode": "source"
+        },
+        {
+          "name": "Bundle_entry#540",
+          "type": "Any",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_605",
+          "source": [
+            {
+              "context": "Observation"
+            }
+          ],
+          "target": [
+            {
+              "variable": "m",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Observation"
+                },
+                {
+                  "valueString": "id"
+                }
+              ]
+            },
+            {
+              "transform": "append",
+              "variable": "append#541",
+              "parameter": [
+                {
+                  "valueString": "http://example.org/fhir/Observation/"
+                },
+                {
+                  "valueId": "m"
+                }
+              ]
+            },
+            {
+              "context": "Bundle_entry#540",
+              "element": "fullUrl",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "append#541"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        }
+      ]
+    },
+    {
+      "name": "newWeight",
+      "input": [
+        {
+          "name": "Anamnesis",
+          "type": "Anamnesis",
+          "mode": "source"
+        },
+        {
+          "name": "Observation",
+          "type": "Observation",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_606",
+          "source": [
+            {
+              "context": "Anamnesis"
+            }
+          ],
+          "target": [
+            {
+              "context": "Observation",
+              "element": "value",
+              "variable": "n",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "Quantity"
+                }
+              ]
+            },
+            {
+              "variable": "o",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "$this"
+                }
+              ]
+            },
+            {
+              "variable": "p",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "performed"
+                }
+              ]
+            },
+            {
+              "variable": "q",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "patient"
+                }
+              ]
+            },
+            {
+              "variable": "r",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueId": "Anamnesis"
+                },
+                {
+                  "valueString": "weight"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#586",
+              "parameter": [
+                {
+                  "valueString": "'http://unitsofmeasure.org'"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#585",
+              "parameter": [
+                {
+                  "valueString": "'kg'"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#584",
+              "parameter": [
+                {
+                  "valueString": "'kg'"
+                }
+              ]
+            },
+            {
+              "context": "n",
+              "element": "value",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "r"
+                }
+              ]
+            },
+            {
+              "context": "n",
+              "element": "unit",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#584"
+                }
+              ]
+            },
+            {
+              "context": "n",
+              "element": "code",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#585"
+                }
+              ]
+            },
+            {
+              "context": "n",
+              "element": "system",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#586"
+                }
+              ]
+            },
+            {
+              "transform": "cc",
+              "variable": "cc#578",
+              "parameter": [
+                {
+                  "valueString": "http://snomed.info/sct'"
+                },
+                {
+                  "valueString": "27113001"
+                },
+                {
+                  "valueString": "Body weight"
+                }
+              ]
+            },
+            {
+              "transform": "cc",
+              "variable": "cc#577",
+              "parameter": [
+                {
+                  "valueString": "http://terminology.hl7.org/CodeSystem/observation-category"
+                },
+                {
+                  "valueString": "vital-signs"
+                },
+                {
+                  "valueString": "Vital Signs"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "constant#576",
+              "parameter": [
+                {
+                  "valueString": "'final'"
+                }
+              ]
+            },
+            {
+              "transform": "uuid",
+              "variable": "uuid#575",
+              "parameter": []
+            },
+            {
+              "context": "Observation",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "uuid#575"
+                }
+              ]
+            },
+            {
+              "context": "Observation",
+              "element": "status",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "constant#576"
+                }
+              ]
+            },
+            {
+              "context": "Observation",
+              "element": "category",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "cc#577"
+                }
+              ]
+            },
+            {
+              "context": "Observation",
+              "element": "code",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "cc#578"
+                }
+              ]
+            },
+            {
+              "context": "Observation",
+              "element": "effective",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "p"
+                }
+              ]
+            },
+            {
+              "context": "Observation",
+              "element": "subject",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "q"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        }
+      ]
+    }
+  ],
+  "extension": [
+    {
+      "url": "fml-export",
+      "valueString": "{\"main\":{\"objects\":{\"Anamnesis\":{\"expanded\":true,\"element\":{\"id\":\"Anamnesis\",\"path\":\"Anamnesis\"},\"resource\":\"Anamnesis\",\"url\":\"http://example.org/StructureDefinition/Anamnesis\",\"name\":\"Anamnesis\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"x\":19,\"y\":41},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"patient\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performed\",\"types\":[\"dateTime\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"weight\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"height\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"heartrate\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"Bundle\":{\"expanded\":true,\"element\":{\"id\":\"Bundle\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Bundle\"},\"path\":\"Bundle\",\"short\":\"Contains a collection of resources\",\"mapping\":[{\"map\":\"Entity. Role, or Act,N/A\",\"identity\":\"rim\"},{\"map\":\"infrastructure.structure\",\"identity\":\"w5\"},{\"map\":\"N/A\",\"identity\":\"v2\"},{\"map\":\"ClinicalDocument, if bundle.type = document\",\"identity\":\"cda\"}],\"isSummary\":false,\"constraint\":[{\"key\":\"bdl-1\",\"human\":\"total only when a search or history\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"total.empty() or (type = 'searchset') or (type = 'history')\"},{\"key\":\"bdl-2\",\"human\":\"entry.search only when a search\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"(type = 'searchset') or entry.search.empty()\"},{\"key\":\"bdl-7\",\"human\":\"FullUrl must be unique in a bundle, or else entries with the same fullUrl must have different meta.versionId (except in history bundles)\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"(type = 'history') or entry.where(fullUrl.exists()).select(fullUrl&iif(resource.meta.versionId.exists(), resource.meta.versionId, '')).isDistinct()\"},{\"key\":\"bdl-9\",\"human\":\"A document must have an identifier with a system and a value\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'document' implies (identifier.system.exists() and identifier.value.exists())\"},{\"key\":\"bdl-10\",\"human\":\"A document must have a date\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'document' implies (timestamp.hasValue())\"},{\"key\":\"bdl-11\",\"human\":\"A document must have a Composition as the first resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'document' implies entry.first().resource.is(Composition)\"},{\"key\":\"bdl-12\",\"human\":\"A message must have a MessageHeader as the first resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'message' implies entry.first().resource.is(MessageHeader)\"},{\"key\":\"bdl-13\",\"human\":\"A subscription-notification must have a SubscriptionStatus as the first resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'subscription-notification' implies entry.first().resource.is(SubscriptionStatus)\"},{\"key\":\"bdl-14\",\"human\":\"entry.request.method PATCH not allowed for history\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'history' implies entry.request.method != 'PATCH'\"},{\"key\":\"bdl-15\",\"human\":\"Bundle resources where type is not transaction, transaction-response, batch, or batch-response or when the request is a POST SHALL have Bundle.entry.fullUrl populated\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type='transaction' or type='transaction-response' or type='batch' or type='batch-response' or entry.all(fullUrl.exists() or request.method='POST')\"},{\"key\":\"bdl-16\",\"human\":\"Issue.severity for all issues within the OperationOutcome must be either 'information' or 'warning'.\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"issues.exists() implies (issues.issue.severity = 'information' or issues.issue.severity = 'warning')\"},{\"key\":\"bdl-17\",\"human\":\"Use and meaning of issues for documents has not been validated because the content will not be rendered in the document.\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'document' implies issues.empty()\"},{\"key\":\"bdl-18\",\"human\":\"Self link is required for searchsets.\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'searchset' implies link.where(relation = 'self' and url.exists()).exists()\"},{\"key\":\"bdl-3a\",\"human\":\"For collections of type document, message, searchset or collection, all entries must contain resources, and not have request or response elements\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type in ('document' | 'message' | 'searchset' | 'collection') implies entry.all(resource.exists() and request.empty() and response.empty())\"},{\"key\":\"bdl-3b\",\"human\":\"For collections of type history, all entries must contain request or response elements, and resources if the method is POST, PUT or PATCH\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type = 'history' implies entry.all(request.exists() and response.exists() and ((request.method in ('POST' | 'PATCH' | 'PUT')) = resource.exists()))\"},{\"key\":\"bdl-3c\",\"human\":\"For collections of type transaction or batch, all entries must contain request elements, and resources if the method is POST, PUT or PATCH\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type in ('transaction' | 'batch') implies entry.all(request.method.exists() and ((request.method in ('POST' | 'PATCH' | 'PUT')) = resource.exists()))\"},{\"key\":\"bdl-3d\",\"human\":\"For collections of type transaction-response or batch-response, all entries must contain response elements\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"type in ('transaction-response' | 'batch-response') implies entry.all(response.exists())\"}],\"definition\":\"A container for a collection of resources.\",\"isModifier\":false,\"mustSupport\":false},\"resource\":\"Bundle\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"name\":\"Bundle\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"x\":1331,\"y\":49},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"type\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"timestamp\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"total\",\"types\":[\"unsignedInt\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"link\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"entry\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"signature\",\"types\":[\"Signature\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"issues\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"Bundle.entry#491\":{\"expanded\":false,\"element\":{\"id\":\"Bundle.entry\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Bundle.entry\"},\"path\":\"Bundle.entry\",\"type\":[{\"code\":\"BackboneElement\"}],\"short\":\"Entry in the bundle - will have a resource or information\",\"isSummary\":true,\"constraint\":[{\"key\":\"bdl-5\",\"human\":\"must be a resource unless there's a request or response\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"resource.exists() or request.exists() or response.exists()\"},{\"key\":\"bdl-8\",\"human\":\"fullUrl cannot be a version specific reference\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"fullUrl.exists() implies fullUrl.contains('/_history/').not()\"},{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only).\",\"isModifier\":false,\"mustSupport\":false,\"orderMeaning\":\"For bundles of type 'document' and 'message', the first resource is special (must be Composition or MessageHeader respectively). For all bundles, the meaning of the order of entries depends on the bundle type\"},\"resource\":\"BackboneElement\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"name\":\"Bundle.entry#491\",\"mode\":\"object\",\"_nodeId\":3,\"position\":{\"x\":1071,\"y\":223},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"link\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"fullUrl\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"resource\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.mode\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.score\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"request.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.method\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.url\",\"types\":[\"uri\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.ifNoneMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifModifiedSince\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifNoneExist\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"response.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.status\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"response.location\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.etag\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.lastModified\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.outcome\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":true}]},\"Bundle.entry#491.resource#545\":{\"expanded\":false,\"element\":{\"id\":\"Observation\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Observation\"},\"path\":\"Observation\",\"alias\":[\"Vital Signs\",\"Measurement\",\"Results\",\"Tests\"],\"short\":\"Measurements and simple assertions\",\"comment\":\"Used for simple observations such as device measurements, laboratory atomic results, vital signs, height, weight, smoking status, comments, etc.  Other resources are used to provide context for observations such as laboratory reports, etc.\",\"mapping\":[{\"map\":\"Entity, Role, or Act,Observation[classCode=OBS, moodCode=EVN]\",\"identity\":\"rim\"},{\"map\":\"Event\",\"identity\":\"workflow\"},{\"map\":\"clinical.diagnostics\",\"identity\":\"w5\"},{\"map\":\"< 363787002 |Observable entity|\",\"identity\":\"sct-concept\"},{\"map\":\"OBX\",\"identity\":\"v2\"}],\"isSummary\":false,\"constraint\":[{\"key\":\"dom-2\",\"human\":\"If the resource is contained in another resource, it SHALL NOT contain nested Resources\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.contained.empty()\"},{\"key\":\"dom-3\",\"human\":\"If the resource is contained in another resource, it SHALL be referred to from elsewhere in the resource or SHALL refer to the containing resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.where((('#'+id in (%resource.descendants().reference | %resource.descendants().ofType(canonical) | %resource.descendants().ofType(uri) | %resource.descendants().ofType(url))) or descendants().where(reference = '#').exists() or descendants().where(ofType(canonical) = '#').exists() or descendants().where(ofType(canonical) = '#').exists()).not()).trace('unmatched', id).empty()\"},{\"key\":\"dom-4\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a meta.versionId or a meta.lastUpdated\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.versionId.empty() and contained.meta.lastUpdated.empty()\"},{\"key\":\"dom-5\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a security label\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.security.empty()\"},{\"key\":\"dom-6\",\"human\":\"A resource should have narrative for robust management\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"warning\",\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice\",\"valueBoolean\":true},{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation\",\"valueMarkdown\":\"When a resource has no narrative, only systems that fully understand the data can display the resource to a human safely. Including a human readable representation in the resource makes for a much more robust eco-system and cheaper handling of resources by intermediary systems. Some ecosystems restrict distribution of resources to only those systems that do fully understand the resources, and as a consequence implementers may believe that the narrative is superfluous. However experience shows that such eco-systems often open up to new participants over time.\"}],\"expression\":\"text.`div`.exists()\"},{\"key\":\"obs-6\",\"human\":\"dataAbsentReason SHALL only be present if Observation.value[x] is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"dataAbsentReason.empty() or value.empty()\"},{\"key\":\"obs-7\",\"human\":\"If Observation.component.code is the same as Observation.code, then Observation.value SHALL NOT be present (the Observation.component.value[x] holds the value).\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"value.empty() or component.code.where(coding.intersect(%resource.code.coding).exists()).empty()\"},{\"key\":\"obs-8\",\"human\":\"bodyStructure SHALL only be present if Observation.bodySite is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"bodySite.exists() implies bodyStructure.empty()\"}],\"definition\":\"Measurements and simple assertions made about a patient, device or other subject.\",\"isModifier\":false,\"mustSupport\":false},\"resource\":\"Observation\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"name\":\"Bundle.entry#491.resource#545\",\"mode\":\"object\",\"_nodeId\":4,\"position\":{\"x\":585,\"y\":241},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"instantiates\",\"types\":[\"canonical\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"basedOn\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.observation\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.type\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.reason\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"partOf\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"category\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"subject\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"focus\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"encounter\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"effective\",\"types\":[\"dateTime\",\"Period\",\"Timing\",\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"issued\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"Annotation\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"bodySite\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"bodyStructure\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"method\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"specimen\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"device\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"referenceRange\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"referenceRange.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.low\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.high\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.normalValue\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.type\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.appliesTo\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.age\",\"types\":[\"Range\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.text\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"hasMember\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"derivedFrom\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"component.value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.referenceRange\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":true}]},\"Bundle.entry#574\":{\"expanded\":false,\"element\":{\"id\":\"Bundle.entry\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Bundle.entry\"},\"path\":\"Bundle.entry\",\"type\":[{\"code\":\"BackboneElement\"}],\"short\":\"Entry in the bundle - will have a resource or information\",\"isSummary\":true,\"constraint\":[{\"key\":\"bdl-5\",\"human\":\"must be a resource unless there's a request or response\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"resource.exists() or request.exists() or response.exists()\"},{\"key\":\"bdl-8\",\"human\":\"fullUrl cannot be a version specific reference\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"fullUrl.exists() implies fullUrl.contains('/_history/').not()\"},{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only).\",\"isModifier\":false,\"mustSupport\":false,\"orderMeaning\":\"For bundles of type 'document' and 'message', the first resource is special (must be Composition or MessageHeader respectively). For all bundles, the meaning of the order of entries depends on the bundle type\"},\"resource\":\"BackboneElement\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"name\":\"Bundle.entry#574\",\"mode\":\"object\",\"_nodeId\":5,\"position\":{\"x\":1071,\"y\":354},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"link\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"fullUrl\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"resource\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.mode\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.score\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"request.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.method\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.url\",\"types\":[\"uri\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.ifNoneMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifModifiedSince\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifNoneExist\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"response.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.status\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"response.location\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.etag\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.lastModified\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.outcome\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":true}]}},\"rules\":[{\"expanded\":true,\"parameters\":[],\"position\":{\"x\":1068,\"y\":85},\"action\":\"uuid\",\"name\":\"uuid#534\",\"_nodeId\":6},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"setEntryUrl\"},{\"type\":\"var\",\"value\":\"Bundle.entry#491.resource#545.$this\"}],\"position\":{\"x\":772,\"y\":247},\"action\":\"rulegroup\",\"name\":\"rulegroup#543\",\"_nodeId\":7},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"newHeartRate\"},{\"type\":\"var\",\"value\":\"Anamnesis.$this\"}],\"position\":{\"x\":779,\"y\":380},\"action\":\"rulegroup\",\"name\":\"rulegroup#552\",\"_nodeId\":8},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"newWeight\"},{\"type\":\"var\",\"value\":\"Anamnesis.$this\"}],\"position\":{\"x\":289,\"y\":248},\"action\":\"rulegroup\",\"name\":\"rulegroup#590\",\"_nodeId\":9},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"transaction\"}],\"position\":{\"x\":1068,\"y\":149},\"action\":\"constant\",\"name\":\"constant#595\",\"_nodeId\":10}],\"connections\":[{\"sourceObject\":\"Bundle.entry#491\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle\",\"targetFieldIdx\":10},{\"sourceObject\":\"Bundle.entry#491.resource#545\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#491\",\"targetFieldIdx\":6},{\"sourceObject\":\"uuid#534\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle\",\"targetFieldIdx\":1},{\"sourceObject\":\"Bundle.entry#491.resource#545\",\"sourceFieldIdx\":0,\"targetObject\":\"rulegroup#543\",\"targetFieldIdx\":0},{\"sourceObject\":\"rulegroup#543\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#491\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"rulegroup#552\",\"targetFieldIdx\":0},{\"sourceObject\":\"Bundle.entry#574\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle\",\"targetFieldIdx\":10},{\"sourceObject\":\"rulegroup#552\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#574\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"rulegroup#590\",\"targetFieldIdx\":0},{\"sourceObject\":\"rulegroup#590\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#491.resource#545\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#595\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle\",\"targetFieldIdx\":6},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"uuid#534\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#595\",\"targetFieldIdx\":0}]},\"newHeartRate\":{\"objects\":{\"Anamnesis\":{\"expanded\":true,\"element\":{\"id\":\"Anamnesis\",\"path\":\"Anamnesis\"},\"resource\":\"Anamnesis\",\"url\":\"http://example.org/StructureDefinition/Anamnesis\",\"name\":\"Anamnesis\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"y\":30,\"x\":20},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"patient\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performed\",\"types\":[\"dateTime\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"weight\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"height\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"heartrate\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"Bundle.entry#505\":{\"expanded\":false,\"element\":{\"id\":\"Bundle.entry\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Bundle.entry\"},\"path\":\"Bundle.entry\",\"type\":[{\"code\":\"BackboneElement\"}],\"short\":\"Entry in the bundle - will have a resource or information\",\"isSummary\":true,\"constraint\":[{\"key\":\"bdl-5\",\"human\":\"must be a resource unless there's a request or response\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"resource.exists() or request.exists() or response.exists()\"},{\"key\":\"bdl-8\",\"human\":\"fullUrl cannot be a version specific reference\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"fullUrl.exists() implies fullUrl.contains('/_history/').not()\"},{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only).\",\"isModifier\":false,\"mustSupport\":false,\"orderMeaning\":\"For bundles of type 'document' and 'message', the first resource is special (must be Composition or MessageHeader respectively). For all bundles, the meaning of the order of entries depends on the bundle type\"},\"resource\":\"BackboneElement\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"name\":\"Bundle.entry#505\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"y\":93,\"x\":1139},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"link\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"fullUrl\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"resource\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.mode\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.score\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"request.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.method\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.url\",\"types\":[\"uri\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.ifNoneMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifModifiedSince\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifNoneExist\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"response.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.status\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"response.location\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.etag\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.lastModified\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.outcome\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":true}]},\"Bundle.entry#505.resource#507\":{\"expanded\":true,\"element\":{\"id\":\"Observation\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Observation\"},\"path\":\"Observation\",\"alias\":[\"Vital Signs\",\"Measurement\",\"Results\",\"Tests\"],\"short\":\"Measurements and simple assertions\",\"comment\":\"Used for simple observations such as device measurements, laboratory atomic results, vital signs, height, weight, smoking status, comments, etc.  Other resources are used to provide context for observations such as laboratory reports, etc.\",\"mapping\":[{\"map\":\"Entity, Role, or Act,Observation[classCode=OBS, moodCode=EVN]\",\"identity\":\"rim\"},{\"map\":\"Event\",\"identity\":\"workflow\"},{\"map\":\"clinical.diagnostics\",\"identity\":\"w5\"},{\"map\":\"< 363787002 |Observable entity|\",\"identity\":\"sct-concept\"},{\"map\":\"OBX\",\"identity\":\"v2\"}],\"isSummary\":false,\"constraint\":[{\"key\":\"dom-2\",\"human\":\"If the resource is contained in another resource, it SHALL NOT contain nested Resources\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.contained.empty()\"},{\"key\":\"dom-3\",\"human\":\"If the resource is contained in another resource, it SHALL be referred to from elsewhere in the resource or SHALL refer to the containing resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.where((('#'+id in (%resource.descendants().reference | %resource.descendants().ofType(canonical) | %resource.descendants().ofType(uri) | %resource.descendants().ofType(url))) or descendants().where(reference = '#').exists() or descendants().where(ofType(canonical) = '#').exists() or descendants().where(ofType(canonical) = '#').exists()).not()).trace('unmatched', id).empty()\"},{\"key\":\"dom-4\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a meta.versionId or a meta.lastUpdated\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.versionId.empty() and contained.meta.lastUpdated.empty()\"},{\"key\":\"dom-5\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a security label\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.security.empty()\"},{\"key\":\"dom-6\",\"human\":\"A resource should have narrative for robust management\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"warning\",\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice\",\"valueBoolean\":true},{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation\",\"valueMarkdown\":\"When a resource has no narrative, only systems that fully understand the data can display the resource to a human safely. Including a human readable representation in the resource makes for a much more robust eco-system and cheaper handling of resources by intermediary systems. Some ecosystems restrict distribution of resources to only those systems that do fully understand the resources, and as a consequence implementers may believe that the narrative is superfluous. However experience shows that such eco-systems often open up to new participants over time.\"}],\"expression\":\"text.`div`.exists()\"},{\"key\":\"obs-6\",\"human\":\"dataAbsentReason SHALL only be present if Observation.value[x] is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"dataAbsentReason.empty() or value.empty()\"},{\"key\":\"obs-7\",\"human\":\"If Observation.component.code is the same as Observation.code, then Observation.value SHALL NOT be present (the Observation.component.value[x] holds the value).\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"value.empty() or component.code.where(coding.intersect(%resource.code.coding).exists()).empty()\"},{\"key\":\"obs-8\",\"human\":\"bodyStructure SHALL only be present if Observation.bodySite is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"bodySite.exists() implies bodyStructure.empty()\"}],\"definition\":\"Measurements and simple assertions made about a patient, device or other subject.\",\"isModifier\":false,\"mustSupport\":false},\"resource\":\"Observation\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"name\":\"Bundle.entry#505.resource#507\",\"mode\":\"object\",\"_nodeId\":3,\"position\":{\"y\":197.5,\"x\":886},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"instantiates\",\"types\":[\"canonical\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"basedOn\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.observation\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.type\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.reason\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"partOf\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"category\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"subject\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"focus\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"encounter\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"effective\",\"types\":[\"dateTime\",\"Period\",\"Timing\",\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"issued\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"Annotation\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"bodySite\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"bodyStructure\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"method\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"specimen\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"device\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"referenceRange\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"referenceRange.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.low\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.high\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.normalValue\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.type\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.appliesTo\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.age\",\"types\":[\"Range\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.text\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"hasMember\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"derivedFrom\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"component.value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.referenceRange\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":true}]},\"Bundle.entry#505.resource#507.value#520\":{\"expanded\":true,\"element\":{\"id\":\"Quantity\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Quantity\"},\"path\":\"Quantity\",\"short\":\"A measured or measurable amount\",\"comment\":\"The context of use may frequently define what kind of quantity this is and therefore what kind of units can be used. The context of use may also restrict the values for the comparator.\",\"mapping\":[{\"map\":\"n/a,PQ, IVL<PQ>, MO, CO, depending on the values\",\"identity\":\"rim\"},{\"map\":\"SN (see also Range) or CQ\",\"identity\":\"v2\"}],\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status\",\"valueCode\":\"normative\"},{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-normative-version\",\"valueCode\":\"4.0.0\"}],\"constraint\":[{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"},{\"key\":\"qty-3\",\"human\":\"If a code for the unit is present, the system SHALL also be present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Quantity\",\"severity\":\"error\",\"expression\":\"code.empty() or system.exists()\"}],\"definition\":\"A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies.\",\"isModifier\":false},\"resource\":\"Quantity\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Quantity\",\"name\":\"Bundle.entry#505.resource#507.value#520\",\"mode\":\"object\",\"_nodeId\":4,\"position\":{\"y\":623.5,\"x\":578.5},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"comparator\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"unit\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"system\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false}]}},\"rules\":[{\"expanded\":true,\"parameters\":[{\"type\":\"var\",\"value\":\"Anamnesis.$this\"}],\"position\":{\"y\":124.5,\"x\":619.5},\"action\":\"uuid\",\"name\":\"uuid#514\",\"_nodeId\":5},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"http://example.org/fhir/Observation/\"},{\"type\":\"var\",\"value\":\"uuid#514\"}],\"position\":{\"x\":815,\"y\":-14.25},\"action\":\"append\",\"name\":\"append#515\",\"_nodeId\":6},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"final\"}],\"position\":{\"y\":548.5,\"x\":602},\"action\":\"constant\",\"name\":\"constant#516\",\"_nodeId\":7},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"/min\"}],\"position\":{\"y\":663,\"x\":287.5},\"action\":\"constant\",\"name\":\"constant#522\",\"_nodeId\":8},{\"expanded\":true,\"name\":\"constant#523\",\"position\":{\"y\":718,\"x\":273},\"action\":\"constant\",\"parameters\":[{\"type\":\"const\",\"value\":\"beats/min\"}],\"_nodeId\":9},{\"expanded\":true,\"name\":\"constant#525\",\"position\":{\"y\":851.5,\"x\":234},\"action\":\"constant\",\"parameters\":[{\"type\":\"const\",\"value\":\"http://unitsofmeasure.org\"}],\"_nodeId\":10},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"http://terminology.hl7.org/CodeSystem/observation-category\"},{\"type\":\"const\",\"value\":\"vital-signs\"},{\"type\":\"const\",\"value\":\"Vital Signs\"}],\"position\":{\"y\":867.5,\"x\":480},\"action\":\"cc\",\"name\":\"cc#531\",\"_nodeId\":11},{\"expanded\":true,\"name\":\"cc#532\",\"position\":{\"y\":965.5,\"x\":575},\"action\":\"cc\",\"parameters\":[{\"type\":\"const\",\"value\":\"http://snomed.info/sct\"},{\"type\":\"const\",\"value\":\"364075005\"},{\"type\":\"const\",\"value\":\"Heart rate\"}],\"_nodeId\":12}],\"connections\":[{\"sourceObject\":\"Bundle.entry#505.resource#507\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505\",\"targetFieldIdx\":6},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"uuid#514\",\"targetFieldIdx\":0},{\"sourceObject\":\"uuid#514\",\"sourceFieldIdx\":0,\"targetObject\":\"append#515\",\"targetFieldIdx\":0},{\"sourceObject\":\"uuid#514\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":1},{\"sourceObject\":\"append#515\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505\",\"targetFieldIdx\":5},{\"sourceObject\":\"constant#516\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":14},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#516\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":3,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":20},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":1,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":17},{\"sourceObject\":\"Bundle.entry#505.resource#507.value#520\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":23},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#522\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#523\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#523\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507.value#520\",\"targetFieldIdx\":5},{\"sourceObject\":\"constant#522\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507.value#520\",\"targetFieldIdx\":7},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":6,\"targetObject\":\"Bundle.entry#505.resource#507.value#520\",\"targetFieldIdx\":3},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#525\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#525\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507.value#520\",\"targetFieldIdx\":6},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"cc#531\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"cc#532\",\"targetFieldIdx\":0},{\"sourceObject\":\"cc#532\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":16},{\"sourceObject\":\"cc#531\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#505.resource#507\",\"targetFieldIdx\":15}]},\"setEntryUrl\":{\"objects\":{\"Observation\":{\"expanded\":true,\"element\":{\"id\":\"Observation\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Observation\"},\"path\":\"Observation\",\"alias\":[\"Vital Signs\",\"Measurement\",\"Results\",\"Tests\"],\"short\":\"Measurements and simple assertions\",\"comment\":\"Used for simple observations such as device measurements, laboratory atomic results, vital signs, height, weight, smoking status, comments, etc.  Other resources are used to provide context for observations such as laboratory reports, etc.\",\"mapping\":[{\"map\":\"Entity, Role, or Act,Observation[classCode=OBS, moodCode=EVN]\",\"identity\":\"rim\"},{\"map\":\"Event\",\"identity\":\"workflow\"},{\"map\":\"clinical.diagnostics\",\"identity\":\"w5\"},{\"map\":\"< 363787002 |Observable entity|\",\"identity\":\"sct-concept\"},{\"map\":\"OBX\",\"identity\":\"v2\"}],\"isSummary\":false,\"constraint\":[{\"key\":\"dom-2\",\"human\":\"If the resource is contained in another resource, it SHALL NOT contain nested Resources\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.contained.empty()\"},{\"key\":\"dom-3\",\"human\":\"If the resource is contained in another resource, it SHALL be referred to from elsewhere in the resource or SHALL refer to the containing resource\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.where((('#'+id in (%resource.descendants().reference | %resource.descendants().ofType(canonical) | %resource.descendants().ofType(uri) | %resource.descendants().ofType(url))) or descendants().where(reference = '#').exists() or descendants().where(ofType(canonical) = '#').exists() or descendants().where(ofType(canonical) = '#').exists()).not()).trace('unmatched', id).empty()\"},{\"key\":\"dom-4\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a meta.versionId or a meta.lastUpdated\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.versionId.empty() and contained.meta.lastUpdated.empty()\"},{\"key\":\"dom-5\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a security label\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"error\",\"expression\":\"contained.meta.security.empty()\"},{\"key\":\"dom-6\",\"human\":\"A resource should have narrative for robust management\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\",\"severity\":\"warning\",\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice\",\"valueBoolean\":true},{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation\",\"valueMarkdown\":\"When a resource has no narrative, only systems that fully understand the data can display the resource to a human safely. Including a human readable representation in the resource makes for a much more robust eco-system and cheaper handling of resources by intermediary systems. Some ecosystems restrict distribution of resources to only those systems that do fully understand the resources, and as a consequence implementers may believe that the narrative is superfluous. However experience shows that such eco-systems often open up to new participants over time.\"}],\"expression\":\"text.`div`.exists()\"},{\"key\":\"obs-6\",\"human\":\"dataAbsentReason SHALL only be present if Observation.value[x] is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"dataAbsentReason.empty() or value.empty()\"},{\"key\":\"obs-7\",\"human\":\"If Observation.component.code is the same as Observation.code, then Observation.value SHALL NOT be present (the Observation.component.value[x] holds the value).\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"value.empty() or component.code.where(coding.intersect(%resource.code.coding).exists()).empty()\"},{\"key\":\"obs-8\",\"human\":\"bodyStructure SHALL only be present if Observation.bodySite is not present\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"severity\":\"error\",\"expression\":\"bodySite.exists() implies bodyStructure.empty()\"}],\"definition\":\"Measurements and simple assertions made about a patient, device or other subject.\",\"isModifier\":false,\"mustSupport\":false},\"resource\":\"Observation\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"name\":\"Observation\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"y\":30,\"x\":29},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"instantiates\",\"types\":[\"canonical\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"basedOn\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.observation\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.type\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.reason\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"partOf\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"category\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"subject\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"focus\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"encounter\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"effective\",\"types\":[\"dateTime\",\"Period\",\"Timing\",\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"issued\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"Annotation\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"bodySite\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"bodyStructure\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"method\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"specimen\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"device\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"referenceRange\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"referenceRange.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.low\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.high\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.normalValue\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.type\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.appliesTo\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.age\",\"types\":[\"Range\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.text\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"hasMember\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"derivedFrom\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"component.value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.referenceRange\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":true}]},\"Bundle.entry#540\":{\"expanded\":true,\"element\":{\"id\":\"Bundle.entry\",\"max\":\"*\",\"min\":0,\"base\":{\"max\":\"*\",\"min\":0,\"path\":\"Bundle.entry\"},\"path\":\"Bundle.entry\",\"type\":[{\"code\":\"BackboneElement\"}],\"short\":\"Entry in the bundle - will have a resource or information\",\"isSummary\":true,\"constraint\":[{\"key\":\"bdl-5\",\"human\":\"must be a resource unless there's a request or response\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"resource.exists() or request.exists() or response.exists()\"},{\"key\":\"bdl-8\",\"human\":\"fullUrl cannot be a version specific reference\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"severity\":\"error\",\"expression\":\"fullUrl.exists() implies fullUrl.contains('/_history/').not()\"},{\"key\":\"ele-1\",\"human\":\"All FHIR elements must have a @value or children\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\",\"severity\":\"error\",\"expression\":\"hasValue() or (children().count() > id.count())\"}],\"definition\":\"An entry in a bundle resource - will either contain a resource or information about a resource (transactions and history only).\",\"isModifier\":false,\"mustSupport\":false,\"orderMeaning\":\"For bundles of type 'document' and 'message', the first resource is special (must be Composition or MessageHeader respectively). For all bundles, the meaning of the order of entries depends on the bundle type\"},\"resource\":\"BackboneElement\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Bundle\",\"name\":\"Bundle.entry#540\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"x\":625,\"y\":197},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"link\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"fullUrl\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"resource\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"search.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"search.mode\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"search.score\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"request.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"request.method\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.url\",\"types\":[\"uri\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"request.ifNoneMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifModifiedSince\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifMatch\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"request.ifNoneExist\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response\",\"types\":[\"BackboneElement\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"response.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"response.status\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"response.location\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.etag\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.lastModified\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"response.outcome\",\"types\":[\"Resource\"],\"multiple\":false,\"required\":false,\"part\":true}]}},\"rules\":[{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"http://example.org/fhir/Observation/\"},{\"type\":\"var\",\"value\":\"Observation.id\"}],\"position\":{\"y\":232,\"x\":318},\"action\":\"append\",\"name\":\"append#541\",\"_nodeId\":3}],\"connections\":[{\"sourceObject\":\"Observation\",\"sourceFieldIdx\":1,\"targetObject\":\"append#541\",\"targetFieldIdx\":0},{\"sourceObject\":\"append#541\",\"sourceFieldIdx\":0,\"targetObject\":\"Bundle.entry#540\",\"targetFieldIdx\":5}]},\"newWeight\":{\"objects\":{\"Anamnesis\":{\"expanded\":true,\"element\":{\"id\":\"Anamnesis\",\"path\":\"Anamnesis\",\"short\":\"Base for all elements\",\"definition\":\"Base definition for all elements in a resource.\",\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"Element\",\"min\":0,\"max\":\"*\"},\"condition\":[\"ele-1\"],\"constraint\":[{\"key\":\"ele-1\",\"severity\":\"error\",\"human\":\"All FHIR elements must have a @value or children\",\"expression\":\"hasValue() or (children().count() > id.count())\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\"}],\"isModifier\":false,\"mapping\":[{\"identity\":\"rim\",\"map\":\"n/a\"}]},\"resource\":\"Anamnesis\",\"url\":\"http://example.org/StructureDefinition/Anamnesis\",\"name\":\"Anamnesis\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"y\":30,\"x\":20},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"patient\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performed\",\"types\":[\"dateTime\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"weight\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"height\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"heartrate\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":false}]},\"Observation\":{\"expanded\":true,\"element\":{\"id\":\"Observation\",\"path\":\"Observation\",\"short\":\"Measurements and simple assertions\",\"definition\":\"Measurements and simple assertions made about a patient, device or other subject.\",\"comment\":\"Used for simple observations such as device measurements, laboratory atomic results, vital signs, height, weight, smoking status, comments, etc.  Other resources are used to provide context for observations such as laboratory reports, etc.\",\"alias\":[\"Vital Signs\",\"Measurement\",\"Results\",\"Tests\"],\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"Observation\",\"min\":0,\"max\":\"*\"},\"constraint\":[{\"key\":\"dom-2\",\"severity\":\"error\",\"human\":\"If the resource is contained in another resource, it SHALL NOT contain nested Resources\",\"expression\":\"contained.contained.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-3\",\"severity\":\"error\",\"human\":\"If the resource is contained in another resource, it SHALL be referred to from elsewhere in the resource or SHALL refer to the containing resource\",\"expression\":\"contained.where((('#'+id in (%resource.descendants().reference | %resource.descendants().ofType(canonical) | %resource.descendants().ofType(uri) | %resource.descendants().ofType(url))) or descendants().where(reference = '#').exists() or descendants().where(ofType(canonical) = '#').exists() or descendants().where(ofType(canonical) = '#').exists()).not()).trace('unmatched', id).empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-4\",\"severity\":\"error\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a meta.versionId or a meta.lastUpdated\",\"expression\":\"contained.meta.versionId.empty() and contained.meta.lastUpdated.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-5\",\"severity\":\"error\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a security label\",\"expression\":\"contained.meta.security.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice\",\"valueBoolean\":true},{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation\",\"valueMarkdown\":\"When a resource has no narrative, only systems that fully understand the data can display the resource to a human safely. Including a human readable representation in the resource makes for a much more robust eco-system and cheaper handling of resources by intermediary systems. Some ecosystems restrict distribution of resources to only those systems that do fully understand the resources, and as a consequence implementers may believe that the narrative is superfluous. However experience shows that such eco-systems often open up to new participants over time.\"}],\"key\":\"dom-6\",\"severity\":\"warning\",\"human\":\"A resource should have narrative for robust management\",\"expression\":\"text.`div`.exists()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"obs-6\",\"severity\":\"error\",\"human\":\"dataAbsentReason SHALL only be present if Observation.value[x] is not present\",\"expression\":\"dataAbsentReason.empty() or value.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\"},{\"key\":\"obs-7\",\"severity\":\"error\",\"human\":\"If Observation.component.code is the same as Observation.code, then Observation.value SHALL NOT be present (the Observation.component.value[x] holds the value).\",\"expression\":\"value.empty() or component.code.where(coding.intersect(%resource.code.coding).exists()).empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\"},{\"key\":\"obs-8\",\"severity\":\"error\",\"human\":\"bodyStructure SHALL only be present if Observation.bodySite is not present\",\"expression\":\"bodySite.exists() implies bodyStructure.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Observation\"}],\"mustSupport\":false,\"isModifier\":false,\"isSummary\":false,\"mapping\":[{\"identity\":\"rim\",\"map\":\"Entity, Role, or Act,Observation[classCode=OBS, moodCode=EVN]\"},{\"identity\":\"workflow\",\"map\":\"Event\"},{\"identity\":\"w5\",\"map\":\"clinical.diagnostics\"},{\"identity\":\"sct-concept\",\"map\":\"< 363787002 |Observable entity|\"},{\"identity\":\"v2\",\"map\":\"OBX\"}]},\"resource\":\"Observation\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Observation\",\"name\":\"Observation\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"x\":877,\"y\":68},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"instantiates\",\"types\":[\"canonical\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"basedOn\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"triggeredBy.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"triggeredBy.observation\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.type\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"triggeredBy.reason\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"partOf\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"category\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"subject\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"focus\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"encounter\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"effective\",\"types\":[\"dateTime\",\"Period\",\"Timing\",\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"issued\",\"types\":[\"instant\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"performer\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"note\",\"types\":[\"Annotation\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"bodySite\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"bodyStructure\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"method\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"specimen\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"device\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"referenceRange\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"referenceRange.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.low\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.high\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.normalValue\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.type\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.appliesTo\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"referenceRange.age\",\"types\":[\"Range\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"referenceRange.text\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"hasMember\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"derivedFrom\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"component.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":true,\"part\":true},{\"name\":\"component.value\",\"types\":[\"Quantity\",\"CodeableConcept\",\"string\",\"boolean\",\"integer\",\"Range\",\"Ratio\",\"SampledData\",\"time\",\"dateTime\",\"Period\",\"Attachment\",\"Reference\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.dataAbsentReason\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"part\":true},{\"name\":\"component.interpretation\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"part\":true},{\"name\":\"component.referenceRange\",\"types\":[],\"multiple\":true,\"required\":false,\"part\":true}]},\"Observation.value#581\":{\"expanded\":false,\"element\":{\"id\":\"Quantity\",\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status\",\"valueCode\":\"normative\"},{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-normative-version\",\"valueCode\":\"4.0.0\"}],\"path\":\"Quantity\",\"short\":\"A measured or measurable amount\",\"definition\":\"A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies.\",\"comment\":\"The context of use may frequently define what kind of quantity this is and therefore what kind of units can be used. The context of use may also restrict the values for the comparator.\",\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"Quantity\",\"min\":0,\"max\":\"*\"},\"condition\":[\"ele-1\"],\"constraint\":[{\"key\":\"ele-1\",\"severity\":\"error\",\"human\":\"All FHIR elements must have a @value or children\",\"expression\":\"hasValue() or (children().count() > id.count())\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\"},{\"key\":\"qty-3\",\"severity\":\"error\",\"human\":\"If a code for the unit is present, the system SHALL also be present\",\"expression\":\"code.empty() or system.exists()\"}],\"isModifier\":false,\"mapping\":[{\"identity\":\"rim\",\"map\":\"n/a\"},{\"identity\":\"v2\",\"map\":\"SN (see also Range) or CQ\"},{\"identity\":\"rim\",\"map\":\"PQ, IVL<PQ>, MO, CO, depending on the values\"}]},\"resource\":\"Quantity\",\"url\":\"http://hl7.org/fhir/StructureDefinition/Quantity\",\"name\":\"Observation.value#581\",\"mode\":\"object\",\"_nodeId\":3,\"position\":{\"x\":606,\"y\":602},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"part\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"part\":false},{\"name\":\"value\",\"types\":[\"decimal\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"comparator\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"unit\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"system\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"part\":false},{\"name\":\"code\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"part\":false}]}},\"rules\":[{\"expanded\":true,\"parameters\":[],\"position\":{\"x\":630,\"y\":97},\"action\":\"uuid\",\"name\":\"uuid#575\",\"_nodeId\":4},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"final\"}],\"position\":{\"x\":625,\"y\":172},\"action\":\"constant\",\"name\":\"constant#576\",\"_nodeId\":5},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"http://terminology.hl7.org/CodeSystem/observation-category\"},{\"type\":\"const\",\"value\":\"vital-signs\"},{\"type\":\"const\",\"value\":\"Vital Signs\"}],\"position\":{\"y\":255.5,\"x\":480},\"action\":\"cc\",\"name\":\"cc#577\",\"_nodeId\":6},{\"expanded\":true,\"name\":\"cc#578\",\"position\":{\"y\":353.5,\"x\":574},\"action\":\"cc\",\"parameters\":[{\"type\":\"const\",\"value\":\"http://snomed.info/sct'\"},{\"type\":\"const\",\"value\":\"27113001\"},{\"type\":\"const\",\"value\":\"Body weight\"}],\"_nodeId\":7},{\"expanded\":true,\"parameters\":[{\"type\":\"const\",\"value\":\"kg\"}],\"position\":{\"y\":534.5,\"x\":292},\"action\":\"constant\",\"name\":\"constant#584\",\"_nodeId\":8},{\"expanded\":true,\"name\":\"constant#585\",\"position\":{\"x\":296,\"y\":651},\"action\":\"constant\",\"parameters\":[{\"type\":\"const\",\"value\":\"kg\"}],\"_nodeId\":9},{\"expanded\":true,\"name\":\"constant#586\",\"position\":{\"x\":227,\"y\":592},\"action\":\"constant\",\"parameters\":[{\"type\":\"const\",\"value\":\"http://unitsofmeasure.org\"}],\"_nodeId\":10}],\"connections\":[{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"uuid#575\",\"targetFieldIdx\":0},{\"sourceObject\":\"uuid#575\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation\",\"targetFieldIdx\":1},{\"sourceObject\":\"constant#576\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation\",\"targetFieldIdx\":14},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#576\",\"targetFieldIdx\":0},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"cc#577\",\"targetFieldIdx\":0},{\"sourceObject\":\"cc#577\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation\",\"targetFieldIdx\":15},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"cc#578\",\"targetFieldIdx\":0},{\"sourceObject\":\"cc#578\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation\",\"targetFieldIdx\":16},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":5,\"targetObject\":\"Observation\",\"targetFieldIdx\":20},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":3,\"targetObject\":\"Observation\",\"targetFieldIdx\":17},{\"sourceObject\":\"Observation.value#581\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation\",\"targetFieldIdx\":23},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":6,\"targetObject\":\"Observation.value#581\",\"targetFieldIdx\":3},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#584\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#584\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation.value#581\",\"targetFieldIdx\":5},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#585\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#585\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation.value#581\",\"targetFieldIdx\":7},{\"sourceObject\":\"Anamnesis\",\"sourceFieldIdx\":0,\"targetObject\":\"constant#586\",\"targetFieldIdx\":0},{\"sourceObject\":\"constant#586\",\"sourceFieldIdx\":0,\"targetObject\":\"Observation.value#581\",\"targetFieldIdx\":6}]}}"
+    }
+  ],
+  "structure": [
+    {
+      "url": "http://example.org/StructureDefinition/Anamnesis",
+      "mode": "source",
+      "alias": "Anamnesis"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/Bundle",
+      "mode": "target",
+      "alias": "Bundle"
+    }
+  ]
+}

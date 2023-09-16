@@ -1,0 +1,61 @@
+{
+  "abstract": true,
+  "extension": [
+    {
+      "valueUri": "http://hl7.org/fhir/tutorial",
+      "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-namespace"
+    }
+  ],
+  "type": "TLeft",
+  "derivation": "specialization",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
+  "snapshot": {
+    "element": [
+      {
+        "max": "1",
+        "path": "TLeft",
+        "id": "TLeft",
+        "min": 1
+      },
+      {
+        "max": "1",
+        "path": "TLeft.a1",
+        "id": "TLeft.a1",
+        "min": 1,
+        "type": [
+          {
+            "code": "string"
+          }]
+      },
+      {
+        "max": "1",
+        "path": "TLeft.a2",
+        "min": 1,
+        "id": "TLeft.a2",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "id": "TLeft.meta",
+        "path": "TLeft.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      }
+    ]
+  },
+  "status": "draft",
+  "name": "TLeft",
+  "kind": "logical",
+  "fhirVersion": "4.0.1",
+  "url": "http://hl7.org/fhir/StructureDefinition/step3-left",
+  "id": "TLeft",
+  "resourceType": "StructureDefinition"
+}

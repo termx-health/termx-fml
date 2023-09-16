@@ -1,0 +1,186 @@
+{
+  "id": "structuremap-supply-request-transform",
+  "resourceType": "StructureMap",
+  "status": "draft",
+  "name": "structuremap-supply-request-transform",
+  "url": "http://hl7.org/fhir/StructureMap/structuremap-supply-request-transform",
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/ActivityDefinition",
+      "mode": "source"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/SupplyRequest",
+      "mode": "target"
+    }
+  ],
+  "group": [
+    {
+      "name": "main",
+      "input": [
+        {
+          "name": "source",
+          "type": "ActivityDefinition",
+          "mode": "source"
+        },
+        {
+          "name": "target",
+          "type": "SupplyRequest",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "status",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "status",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "'draft'"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "category",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "category",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "'non-stock'"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "priority",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "priority",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "'routine'"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "quantity",
+          "source": [
+            {
+              "context": "source",
+              "element": "quantity",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "category",
+              "transform": "copy"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "source": [
+            {
+              "context": "source",
+              "element": "code",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "item",
+              "variable": "b",
+              "transform": "create"
+            },
+            {
+              "context": "b",
+              "element": "concept",
+              "transform": "copy"
+            }
+          ]
+        },
+        {
+          "name": "when",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "occurrence",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "authoredOn",
+          "source": [
+            {
+              "context": "source",
+              "element": "id",
+              "variable": "a"
+            }
+          ],
+          "target": [
+            {
+              "context": "target",
+              "element": "authoredOn",
+              "transform": "evaluate",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
