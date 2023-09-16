@@ -194,20 +194,20 @@ export class FMLStructureGroup {
 
   /* Builders */
 
-  public newFMLObject(resource: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
-    if (isNil(resource)) {
+  public newFMLObject(resourceType: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
+    if (isNil(resourceType)) {
       throw Error(`Resource name is missing for the "${path}"`);
     }
 
     // true => assume resource's definition is described within the structure definition
-    const inlineDefinition = path.includes(".") && path === resource;
+    const inlineDefinition = path.includes(".") && path === resourceType;
 
     // try to find resource's structure definition
-    const structureDefinition = this.findStructureDefinition(resource);
+    const structureDefinition = this.findStructureDefinition(resourceType);
     if (isNil(structureDefinition)) {
-      throw Error(`StructureDefinition for the "${resource}" not found!`);
+      throw Error(`StructureDefinition for the type "${resourceType}" not found!`);
     } else if (isNil(structureDefinition.snapshot)) {
-      throw Error(`Snapshot is missing in the StructureDefinition "${resource}"!`);
+      throw Error(`Snapshot is missing in the StructureDefinition "${resourceType}"!`);
     }
 
     let elements = structureDefinition.snapshot.element;
@@ -271,15 +271,27 @@ export class FMLStructureGroup {
 
   /* Utils */
 
-  public findStructureDefinition(anyPath: string): StructureDefinition {
-    // MyResource.whatever.element (anyPath) => MyResource (base)
-    const base = anyPath.includes('.')
-      ? anyPath.slice(0, anyPath.indexOf('.'))
-      : anyPath;
+  /**
+   * Tries to find the structure definition.
+   * 1. Lookup using .id.
+   *    If type has "." char in it, assumes it's sub-element (e.g.  Bundle.entry), so the part before "." should be used as search token
+   * 2. Lookup using .type
+   *
+   * Valid arguments:
+   * Bundle, Bundle.entry, http://fhir.org/StructureDefinition/Bundle
+   * */
+  public findStructureDefinition(anyType: string): StructureDefinition {
+    // MyResource.whatever.element (anyType) => MyResource (base)
+    const base = anyType.includes('.')
+      ? anyType.slice(0, anyType.indexOf('.'))
+      : anyType;
 
-    return this.bundle().entry
-      .map(e => e.resource)
-      .find(e => e.id === base);
+    const resources = this.bundle()
+      .entry
+      .map(e => e.resource);
+
+    return resources.find(e => e.id === base)
+      ?? resources.find(e => e.type === anyType);
   }
 
   public isFieldSelectable = (f: FMLStructureObjectField): boolean => {
