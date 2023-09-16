@@ -244,7 +244,6 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapRemove(idx: number): void {
-    this.fml.groups
     this.fml.maps.splice(idx, 1);
   }
 
@@ -408,7 +407,36 @@ export class EditorComponent implements OnInit, OnChanges {
     obj.name = asResourceVariable(`${parentObj.name}.${field}`);
     this.fmlGroup.objects[obj.name] = obj;
 
-    this.editor._createObjectNode(obj);
+
+    // positioning magic START
+    const createOnRight = ['source', 'element'].includes(parentObj.mode);
+    const {top, left} = this.editor._getOffsets();
+
+    const parentEl = this.editor._getNodeElementByName(parentObj.name).el;
+    const portEl = parentEl.getElementsByClassName(createOnRight ? 'output' : 'input').item(parentObj?.fieldIndex(field));
+    const rectEl = portEl && !portEl.classList.contains('hidden')
+      ? portEl
+      : parentEl;
+
+    const pos = {
+      x: rectEl.getBoundingClientRect().x,
+      y: rectEl.getBoundingClientRect().y
+    };
+
+    // re-position after width is known
+    Promise.resolve().then(() => {
+      const nodeEl = this.editor._getNodeElementByName(obj.name).el;
+      const nodeRect = nodeEl.getBoundingClientRect();
+      const portEl = nodeEl.getElementsByClassName(createOnRight ? 'input' : 'output').item(0) as HTMLElement
+      this.editor._setHTMLPosition(
+        obj.name,
+        nodeRect.x + (createOnRight ? 30 : -nodeRect.width - 30) - left,
+        nodeRect.y - (portEl?.offsetTop ?? 0) - top
+      );
+    });
+    // positioning magic END
+
+    this.editor._createObjectNode(obj, {x: pos.x - left, y: pos.y - top});
     if (mode === 'object') {
       this.editor._createConnection(obj.name, 1, parentObj.name, field);
     } else {

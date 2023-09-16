@@ -124,7 +124,7 @@
           <div *ngIf="node.data.obj as obj">
             <app-object-view
               [fmlGroup]="fmlGroup"
-              [object]="obj"
+              [object]="fmlGroup.objects[obj.name]"
               (objectChange)="applyObject($event)"
               (fieldSelect)="onStructureItemSelect($event.object, $event.field, $event.type)"
             />

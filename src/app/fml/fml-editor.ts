@@ -314,14 +314,7 @@ export class FMLEditor extends Drawflow {
       const nodeWithPosition = dagreGraph.node(name);
       const y = nodeWithPosition.y - el.offsetHeight / 2;
       const x = nodeWithPosition.x - el.offsetWidth / 2;
-
-      // hacky way to update position.
-      // export: position should be saved in data and later transferred to node pos_x and pos_y values
-      el.style.top = y + "px";
-      el.style.left = x + "px";
-      this.updateConnectionNodes(`node-${nodeId}`);
-
-      return {nodeId, y, x};
+      return this._setHTMLPosition(name, x, y);
     };
 
     Object.keys(this._fmlGroup.objects).forEach(name => {
@@ -334,6 +327,28 @@ export class FMLEditor extends Drawflow {
       this._updateRule(nodeId, rule.name, obj => obj.position = position);
     });
   }
+
+  public _setHTMLPosition = (name: string, x: number, y: number): {nodeId: number, x: number, y: number} => {
+    const position: FMLPosition = {x, y};
+    const {el, nodeId} = this._getNodeElementByName(name);
+
+    // hacky way to update position.
+    // export: position should be saved in data and later transferred to node pos_x and pos_y values
+    el.style.top = position.y + "px";
+    el.style.left = position.x + "px";
+    this.updateConnectionNodes(`node-${nodeId}`);
+
+    // fixme: this part is called too many times?
+    const node = this.getNodeFromId(nodeId);
+    if (this._isObj(node)) {
+      this._updateObject(nodeId, node.data.obj.name, obj => obj.position = position);
+    } else if (this._isRule(node)) {
+      this._updateRule(nodeId, node.data.rule.name, rule => rule.position = position);
+    }
+
+    return {nodeId, ...position};
+  };
+
 
   public _rerenderNodes(): void {
     if (!this._initialized) {
