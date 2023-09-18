@@ -2,30 +2,45 @@ import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureGroup} from '../../fml/fml-structure';
 import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
+import {substringAfterLast} from '../../fml/fml.utils';
 
 @Component({
   selector: 'app-structure-definition-tree',
   template: `
     <m-tree
-      *ngIf="options.length"
-      [mData]="options"
-      [mExpandedKeys]="[definition?.name]"
-      [mOption]="option"
-      [mAnimate]="false"
-      (mClick)="nodeClicked($event)"
+        class="fml-tree"
+        *ngIf="options.length"
+        [mData]="options"
+        [mExpandedKeys]="[definition?.name]"
+        [mOption]="option"
+        [mAnimate]="false"
+        (mClick)="nodeClicked($event)"
     >
       <ng-template #option let-node let-data="data">
-        <div [class.m-items-middle]="data?.types?.length === 1">
-          <div>
-            {{node.title}}
+        <div class="m-justify-between">
+          <div [class.m-items-middle]="data?.types?.length === 1" style="row-gap: 0; flex-wrap: wrap;">
+            <div>
+              {{node.title}}
+            </div>
+            <div *ngIf="data?.types?.length" class="description" style="word-break: break-all">
+              <ng-container *ngFor="let type of data.types | map: shortenType; let isLast = last">
+                <span [mTooltip]="type.isShorted" [mTitle]="type.source" mPosition="left">{{type.short}}{{isLast ? '' : ', '}}</span>
+              </ng-container>
+            </div>
           </div>
-          <div class="description">
-            {{data?.types | join: ', '}}
-          </div>
+
+          <span class="description m-bold">
+            {{data.required ? '1' : '0'}}{{data.multiple ? '..*' : '..1'}}
+          </span>
         </div>
       </ng-template>
     </m-tree>
-  `
+  `,
+  styles: [`
+    ::ng-deep .fml-tree .m-tree-node__option {
+      width: 100%;
+    }
+  `]
 })
 export class StructureDefinitionTreeComponent implements OnChanges {
   @Input() definition: StructureDefinition;
@@ -82,9 +97,24 @@ export class StructureDefinitionTreeComponent implements OnChanges {
           data: {
             path: e.path,
             types: e.type?.map(t => t.code),
+            multiple: e.max !== '1',
+            required: e.min === 1,
           },
           selectable: this.selectFn?.(e) ?? false
         });
       });
   };
+
+
+  protected shortenType(type: string): {
+    isShorted: boolean,
+    source: string,
+    short: string,
+  } {
+    return {
+      isShorted: type.includes('/'),
+      source: type,
+      short: type.includes('/') ? `../${substringAfterLast(type, '/')}` : type
+    };
+  }
 }

@@ -4,7 +4,7 @@
       <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
       <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
       <m-button mDisplay="text" (mClick)="exportStructureMap()" mSize="small">Export</m-button>
-      <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">FML</m-button>
+      <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">Preview</m-button>
 
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
