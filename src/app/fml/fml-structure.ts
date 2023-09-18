@@ -330,7 +330,6 @@ export class FMLStructure {
     const _rules = group(_fmlGroup.rules, r => r.name);
     const _objects = _fmlGroup.objects;
 
-
     return _fmlGroup.connections
       .filter(c => c.targetObject === target)
       .filter(c => field === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)

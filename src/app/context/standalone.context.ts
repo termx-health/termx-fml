@@ -6,7 +6,7 @@ import {EditorContext} from './editor.context';
 import {substringAfterLast} from '../fml/fml.utils';
 
 
-export class LocalContext implements EditorContext {
+export class StandaloneContext implements EditorContext {
   private SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
   private STRUCTURE_MAPS_KEY = "structure_maps";
 
@@ -84,6 +84,12 @@ export class LocalContext implements EditorContext {
     return this.structureMap$.getValue()?.name;
   }
 
+
+  public renderFML(sm: StructureMap): Observable<string> {
+    // todo: some implementation for standalone application
+    const url = 'http://localhost:8200/transformation-definitions/generate-fml';
+    return this.http.post<{fml: string}>(url, {structureMap: JSON.stringify(sm)}).pipe(map(resp => resp.fml));
+  }
 
   public importMap(sm: StructureMap): void {
     this.saveMap(sm);

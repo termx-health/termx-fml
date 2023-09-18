@@ -54,7 +54,7 @@ export class FmlStructureComposer {
       valueString: JSON.stringify(FMLStructureSimpleMapper.fromFML(fml))
     }];
 
-    // structure container resources (ConceptMap)
+    // structure contained resources (ConceptMap)
     sm.contained = fml.maps
       .filter(m => m.mode === 'internal')
       .map(m => ({
@@ -111,7 +111,7 @@ export class FmlStructureComposer {
 
 
     // group rules
-    if (groupName !== this.MAIN && fmlGroup.shareContext) {
+    if (fmlGroup.shareContext && groupName !== this.MAIN) {
       this.generateRule(fml, fmlGroup, smGroup);
       return smGroup;
     }
@@ -121,9 +121,9 @@ export class FmlStructureComposer {
 
        before:
        # AModel (target)
-         * x -> field-1
-         *      field-2
-         * y -> field-3
+         Rule.x -> field-1
+                   field-2
+         Rule.y -> field-3
 
        after:
        [[AModel, field-1], [AModel, field-3]]
@@ -131,8 +131,14 @@ export class FmlStructureComposer {
        If field has multiple source objects, only unique fields are returned.
      */
     Object.values(fmlGroup.objects)
+      // find target objects
       .filter(o => o.mode === 'target')
-      .flatMap(o => o.fields.filter(f => fmlGroup.getSources(o.name, f.name).length).map(f => [o.name, f.name]))
+      // map to [obj, field] of fields that have connections
+      .flatMap(o =>
+        o.fields
+          .filter(f => fmlGroup.getSources(o.name, f.name).length)
+          .map(f => [o.name, f.name]))
+      // unique
       .filter((v, idx, self) => self.findIndex(el => el.join('_') === v.join('_')) === idx)
       .forEach(([target, field]) => {
         fml.subFML(groupName, target, field).forEach(subFml => {
@@ -244,35 +250,38 @@ export class FmlStructureComposer {
               const tgtObjBaseName = substringBeforeLast(tgtObj.name, VARIABLE_SEP);
 
               if (isDefined(tgtObj.listOption)) {
-                // cannot append multiple sources, we MUST nest further
+                // rule CANNOT have multiple sources, we MUST nest them
                 if (smRule.source.length) {
-                  const _smRule = {
+                  const _newSmRule = {
                     name: `rule_${SEQUENCE.next()}`,
                     source: [],
                     target: [],
                     rule: [],
                     dependent: []
                   };
-                  smRule.rule.push(_smRule);
-                  smRule = _smRule;
+                  smRule.rule.push(_newSmRule);
+                  smRule = _newSmRule;
                 }
 
-                // mapping between our types and FHIR's
-                const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
+                // mapping between our types and FHIR ones
+                const listMapping: {
+                  [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode']
+                } = {
                   first: 'first',
                   last: 'last'
                 };
 
-                const transformConditionParams = (c): string => {
-                  if (c) {
-                    Object.keys(fmlGroup.objects).sort(n => n.length).reverse().forEach(n => {
-                      const _n = substringBeforeLast(n, VARIABLE_SEP);
-                      if (c.includes(n) && vars[_n]) {
-                        c = c.replaceAll(n, vars[_n]);
-                      }
-                    });
-                    return c;
+                const transformConditionParam = (c: string): string => {
+                  if (isNil(c)) {
+                    return;
                   }
+                  Object.keys(fmlGroup.objects).sort(n => n.length).reverse().forEach(n => {
+                    const _n = substringBeforeLast(n, VARIABLE_SEP);
+                    if (c.includes(n) && vars[_n]) {
+                      c = c.replaceAll(n, vars[_n]);
+                    }
+                  });
+                  return c;
                 };
 
                 smRule.source.push({
@@ -281,7 +290,7 @@ export class FmlStructureComposer {
                   variable:
                     vars[tgtObjBaseName] =
                       toVar(`${asVar(baseName, true)}.${n.name}`), // todo: document what it does?
-                  condition: transformConditionParams(tgtObj.condition),
+                  condition: transformConditionParam(tgtObj.condition),
                   listMode: listMapping[tgtObj.listOption]
                 });
                 return;

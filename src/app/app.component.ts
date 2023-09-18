@@ -1,7 +1,7 @@
-import {Component, isDevMode, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {FMLStructureGroup} from './fml/fml-structure';
 import {StructureMap} from 'fhir/r5';
-import {HttpCacheService, isDefined} from '@kodality-web/core-util';
+import {HttpCacheService, isDefined, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
@@ -10,9 +10,10 @@ import {saveAs} from 'file-saver';
 import {EditorComponent} from './editor.component';
 import {IframeContext} from './context/iframe.context';
 import {EditorContext} from './context/editor.context';
-import {LocalContext} from './context/local.context';
+import {StandaloneContext} from './context/standalone.context';
 import {toSvg} from 'html-to-image';
 import {fromPx} from './fml/fml.utils';
+import {isDev, isIframe} from './global';
 
 
 @Component({
@@ -22,13 +23,16 @@ import {fromPx} from './fml/fml.utils';
 export class AppComponent implements OnInit {
   protected ctx: EditorContext;
   protected fml: {text: string, json: StructureMap};
-  protected isDev = isDevMode();
+  protected isIframe = isIframe();
+  protected isDev = isDev();
   protected isAnimated = true;
 
   @ViewChild('changeModal') public changeModal: MuiModalContainerComponent;
   protected changes: {text: string, apply: () => void}[] = [];
 
   @ViewChild(EditorComponent) public editor: EditorComponent;
+
+  protected loader = new LoadingManager();
 
   constructor(
     private http: HttpClient,
@@ -53,7 +57,7 @@ export class AppComponent implements OnInit {
           return sm;
         }
       })
-      : new LocalContext(this.http, this.cache);
+      : new StandaloneContext(this.http, this.cache);
   }
 
 
@@ -85,11 +89,9 @@ export class AppComponent implements OnInit {
   // FML
   protected viewAsFML(m: MuiModalContainerComponent): void {
     const map = this.export();
-
-    const url = 'http://localhost:8200/transformation-definitions/generate-fml';
-    this.http.post<{fml: string}>(url, {structureMap: JSON.stringify(map)}).subscribe(resp => {
+    this.loader.wrap('render-fml', this.ctx.renderFML(map)).subscribe(fml => {
       this.fml = {
-        text: resp.fml
+        text: fml
           .replaceAll(',  ', ',\n    ')
           .replaceAll(' ->  ', ' ->\n    '),
         json: map
@@ -282,13 +284,5 @@ export class AppComponent implements OnInit {
       cp.remove();
       return undefined;
     });
-  }
-
-  protected get isIframe(): boolean {
-    try {
-      return window.self !== window.top;
-    } catch (e) {
-      return true;
-    }
   }
 }

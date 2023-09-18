@@ -1,5 +1,5 @@
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 
 export interface EditorContext {
   maps$: BehaviorSubject<string[]>
@@ -11,6 +11,8 @@ export interface EditorContext {
 
   get selectedMapName(): string;
 
+
+  renderFML(sm: StructureMap): Observable<string>;
 
   importMap(sm: StructureMap): void;
 

@@ -4,7 +4,7 @@
       <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
       <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
       <m-button mDisplay="text" (mClick)="exportStructureMap()" mSize="small">Export</m-button>
-      <m-button mDisplay="text" *ngIf="isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small">FML</m-button>
+      <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">FML</m-button>
 
       <m-divider mVertical/>
       <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
@@ -56,12 +56,12 @@
 </div>
 
 <app-editor
-    *ngIf="ctx.structureMap$ | async as sm"
-    style="height: calc(100dvh - 2.5rem)"
-    [iframe]="isIframe"
-    [resourceBundle]="ctx.bundle$ | async"
-    [structureMap]="sm"
-    [mapName]="sm.name"
+  *ngIf="ctx.structureMap$ | async as sm"
+  style="height: calc(100dvh - 2.5rem)"
+  [iframe]="isIframe"
+  [resourceBundle]="ctx.bundle$ | async"
+  [structureMap]="sm"
+  [mapName]="sm.name"
 ></app-editor>
 
 

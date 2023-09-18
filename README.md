@@ -16,10 +16,8 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 To run the FML editor within your application, follow these steps:
 
 1. Create an iframe element within your application.
-2. Provide the URL to the FML editor within this iframe.
+2. Provide the URL to the FML editor to the iframe.
 3. Establish communication between the iframe and your application using [window.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
-
-This approach allows seamless interaction between the iframe and your application.
 
 ### Initialization
 
@@ -35,9 +33,12 @@ sequenceDiagram
 ```
 
 ### Saving
-The `save` event is triggered when the user clicks the 'Save' button in the FML editor. 
+The `save` event is triggered when the user clicks the 'Save' button in the FML editor.
 
-To save data, the client should send the `export` action. Optionally, the save format can be provided. If no format is given, the default one is used. 
+To save data, the client should send the `export` action.
+Optionally, the save format can be provided:
+* `json` - composes FHIR StructureMap object
+* `json+svg` - `json` + snapshot of the main group as svg in the StructureMap extension
 
 Once the data is prepared and ready for export, the FML editor sends the `export` event with a StructureMap object as data.
 
