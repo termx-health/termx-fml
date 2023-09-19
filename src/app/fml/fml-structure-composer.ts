@@ -307,7 +307,9 @@ export class FmlStructureComposer {
 
               parameter: [
                 {valueId: asVar(baseName)},
-                {valueString: n.name}
+                // todo: investigate why Uppercase fields should be prefixed with $this.
+                //  evaluate(X, Name) - not ok, but evaluate(x, name) - is ok
+                {valueString: n.name === $THIS ? $THIS : `$this.${n.name}`}
               ]
             });
           });
