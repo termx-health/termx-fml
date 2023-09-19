@@ -3,6 +3,11 @@ import {Bundle, StructureDefinition} from 'fhir/r5';
 import {FMLStructure, FMLStructureConceptMap, FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {plainToInstance} from 'class-transformer';
 
+/*
+* Lightweight version of FMLStructure.
+* Should be used in mapper and composer only.
+*/
+
 export interface FMLStructureSimple {
   objects: {[name: string]: Omit<FMLStructureObject, 'rawFields'>},
   rules: FMLStructureRule[],

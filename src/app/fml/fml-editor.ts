@@ -448,7 +448,11 @@ export class FMLEditor extends Drawflow {
   }
 
   public _getOffsets(): {top: number, left: number} {
-    const [_, x, y] = (this.element.firstElementChild as HTMLDivElement).style.transform.match(/translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m) ?? [0, 0, 0];
+    const el = this.element.firstElementChild as HTMLDivElement;
+    const re = /translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m;
+    const [_, x, y] = el.style.transform.match(re) ?? [0, 0, 0];
+
+    // todo: take into account 'scale' factor
     return {
       top: this.element.offsetTop + Number(y),
       left: this.element.offsetLeft + Number(x)

@@ -1,23 +1,41 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {group, isNil, remove, unique} from '@kodality-web/core-util';
 
+/*
+* DISCLAIMER!
+* Classes FMLStructure, FMLStructureGroup, FMLStructureRule etc. are internal data structures!
+* Although they may resemble actual FML aka. StructureMap, but they are completely different.
+*
+* The mapping between FHIR and internal structure is done in 'fml-structure-composer.ts' and 'fml-structure-mapper.ts' files.
+*/
+
 export const $THIS = "$this";
 
+
+/* Element's position inside of editor */
 export interface FMLPosition {
   x: number,
   y: number
 }
 
 
+/* Base class for the object and rules */
 export class FMLStructureEntity {
   /** Unique name within FML structure */
   name: string;
+  /**
+   * @see FMLStructureEntityMode
+   * * 'source' - element from which fields should be mapped
+   * * 'target' - element to which fields should be mapped
+   * * 'element' - source's sub element
+   * * 'object' - target's sub element
+   */
   mode: FMLStructureEntityMode | string;
   position?: FMLPosition;
   expanded?: boolean = true;
 }
 
-export type FMLStructureEntityMode = 'source' | 'target' | 'element' | 'object' | 'rule' | 'group';
+export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'rule' | 'group';
 
 
 /* Object */
@@ -26,15 +44,16 @@ export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
   /** @example CodeableConcept */
   resource: string;
+  /** @example http://hl7.org/fhir/StructureDefinition/CodeableConcept */
   url: string;
-  /** @example code, category, status etc. */
+  /** @example id, coding, text etc. */
   rawFields: FMLStructureObjectField[] = [];
 
   condition?: string;
   listOption?: 'every' | 'first' | 'last';
 
   public get fields(): FMLStructureObjectField[] {
-    return this.rawFields.filter(f => !f.part);
+    return this.rawFields.filter(f => !f.backbonePart);
   }
 
   public fieldIndex(field: string): number {
@@ -60,16 +79,14 @@ export interface FMLStructureObjectField {
   // meta-data
   multiple: boolean;
   required: boolean;
-  part: boolean; // BackboneElement sub element
+  backbonePart: boolean;
 }
 
 
 /* Rule */
 
 export class FMLStructureRule extends FMLStructureEntity {
-  /** @example copy, create, append etc. */
   action: string;
-  /** Action parameters */
   parameters?: FMLStructureRuleParameter[];
   condition?: string;
 }
@@ -96,6 +113,7 @@ export class FMLStructureConceptMap {
   mode: 'internal' | 'external';
   name: string;
 
+  // for internal mode
   source?: string;
   target?: string;
   mappings?: FMLStructureConceptMapMapping[];
@@ -118,9 +136,11 @@ export class FMLStructureGroup {
   shareContext = false;
 
   public get connections(): readonly FMLStructureConnection[] {
+    // getter to prevent direct array modification
     return this._connections;
   }
 
+  // fixme: not happy how this should be (re)set every time, when new group is created
   public bundle: () => Bundle<StructureDefinition>;
 
 
@@ -196,7 +216,7 @@ export class FMLStructureGroup {
 
   public newFMLObject(resourceType: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
     if (isNil(resourceType)) {
-      throw Error(`Resource name is missing for the "${path}"`);
+      throw Error(`Resource type is missing for the "${path}"`);
     }
 
     // true => assume resource's definition is described within the structure definition
@@ -245,7 +265,7 @@ export class FMLStructureGroup {
       types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
       multiple: e.max !== '1',
       required: e.min === 1,
-      part: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
+      backbonePart: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
     }));
 
     o.rawFields.unshift({
@@ -253,7 +273,7 @@ export class FMLStructureGroup {
       types: [],
       multiple: false,
       required: true,
-      part: false
+      backbonePart: false
     });
 
     return o;
@@ -298,13 +318,13 @@ export class FMLStructureGroup {
     return FMLStructureGroup.isBackboneElementField(f) || this.bundle()?.entry.some(e => f.types?.includes(e.resource.type));
   };
 
-  public static isBackboneElement(resourceType: string): boolean {
-    return ['BackboneElement', 'Element'].includes(resourceType);
-  }
-
   public static isBackboneElementField = (f: FMLStructureObjectField): boolean => {
     return f.types?.some(t => FMLStructureGroup.isBackboneElement(t) || t.startsWith("#"));
   };
+
+  public static isBackboneElement(resourceType: string): boolean {
+    return ['BackboneElement', 'Element'].includes(resourceType);
+  }
 }
 
 
@@ -361,7 +381,7 @@ export class FMLStructure {
 
 
         const fml = new FMLStructure();
-        fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: revert
+        fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: performance issue, too much data!
         fml.maps = structuredClone(this.maps);
         fml.setGroup(groupName, fmlGroup);
         return fml;

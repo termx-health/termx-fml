@@ -413,7 +413,7 @@ export class EditorComponent implements OnInit, OnChanges {
     const {top, left} = this.editor._getOffsets();
 
     const parentEl = this.editor._getNodeElementByName(parentObj.name).el;
-    const portEl = parentEl.getElementsByClassName(createOnRight ? 'output' : 'input').item(parentObj?.fieldIndex(field));
+    const portEl = parentEl.getElementsByClassName(createOnRight ? 'output' : 'input').item(parentObj?.fieldIndex(field)) as HTMLElement;
     const rectEl = portEl && !portEl.classList.contains('hidden')
       ? portEl
       : parentEl;
