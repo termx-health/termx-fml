@@ -22,7 +22,7 @@ export class FMLStructureMapper {
 
       if (isNil(parsed['version'])) {
         console.warn("v1: from simple nested to complex");
-        parsed = <FMLStructureExportSimple>{
+        parsed = {
           groups: parsed,
           maps: Object.values(parsed).flatMap(o => o['maps'] || [])
         };
@@ -31,18 +31,24 @@ export class FMLStructureMapper {
 
       if (parsed['version'] === '1') {
         console.warn("v1.1: adding shareContext param");
-        Object.values((parsed as FMLStructureExportSimple).groups).forEach(g => g.shareContext = true);
+        Object.values(parsed['groups']).forEach(g => g['shareContext'] = true);
         parsed['version'] = '1.1';
       }
 
       if (parsed['version'] === '1.1') {
         console.warn("v1.2: change object fields' 'part' param to 'backbonePart'");
-        Object.values((parsed as FMLStructureExportSimple).groups).forEach(g => {
-          Object.values(g.objects).forEach(obj => {
-            obj.fields.forEach(f => f.backbonePart = f['part']);
+        Object.values(parsed['groups']).forEach(g => {
+          Object.values(g['objects']).forEach(obj => {
+            obj['fields'].forEach(f => f.backbonePart = f['part']);
           });
         });
         parsed['version'] = '1.2';
+      }
+
+      if (parsed['version'] === '1.2') {
+        console.warn("v1.3: rename 'maps' to 'conceptMaps'");
+        (parsed as FMLStructureExportSimple).conceptMaps = parsed['maps'];
+        parsed['version'] = '1.3';
       }
 
       return FMLStructureSimpleMapper.toFML(bundle, parsed);

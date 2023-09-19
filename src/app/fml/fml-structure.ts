@@ -333,7 +333,7 @@ export class FMLStructureGroup {
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
   groups: {[groupName: string]: FMLStructureGroup} = {};
-  maps: FMLStructureConceptMap[] = [];
+  conceptMaps: FMLStructureConceptMap[] = [];
 
   public setGroup(name: string, group: FMLStructureGroup): void {
     group.bundle = () => this.bundle;
@@ -382,7 +382,7 @@ export class FMLStructure {
 
         const fml = new FMLStructure();
         fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: performance issue, too much data!
-        fml.maps = structuredClone(this.maps);
+        fml.conceptMaps = structuredClone(this.conceptMaps);
         fml.setGroup(groupName, fmlGroup);
         return fml;
       });

@@ -2,7 +2,8 @@ import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject, Observable} from 'rxjs';
 
 export interface EditorContext {
-  maps$: BehaviorSubject<string[]>
+  // the list of available StructureMaps
+  maps$: BehaviorSubject<string[]>;
   structureMap$: BehaviorSubject<StructureMap>
   bundle$: BehaviorSubject<Bundle<StructureDefinition>>
 

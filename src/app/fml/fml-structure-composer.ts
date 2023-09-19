@@ -55,7 +55,7 @@ export class FmlStructureComposer {
     }];
 
     // structure contained resources (ConceptMap)
-    sm.contained = fml.maps
+    sm.contained = fml.conceptMaps
       .filter(m => m.mode === 'internal')
       .map(m => ({
         resourceType: 'ConceptMap',
@@ -83,6 +83,9 @@ export class FmlStructureComposer {
         alias: o.name
       }));
 
+    // structure imports
+    sm.import = [];
+
     // structure groups
     Object.keys(fml.groups).forEach(groupName => {
       const fmlGroup = fml.groups[groupName];
@@ -94,7 +97,7 @@ export class FmlStructureComposer {
   }
 
   private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup, groupName: string): StructureMapGroup {
-    const smGroup = {
+    const smGroup: StructureMapGroup = {
       name: groupName,
       input: [],
       rule: []

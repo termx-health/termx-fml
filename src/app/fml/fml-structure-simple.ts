@@ -17,15 +17,15 @@ export interface FMLStructureSimple {
 
 export interface FMLStructureExportSimple {
   groups: {[groupName: string]: FMLStructureSimple};
-  maps: FMLStructureConceptMap[];
-  version: '1.2';
+  conceptMaps: FMLStructureConceptMap[];
+  version: '1.3';
 }
 
 export class FMLStructureSimpleMapper {
   public static toFML(bundle: Bundle<StructureDefinition>, exp: FMLStructureExportSimple): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
-    fml.maps = exp.maps ?? [];
+    fml.conceptMaps = exp.conceptMaps ?? [];
 
     Object.keys(exp.groups).forEach(groupName => {
       const fmlGroup = new FMLStructureGroup();
@@ -63,8 +63,8 @@ export class FMLStructureSimpleMapper {
           shareContext: fmlGroup.shareContext
         };
       }),
-      maps: fml.maps,
-      version: '1.2'
+      conceptMaps: fml.conceptMaps,
+      version: '1.3'
     };
   }
 }

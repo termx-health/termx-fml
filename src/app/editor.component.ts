@@ -244,7 +244,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapRemove(idx: number): void {
-    this.fml.maps.splice(idx, 1);
+    this.fml.conceptMaps.splice(idx, 1);
   }
 
   protected conceptMapReset(): void {
@@ -261,11 +261,11 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected conceptMapApply(): void {
-    const idx = this.fml.maps.indexOf(this.conceptMap['_origin']);
+    const idx = this.fml.conceptMaps.indexOf(this.conceptMap['_origin']);
     if (idx !== -1) {
-      this.fml.maps.splice(idx, 1, this.conceptMap);
+      this.fml.conceptMaps.splice(idx, 1, this.conceptMap);
     } else {
-      this.fml.maps.push(this.conceptMap);
+      this.fml.conceptMaps.push(this.conceptMap);
     }
 
     this.conceptMapModal.close();

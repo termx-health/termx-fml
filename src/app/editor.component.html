@@ -87,7 +87,7 @@
           <div class="block">
             <h5>ConceptMap <span class="description">(translate)</span></h5>
             <m-list mSeparated>
-              <m-list-item *ngFor="let cm of fml.maps; let idx = index"
+              <m-list-item *ngFor="let cm of fml.conceptMaps; let idx = index"
                 style="cursor: grab;"
                 draggable="true"
                 (dragstart)="onDragStart($event, 'conceptMap', cm)"

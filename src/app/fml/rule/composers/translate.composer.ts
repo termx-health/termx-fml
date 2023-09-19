@@ -17,7 +17,7 @@ export class FMLTranslateRuleComposer extends FMLRuleComposer {
         transform: 'translate',
         variable: rule.name,
         parameter: rule.parameters.map(p => {
-          const conceptMap = fml.maps.find(m => m.name === p.value);
+          const conceptMap = fml.conceptMaps.find(m => m.name === p.value);
           let val = p.value;
           if (isDefined(conceptMap) && conceptMap.mode === 'internal') {
             val = `#${val}`;

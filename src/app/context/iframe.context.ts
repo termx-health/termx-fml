@@ -79,7 +79,10 @@ export class IframeContext implements EditorContext {
           // return;
         }
 
-        const msg: Requests = JSON.parse(event.data);
+        const msg: Requests = typeof event.data === 'string'
+          ? JSON.parse(event.data)
+          : event.data;
+
         switch (msg.action) {
           case 'load':
             this.contained$.next(msg.contained ?? []);
