@@ -1,4 +1,4 @@
-import {copyDeep, isDefined, isNil} from '@kodality-web/core-util';
+import {copyDeep, group, isDefined, isNil} from '@kodality-web/core-util';
 import {
   StructureMap,
   StructureMapGroup,
@@ -156,7 +156,8 @@ export class FmlStructureComposer {
     const topology = FMLGraph.fromFML(fmlGroup).topologySort();
     const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
-    const vars = {};
+    const inputObjects = Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode));
+    const vars = group(inputObjects, o => o.name, o => normalize(o.name));
     const toVar = (name: string): string => vars[name] = nextVar();
     const asVar = (name: string, raw = false): string => raw ? vars[name] ?? name : normalize(vars[name] ?? name);
 
@@ -300,21 +301,19 @@ export class FmlStructureComposer {
               }
             }
 
+            if (n.name !== $THIS) {
+              // default: extract object's field via. evaluate
+              smRule.target.push({
+                transform: 'evaluate',
+                variable:
+                  vars[`${obj.name}.${n.name}`] =
+                    toVar(`${asVar(obj.name, true)}.${n.name}`), // todo: document what it does?
 
-            // default: extract object's field via. evaluate
-            smRule.target.push({
-              transform: 'evaluate',
-              variable:
-                vars[`${obj.name}.${n.name}`] =
-                  toVar(`${asVar(obj.name, true)}.${n.name}`), // todo: document what it does?
-
-              parameter: [
-                {valueId: asVar(baseName)},
-                // todo: investigate why Uppercase fields should be prefixed with $this.
-                //  evaluate(X, Name) - not ok, but evaluate(x, name) - is ok
-                {valueString: n.name === $THIS ? $THIS : `$this.${n.name}`}
-              ]
-            });
+                parameter: [
+                  {valueString: `%${asVar(baseName)}.${n.name}`},
+                ]
+              });
+            }
           });
 
 
@@ -382,9 +381,9 @@ export class FmlStructureComposer {
 
 
 function normalize(txt: string): string {
-  if (isNil(txt)) {
-    return undefined;
+  if (isDefined(txt)) {
+    return txt
+      .replaceAll(/[.#_]/gm, '_')
+      .replaceAll('_', '');
   }
-  // const baseName = substringBeforeLast(txt, VARIABLE_SEP);
-  return txt.replaceAll('.', '_');
 }
