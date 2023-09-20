@@ -1,5 +1,5 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
-import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule, StructureMapStructure} from 'fhir/r5';
+import {Bundle, StructureDefinition, StructureMap, StructureMapGroup, StructureMapGroupRule} from 'fhir/r5';
 import {FMLRuleParserVariables} from './rule/parsers/parser';
 import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getRuleParser} from './rule/parsers/_parsers';
@@ -57,90 +57,99 @@ export class FMLStructureMapper {
     const fml = new FMLStructure();
     fml.bundle = bundle;
     // todo: map local concept maps
-    fml.setGroup(this.MAIN, this.mapGroup(bundle, fhir));
+
+    fhir.group.forEach((fhirGroup, idx) => {
+      const fmlGroup = this.mapGroup(bundle, fhir, fhirGroup);
+      this.validate(fmlGroup, fhir);
+      fml.putGroup(idx === 0 ? this.MAIN : fhirGroup.name, fmlGroup);
+    });
+
     return fml;
   }
 
-  private static mapGroup(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructureGroup {
-    // finds the correct resource type based on URL
-    const getKey = ({url}: StructureMapStructure) => bundle.entry.find(c => c.resource.url === url)?.resource?.id;
+  public static mapGroup(bundle: Bundle<StructureDefinition>, fhir: StructureMap, fhirGroup: StructureMapGroup): FMLStructureGroup {
+    const getKey = (k: string /* url, alias, type */): string => {
+      if (k === 'Any') {
+        return 'Element';
+      }
+      const map = group(bundle.entry, e => e.resource.url, e => e.resource);
+      if (map[k]) {
+        return map[k]?.id;
+      }
+      const aliasSearch = fhir.structure.find(s => s.alias === k)?.url;
+      if (aliasSearch) {
+        return map[aliasSearch]?.id;
+      }
+      return bundle.entry.find(e => e.resource.type === k)?.resource?.id;
+    };
 
-    const fmlGroup = new FMLStructureGroup();
-    // fixme: temporary workaround for newFMLObject to work
-    fmlGroup.bundle = (): Bundle<StructureDefinition> => bundle;
 
-    // [alias || resource] -> FMLStructureObject
-    fmlGroup.objects = group(fhir.structure ?? [], s => s.alias ?? getKey(s), s => {
-      const resource = getKey(s);
-      return fmlGroup.newFMLObject(resource, s.alias ?? getKey(s), s.mode as FMLStructureEntityMode);
+    const fmlGroup = new FMLStructureGroup(() => bundle);
+    fmlGroup.objects = {};
+
+    // groups
+    // [type] -> FMLStructureObject
+    fmlGroup.objects = group(fhirGroup.input ?? [], s => getKey(s.type), (s, k) => {
+      return fmlGroup.newFMLObject(k, k, s.mode as FMLStructureEntityMode);
+    });
+
+    fhirGroup.rule ??= [];
+
+    // rules
+    fhirGroup.rule.forEach(fhirRule => {
+      const variables = group(fhirGroup.input, i => i.name, i => i.type);
+      _parseRule(fhirRule, variables);
     });
 
 
-    // groups
-    fhir.group.forEach(fhirGroup => {
-      fhirGroup.rule ??= [];
+    function _parseRule(fhirRule: StructureMapGroupRule, variables: FMLRuleParserVariables) {
+      fhirRule.source ??= [];
+      fhirRule.target ??= [];
 
-      // rules
-      fhirGroup.rule.forEach(fhirRule => {
-        const variables = group(fhirGroup.input, i => i.name, i => i.type);
-        _parseRule(fhirRule, variables);
-      });
-
-
-      function _parseRule(fhirRule: StructureMapGroupRule, variables: FMLRuleParserVariables) {
-        fhirRule.source ??= [];
-        fhirRule.target ??= [];
-
-        [...fhirRule.source, ...fhirRule.target]
-          .filter(r => isDefined(r.variable))
-          .forEach(r => {
-            if (isNil(r.context)) {
-              // if rule is missing target element, then rule itself is used as input somewhere
-              // NB: FHIR rule name is used here!
-              variables[r.variable] = `${fhirRule.name}`;
-            } else {
-              variables[r.variable] = `${variables[r.context]}.${r.element}`;
-            }
-          });
-
-
-        // NB: currently only one source
-        const fhirRuleSource = fhirRule.source[0];
-
-        fhirRule.target.forEach(fhirRuleTarget => {
-          try {
-            const {
-              rule,
-              object,
-              connections
-            } = getRuleParser(fhirRuleTarget.transform).parse(fmlGroup, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
-
-            if (isDefined(object)) {
-              fmlGroup.objects[object.name] = object;
-            }
-            if (isDefined(rule)) {
-              fmlGroup.putRule(rule);
-            }
-            if (isDefined(connections)) {
-              connections.forEach(c => fmlGroup.putConnection(c));
-            }
-
-            if (isNil(fhirRuleTarget.context)) {
-              variables[fhirRuleTarget.variable] = `${rule.name}`;
-            }
-          } catch (e) {
-            console.error(e);
+      [...fhirRule.source, ...fhirRule.target]
+        .filter(r => isDefined(r.variable))
+        .forEach(r => {
+          if (isNil(r.context)) {
+            // if rule is missing target element, then rule itself is used as input somewhere
+            // NB: FHIR rule name is used here!
+            variables[r.variable] = `${fhirRule.name}`;
+          } else {
+            variables[r.variable] = `${variables[r.context]}.${r.element}`;
           }
         });
 
 
-        fhirRule.rule?.forEach(subRule => _parseRule(subRule, variables));
-      }
-    });
+      // NB: currently only one source
+      const fhirRuleSource = fhirRule.source[0];
 
+      fhirRule.target.forEach(fhirRuleTarget => {
+        try {
+          const {
+            rule,
+            object,
+            connections
+          } = getRuleParser(fhirRuleTarget.transform).parse(fmlGroup, fhirRule.name, fhirRuleSource, fhirRuleTarget, variables);
 
-    // validate
-    this.validate(fmlGroup, fhir);
+          if (isDefined(object)) {
+            fmlGroup.objects[object.name] = object;
+          }
+          if (isDefined(rule)) {
+            fmlGroup.putRule(rule);
+          }
+          if (isDefined(connections)) {
+            connections.forEach(c => fmlGroup.putConnection(c));
+          }
+
+          if (isNil(fhirRuleTarget.context)) {
+            variables[fhirRuleTarget.variable] = `${rule.name}`;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
+      fhirRule.rule?.forEach(subRule => _parseRule(subRule, variables));
+    }
 
     return fmlGroup;
   }

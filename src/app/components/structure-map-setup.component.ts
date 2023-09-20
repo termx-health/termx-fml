@@ -114,9 +114,7 @@ export class StructureMapSetupComponent {
   };
 
   protected initFromWizard(data: Partial<ModalData>): void {
-    const fmlGroup = new FMLStructureGroup();
-    // fixme: temporary workaround for newFMLObject to work
-    fmlGroup.bundle = (): Bundle<StructureDefinition> => this.bundle;
+    const fmlGroup = new FMLStructureGroup(() => this.bundle);
 
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
       const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings) [url];

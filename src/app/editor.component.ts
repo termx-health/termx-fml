@@ -3,7 +3,7 @@ import {FMLStructure, FMLStructureConceptMap, FMLStructureEntityMode, FMLStructu
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {isNil, unique} from '@kodality-web/core-util';
+import {group, isNil, unique} from '@kodality-web/core-util';
 import {FMLStructureMapper} from './fml/fml-structure-mapper';
 import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
@@ -78,6 +78,8 @@ const RULES: RuleDescription[] = [
 
 interface RuleGroup {
   groupName: string,
+  external: boolean,
+  mapName?: string,
 }
 
 @Component({
@@ -89,9 +91,10 @@ export class EditorComponent implements OnInit, OnChanges {
   protected ZOOM_KEY = "fml_zoom";
 
   @Input() public iframe: boolean;
-  @Input() public resourceBundle: Bundle<StructureDefinition>;
-  @Input() public structureMap: StructureMap;
   @Input() public mapName: string;
+  @Input() public bundle: Bundle<StructureDefinition>;
+  @Input() public structureMap: StructureMap;
+  @Input() public externalMaps: StructureMap[];
 
   public get fmlGroup(): FMLStructureGroup {
     return this.editor?._fmlGroup;
@@ -125,9 +128,24 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['resourceBundle'] || changes['structureMap']) {
-      if (this.resourceBundle && this.structureMap) {
+    if (
+      changes['bundle'] ||
+      changes['structureMap'] ||
+      changes['externalMaps']
+    ) {
+      if (this.bundle && this.structureMap) {
         this.init();
+
+        this.externalMaps?.forEach(fhirMap => {
+          fhirMap.group.forEach(fhirGroup => {
+            console.log(fhirMap.url, fhirGroup)
+            const fmlGroup = new FMLStructureGroup(() => this.bundle);
+            fmlGroup.objects = group(fhirGroup.input ?? [], s => s.type, s => fmlGroup.newFMLObject(s.type, s.type, s.mode));
+            fmlGroup.external = true;
+            fmlGroup.externalMapUrl = fhirMap.url;
+            this.putFmlGroup(fhirGroup.name + '_', fmlGroup);
+          });
+        });
       }
     }
   }
@@ -142,7 +160,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   private init(): void {
-    const fml = FMLStructureMapper.map(this.resourceBundle, this.structureMap);
+    const fml = FMLStructureMapper.map(this.bundle, this.structureMap);
     this.fml = fml;
     this.setFmlGroup(this.FML_MAIN, fml.groups[this.FML_MAIN]);
   }
@@ -150,9 +168,7 @@ export class EditorComponent implements OnInit, OnChanges {
   private setFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
     this.nodeSelected = undefined;
     this.groupName = groupName;
-    this.ruleGroups = Object.keys(this.fml.groups)
-      .filter(n => ![this.FML_MAIN, groupName].includes(n))
-      .map(n => ({groupName: n}));
+    this.putFmlGroup(groupName, fmlGroup);
 
     SEQUENCE.current = Math.max(0, ...Object.values(this.fml.groups)
       .flatMap(f => [
@@ -164,8 +180,18 @@ export class EditorComponent implements OnInit, OnChanges {
       .map(Number)
       .filter(unique));
 
-    this.fml.setGroup(groupName, fmlGroup);
     this.initEditor(this.fml, groupName);
+  }
+
+  private putFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
+    this.fml.putGroup(groupName, fmlGroup);
+    this.ruleGroups = Object.keys(this.fml.groups)
+      .filter(n => ![this.FML_MAIN, this.groupName].includes(n))
+      .map(n => ({
+        mapName: this.externalMaps.find(m => m.group?.find(g => g.name === n))?.name,
+        groupName: n,
+        external: this.fml.groups[n].external
+      }));
   }
 
 
@@ -209,7 +235,7 @@ export class EditorComponent implements OnInit, OnChanges {
   public initFmlFromGroup(bundle: Bundle<StructureDefinition>, group: FMLStructureGroup): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
-    fml.setGroup(this.FML_MAIN, group);
+    fml.putGroup(this.FML_MAIN, group);
     return fml;
   }
 

@@ -449,7 +449,7 @@ export class FMLEditor extends Drawflow {
 
   public _getOffsets(): {top: number, left: number} {
     const el = this.element.firstElementChild as HTMLDivElement;
-    const re = /translate\(([+\-\d]+)px, ([+\-\d]+)px\)/m;
+    const re = /translate\(([+\-\d].+)px, ([+\-\d.]+)px\)/m;
     const [_, x, y] = el.style.transform.match(re) ?? [0, 0, 0];
 
     // todo: take into account 'scale' factor

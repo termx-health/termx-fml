@@ -1,4 +1,4 @@
-import {copyDeep, group, isDefined, isNil} from '@kodality-web/core-util';
+import {copyDeep, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {
   StructureMap,
   StructureMapGroup,
@@ -84,10 +84,13 @@ export class FmlStructureComposer {
       }));
 
     // structure imports
-    sm.import = [];
+    sm.import = Object.values(fml.groups)
+      .filter(g=> g.external)
+      .map(g=> g.externalMapUrl)
+      .filter(unique);
 
     // structure groups
-    Object.keys(fml.groups).forEach(groupName => {
+    Object.keys(fml.groups).filter(k => !fml.groups[k].external).forEach(groupName => {
       const fmlGroup = fml.groups[groupName];
       const smGroup = this.generateGroup(fml, fmlGroup, groupName);
       sm.group.push(smGroup);

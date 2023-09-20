@@ -28,8 +28,8 @@ export class FMLStructureSimpleMapper {
     fml.conceptMaps = exp.conceptMaps ?? [];
 
     Object.keys(exp.groups).forEach(groupName => {
-      const fmlGroup = new FMLStructureGroup();
-      fml.setGroup(groupName, fmlGroup);
+      const fmlGroup = new FMLStructureGroup(() => fml.bundle);
+      fml.putGroup(groupName, fmlGroup);
 
       const _fmlGroup = exp.groups[groupName];
       Object.keys(_fmlGroup.objects).forEach(k => {

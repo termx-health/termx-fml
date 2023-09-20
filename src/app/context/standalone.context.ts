@@ -12,6 +12,7 @@ export class StandaloneContext implements EditorContext {
 
 
   public maps$ = new BehaviorSubject<string[]>([]);
+  public externalStructureMaps$ = new BehaviorSubject<StructureMap[]>([]);
   public structureMap$ = new BehaviorSubject<StructureMap>(undefined);
   public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
 

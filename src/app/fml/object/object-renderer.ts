@@ -64,7 +64,7 @@ export class FMLStructureObjectRenderer {
         ${o.fields.map(f => `
           <div class="m-justify-between node-field">
             <span>${f.name}</span>
-            ${editor._fmlGroup.isFieldSelectable(f) ? `<span class="m-clickable" style="padding-inline: 0.5rem" onclick="_fieldSelect('${o.name}', '${f.name}')">+</span>` : ''}
+            ${editor._fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource') ? `<span class="m-clickable" style="padding-inline: 0.5rem" onclick="_fieldSelect('${o.name}', '${f.name}')">+</span>` : ''}
           </div>
         `).join('\n')}
     `;

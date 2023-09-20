@@ -11,6 +11,7 @@ interface LoadAction {
   action: 'load',
   bundle: Bundle<StructureDefinition>,
   structureMap?: StructureMap,
+  externalStructureMaps?: StructureMap[],
   contained?: FhirResource[],
 }
 
@@ -53,6 +54,7 @@ interface ExitMessage {
 
 export class IframeContext implements EditorContext {
   public maps$ = new BehaviorSubject<string[]>([]);
+  public externalStructureMaps$ = new BehaviorSubject<StructureMap[]>([]);
   public structureMap$ = new BehaviorSubject<StructureMap>(undefined);
   public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
   public contained$ = new BehaviorSubject<FhirResource[]>([]);
@@ -74,7 +76,6 @@ export class IframeContext implements EditorContext {
 
   private _attachListener(): void {
     window.addEventListener("message", event => {
-        console.log(event);
         if (event.origin === location.origin) {
           // return;
         }
@@ -83,11 +84,13 @@ export class IframeContext implements EditorContext {
           ? JSON.parse(event.data)
           : event.data;
 
+        console.log(msg);
         switch (msg.action) {
           case 'load':
-            this.contained$.next(msg.contained ?? []);
+            this.externalStructureMaps$.next(msg.externalStructureMaps);
             this.structureMap$.next(msg.structureMap);
             this.bundle$.next(msg.bundle);
+            this.contained$.next(msg.contained ?? []);
             break;
           case 'export':
             this.opt.exportMap(msg.format).then(sm => {

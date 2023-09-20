@@ -59,8 +59,9 @@
   *ngIf="ctx.structureMap$ | async as sm"
   style="height: calc(100dvh - 2.5rem)"
   [iframe]="isIframe"
-  [resourceBundle]="ctx.bundle$ | async"
+  [bundle]="ctx.bundle$ | async"
   [structureMap]="sm"
+  [externalMaps]="ctx.externalStructureMaps$ | async"
   [mapName]="sm.name"
 ></app-editor>
 

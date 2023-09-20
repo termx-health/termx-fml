@@ -19,22 +19,25 @@
       </div>
 
       <ng-container *ngIf="fml.groups[FML_MAIN]">
-        <div
-          *ngFor="let key of fml.groups | keys"
-          class="editor-tab m-justify-between"
-          [class.editor-tab--selected]="key === groupName"
-          (click)="selectGroup(key)"
-        >
-          <div class="m-items-middle">
-            <m-icon [mCode]="key === FML_MAIN ? key === groupName ? 'folder-open' : 'folder' : 'block'"/>
-            <span>{{key}}</span>
+        <ng-container *ngFor="let key of fml.groups | keys">
+          <div
+            *ngIf="!fml.groups[key].external"
+            class="editor-tab m-justify-between"
+            [class.editor-tab--selected]="key === groupName"
+            (click)="selectGroup(key)"
+          >
+            <div class="m-items-middle">
+              <m-icon [mCode]="key === FML_MAIN ? key === groupName ? 'folder-open' : 'folder' : 'block'"/>
+              <span>{{key}}</span>
+            </div>
+            <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
           </div>
-          <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
-        </div>
+        </ng-container>
+
 
         <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
           <m-icon mCode="file-add"/>
-          <app-structure-map-setup #fmlSetup [bundle]="resourceBundle" (created)="createGroup($event.name, $event.fmlGroup)"/>
+          <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.name, $event.fmlGroup)"/>
         </div>
       </ng-container>
     </div>
@@ -59,10 +62,17 @@
             <h5>Groups</h5>
             <m-list mSeparated>
               <m-list-item *ngFor="let rg of ruleGroups" style="cursor: grab;" draggable="true" (dragstart)="onDragStart($event, 'group', rg)">
-                <div class="m-items-middle">
-                  <m-icon mCode="block"/>
-                  <m-divider mVertical></m-divider>
-                  {{rg.groupName}}
+                <div class="m-justify-between">
+                  <div class="m-items-middle">
+                    <m-icon mCode="block"/>
+                    <m-divider mVertical></m-divider>
+                    <div>
+                      <div>{{rg.groupName}}</div>
+                      <div *ngIf="rg.mapName" class="description">{{rg.mapName}}</div>
+                    </div>
+                  </div>
+
+                  <m-icon *ngIf="rg.external" mCode="link"/>
                 </div>
               </m-list-item>
             </m-list>

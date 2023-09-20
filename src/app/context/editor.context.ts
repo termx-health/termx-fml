@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 export interface EditorContext {
   // the list of available StructureMaps
   maps$: BehaviorSubject<string[]>;
+  externalStructureMaps$: BehaviorSubject<StructureMap[]>
   structureMap$: BehaviorSubject<StructureMap>
   bundle$: BehaviorSubject<Bundle<StructureDefinition>>
 

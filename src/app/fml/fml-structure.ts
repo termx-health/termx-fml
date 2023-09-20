@@ -134,14 +134,22 @@ export class FMLStructureGroup {
 
   /* true = generate single rule */
   shareContext = false;
+  external = false;
+  externalMapUrl: string;
+
+  public bundle: () => Bundle<StructureDefinition>;
+
+  constructor(bundle: () => Bundle<StructureDefinition>) {
+    // todo: evaluate in future whether this approach is better.
+    //  @see FMLStructure.putGroup where bundle is reset.
+    this.bundle = bundle;
+  }
+
 
   public get connections(): readonly FMLStructureConnection[] {
     // getter to prevent direct array modification
     return this._connections;
   }
-
-  // fixme: not happy how this should be (re)set every time, when new group is created
-  public bundle: () => Bundle<StructureDefinition>;
 
 
   /* Connections */
@@ -335,7 +343,7 @@ export class FMLStructure {
   groups: {[groupName: string]: FMLStructureGroup} = {};
   conceptMaps: FMLStructureConceptMap[] = [];
 
-  public setGroup(name: string, group: FMLStructureGroup): void {
+  public putGroup(name: string, group: FMLStructureGroup): void {
     group.bundle = () => this.bundle;
     this.groups = {...this.groups, [name]: group};
   }
@@ -355,7 +363,7 @@ export class FMLStructure {
       .filter(c => field === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
       .map(c => {
         // for each connection create sub fml
-        const fmlGroup = new FMLStructureGroup();
+        const fmlGroup = new FMLStructureGroup(() => this.bundle);
         const _copyResources = (obj): void => {
           if (_objects[obj]) {
             fmlGroup.objects[obj] = _objects[obj];
@@ -383,7 +391,7 @@ export class FMLStructure {
         const fml = new FMLStructure();
         fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: performance issue, too much data!
         fml.conceptMaps = structuredClone(this.conceptMaps);
-        fml.setGroup(groupName, fmlGroup);
+        fml.putGroup(groupName, fmlGroup);
         return fml;
       });
   }
