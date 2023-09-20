@@ -89,7 +89,7 @@ export class FMLStructureMapper {
 
     // groups
     // [type] -> FMLStructureObject
-    fmlGroup.objects = group(fhirGroup.input ?? [], s => getKey(s.type), (s, k) => {
+    fmlGroup.objects = group(fhirGroup.input ?? [], s => getKey(s.type) ?? s.name, (s, k) => {
       return fmlGroup.newFMLObject(k, k, s.mode as FMLStructureEntityMode);
     });
 
