@@ -29,8 +29,6 @@ interface FmlStructureComposeOptions {
 }
 
 export class FmlStructureComposer {
-  private static MAIN = 'main';
-
   public static generate(fml: FMLStructure, options?: FmlStructureComposeOptions): StructureMap {
     return this._generate(fml, options);
   }
@@ -75,7 +73,7 @@ export class FmlStructureComposer {
       }));
 
     // structure inputs
-    sm.structure = Object.values(fml.groups[this.MAIN].objects)
+    sm.structure = Object.values(fml.getGroup(fml.mainGroupName).objects)
       .filter(o => ['source', 'target'].includes(o.mode))
       .map(o => ({
         url: o.url,
@@ -84,24 +82,23 @@ export class FmlStructureComposer {
       }));
 
     // structure imports
-    sm.import = Object.values(fml.groups)
-      .filter(g=> g.external)
-      .map(g=> g.externalMapUrl)
+    sm.import = fml.groups
+      .filter(g => g.external)
+      .map(g => g.externalMapUrl)
       .filter(unique);
 
     // structure groups
-    Object.keys(fml.groups).filter(k => !fml.groups[k].external).forEach(groupName => {
-      const fmlGroup = fml.groups[groupName];
-      const smGroup = this.generateGroup(fml, fmlGroup, groupName);
+    fml.groups.filter(g => !g.external).forEach(fmlGroup => {
+      const smGroup = this.generateGroup(fml, fmlGroup);
       sm.group.push(smGroup);
     });
 
     return sm;
   }
 
-  private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup, groupName: string): StructureMapGroup {
+  private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup): StructureMapGroup {
     const smGroup: StructureMapGroup = {
-      name: groupName,
+      name: fmlGroup.name,
       input: [],
       rule: []
     };
@@ -117,7 +114,7 @@ export class FmlStructureComposer {
 
 
     // group rules
-    if (fmlGroup.shareContext && groupName !== this.MAIN) {
+    if (fmlGroup.shareContext) {
       this.generateRule(fml, fmlGroup, smGroup);
       return smGroup;
     }
@@ -147,8 +144,8 @@ export class FmlStructureComposer {
       // unique
       .filter((v, idx, self) => self.findIndex(el => el.join('_') === v.join('_')) === idx)
       .forEach(([target, field]) => {
-        fml.subFML(groupName, target, field).forEach(subFml => {
-          this.generateRule(subFml, subFml.groups[groupName], smGroup);
+        fml.subFML(fmlGroup.name, target, field).forEach(subFml => {
+          this.generateRule(subFml, subFml.getGroup(fmlGroup.name), smGroup);
         });
       });
 
@@ -188,7 +185,10 @@ export class FmlStructureComposer {
           variable: toVar(obj.name),
           transform: 'create',
           parameter: [{
-            valueString: obj.resource
+            // todo: configurable URL
+            valueString: obj.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
+              ? obj.resource // obj.url.slice('http://hl7.org/fhir/StructureDefinition/'.length)
+              : obj.url
           }]
         }];
       });

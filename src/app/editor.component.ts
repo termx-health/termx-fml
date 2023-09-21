@@ -87,7 +87,6 @@ interface RuleGroup {
   templateUrl: 'editor.component.html'
 })
 export class EditorComponent implements OnInit, OnChanges {
-  protected FML_MAIN = 'main';
   protected ZOOM_KEY = "fml_zoom";
 
   @Input() public iframe: boolean;
@@ -100,14 +99,13 @@ export class EditorComponent implements OnInit, OnChanges {
     return this.editor?._fmlGroup;
   }
 
-  public get fmlGroups(): {[groupName: string]: FMLStructureGroup} {
-    return this.editor?._fml.groups;
+  public get fmlSelectedGroupName(): string {
+    return this.editor?._groupName;
   }
 
   // FML editor
   public editor: FMLEditor;
   protected fml: FMLStructure;
-  protected groupName = this.FML_MAIN;
   protected nodeSelected: DrawflowNode;
 
   // component
@@ -138,12 +136,15 @@ export class EditorComponent implements OnInit, OnChanges {
 
         this.externalMaps?.forEach(fhirMap => {
           fhirMap.group.forEach(fhirGroup => {
-            console.log(fhirMap.url, fhirGroup)
-            const fmlGroup = new FMLStructureGroup(() => this.bundle);
-            fmlGroup.objects = group(fhirGroup.input ?? [], s => s.type, s => fmlGroup.newFMLObject(s.type, s.type, s.mode));
+            const fmlGroup = new FMLStructureGroup(fhirGroup.name, () => this.bundle);
             fmlGroup.external = true;
             fmlGroup.externalMapUrl = fhirMap.url;
-            this.putFmlGroup(fhirGroup.name, fmlGroup);
+            fmlGroup.objects = group(
+              fhirGroup.input ?? [],
+              s => FMLStructureMapper.findResourceId(s.type, {bundle: this.bundle, fhirMap}),
+              (s, k) => fmlGroup.newFMLObject(k, k, s.mode)
+            );
+            this.putFmlGroup(fmlGroup);
           });
         });
       }
@@ -162,15 +163,14 @@ export class EditorComponent implements OnInit, OnChanges {
   private init(): void {
     const fml = FMLStructureMapper.map(this.bundle, this.structureMap);
     this.fml = fml;
-    this.setFmlGroup(this.FML_MAIN, fml.groups[this.FML_MAIN]);
+    this.setFmlGroup(fml.getGroup(fml.mainGroupName));
   }
 
-  private setFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
+  protected setFmlGroup(fmlGroup: FMLStructureGroup): void {
     this.nodeSelected = undefined;
-    this.groupName = groupName;
-    this.putFmlGroup(groupName, fmlGroup);
+    this.putFmlGroup(fmlGroup);
 
-    SEQUENCE.current = Math.max(0, ...Object.values(this.fml.groups)
+    SEQUENCE.current = Math.max(0, ...this.fml.groups
       .flatMap(f => [
         ...Object.keys(f.objects),
         ...f.rules.map(r => r.name)
@@ -180,18 +180,16 @@ export class EditorComponent implements OnInit, OnChanges {
       .map(Number)
       .filter(unique));
 
-    this.initEditor(this.fml, groupName);
+    this.initEditor(this.fml, fmlGroup.name);
   }
 
-  private putFmlGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
-    this.fml.putGroup(groupName, fmlGroup);
-    this.ruleGroups = Object.keys(this.fml.groups)
-      .filter(n => ![this.FML_MAIN, this.groupName].includes(n))
-      .map(n => ({
-        mapName: this.externalMaps.find(m => m.group?.find(g => g.name === n))?.name,
-        groupName: n,
-        external: this.fml.groups[n].external
-      }));
+  private putFmlGroup(fmlGroup: FMLStructureGroup): void {
+    this.fml.setGroup(fmlGroup);
+    this.ruleGroups = this.fml.groups.map(g => ({
+      mapName: this.externalMaps.find(m => m.group?.find(g => g.name === g.name))?.name,
+      groupName: g.name,
+      external: g.external
+    }));
   }
 
 
@@ -235,28 +233,28 @@ export class EditorComponent implements OnInit, OnChanges {
   public initFmlFromGroup(bundle: Bundle<StructureDefinition>, group: FMLStructureGroup): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
-    fml.putGroup(this.FML_MAIN, group);
+    fml.mainGroupName = group.name;
+    fml.setGroup(group);
     return fml;
   }
 
   /* Editor bar */
 
   protected selectGroup(name: string): void {
-    if (this.fmlGroups[name]) {
-      this.setFmlGroup(name, this.fmlGroups[name]);
+    if (this.fml.getGroup(name)) {
+      this.setFmlGroup(this.fml.getGroup(name));
     }
   }
 
   protected deleteGroup(name: string): void {
-    if (name !== this.FML_MAIN) {
-      delete this.fmlGroups[name];
-      this.fml.groups = {...this.fmlGroups};
-      this.setFmlGroup(this.FML_MAIN, this.fmlGroups[this.FML_MAIN]);
+    if (name !== this.fml.mainGroupName) {
+      this.fml.removeGroup(name);
+      this.setFmlGroup(this.fml.getGroup(this.fml.mainGroupName));
     }
   }
 
-  protected createGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
-    this.setFmlGroup(groupName, fmlGroup);
+  protected createGroup(fmlGroup: FMLStructureGroup): void {
+    this.setFmlGroup(fmlGroup);
   }
 
 
@@ -301,7 +299,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
   /* Editor */
 
-  private initEditor(fml: FMLStructure, groupName = this.FML_MAIN): void {
+  private initEditor(fml: FMLStructure, groupName = this.fml.mainGroupName): void {
     this.editor?.element.remove();
 
     const parent = document.getElementById("drawflow-parent");
@@ -453,7 +451,7 @@ export class EditorComponent implements OnInit, OnChanges {
     Promise.resolve().then(() => {
       const nodeEl = this.editor._getNodeElementByName(obj.name).el;
       const nodeRect = nodeEl.getBoundingClientRect();
-      const portEl = nodeEl.getElementsByClassName(createOnRight ? 'input' : 'output').item(0) as HTMLElement
+      const portEl = nodeEl.getElementsByClassName(createOnRight ? 'input' : 'output').item(0) as HTMLElement;
       this.editor._setHTMLPosition(
         obj.name,
         nodeRect.x + (createOnRight ? 30 : -nodeRect.width - 30) - left,
@@ -544,4 +542,11 @@ export class EditorComponent implements OnInit, OnChanges {
     }
     this.editor._rerenderNodes();
   }
+
+
+  /* Utils */
+
+  protected availableRuleGroups = (groups: RuleGroup[], mainGroup: string, currentGroup: string): RuleGroup[] => {
+    return groups.filter(({groupName}) => ![mainGroup, currentGroup].includes(groupName));
+  };
 }

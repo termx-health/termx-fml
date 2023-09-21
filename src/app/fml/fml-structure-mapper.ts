@@ -7,17 +7,15 @@ import {FMLStructureExportSimple, FMLStructureSimpleMapper} from './fml-structur
 
 
 export class FMLStructureMapper {
-  private static MAIN = 'main';
-
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
 
     if (exported) {
       let parsed = JSON.parse(exported);
 
-      if (isNil(parsed['version']) && isNil(parsed[this.MAIN])) {
+      if (isNil(parsed['version']) && isNil(parsed['main'])) {
         console.warn("v0: from flat to nested");
-        parsed = {[this.MAIN]: parsed};
+        parsed = {['main']: parsed};
       }
 
       if (isNil(parsed['version'])) {
@@ -56,42 +54,29 @@ export class FMLStructureMapper {
 
     const fml = new FMLStructure();
     fml.bundle = bundle;
+    fml.mainGroupName = fhir.group[0]?.name;
     // todo: map local concept maps
 
-    fhir.group.forEach((fhirGroup, idx) => {
+    fhir.group.forEach(fhirGroup => {
       const fmlGroup = this.mapGroup(bundle, fhir, fhirGroup);
       this.validate(fmlGroup, fhir);
-      fml.putGroup(idx === 0 ? this.MAIN : fhirGroup.name, fmlGroup);
+      fml.setGroup(fmlGroup);
     });
 
     return fml;
   }
 
-  public static mapGroup(bundle: Bundle<StructureDefinition>, fhir: StructureMap, fhirGroup: StructureMapGroup): FMLStructureGroup {
-    const getKey = (k: string /* url, alias, type */): string => {
-      if (k === 'Any') {
-        return 'Element';
-      }
-      const map = group(bundle.entry, e => e.resource.url, e => e.resource);
-      if (map[k]) {
-        return map[k]?.id;
-      }
-      const aliasSearch = fhir.structure.find(s => s.alias === k)?.url;
-      if (aliasSearch) {
-        return map[aliasSearch]?.id;
-      }
-      return bundle.entry.find(e => e.resource.type === k)?.resource?.id;
-    };
-
-
-    const fmlGroup = new FMLStructureGroup(() => bundle);
+  public static mapGroup(bundle: Bundle<StructureDefinition>, fhirMap: StructureMap, fhirGroup: StructureMapGroup): FMLStructureGroup {
+    const fmlGroup = new FMLStructureGroup(fhirGroup.name, () => bundle);
     fmlGroup.objects = {};
 
     // groups
     // [type] -> FMLStructureObject
-    fmlGroup.objects = group(fhirGroup.input ?? [], s => getKey(s.type) ?? s.name, (s, k) => {
-      return fmlGroup.newFMLObject(k, k, s.mode as FMLStructureEntityMode);
-    });
+    fmlGroup.objects = group(
+      fhirGroup.input ?? [],
+      s => FMLStructureMapper.findResourceId(s.type, {bundle, fhirMap}) ?? s.name,
+      (s, k) => fmlGroup.newFMLObject(k, k, s.mode as FMLStructureEntityMode)
+    );
 
     fhirGroup.rule ??= [];
 
@@ -153,6 +138,28 @@ export class FMLStructureMapper {
 
     return fmlGroup;
   }
+
+  public static findResourceId = (k: string /* url, alias, type */, sources: {bundle: Bundle<StructureDefinition>, fhirMap?: StructureMap}): string => {
+    const {bundle, fhirMap} = sources;
+    if (k === 'Any') {
+      return 'Element';
+    }
+
+    // [url] -> Resource
+    const map = group(bundle.entry, e => e.resource.url, e => e.resource);
+    if (map[k]) {
+      return map[k]?.id;
+    }
+    const aliasSearch = fhirMap?.structure.find(s => s.alias === k)?.url;
+    if (aliasSearch) {
+      return map[aliasSearch]?.id;
+    }
+    const typeSearch = bundle.entry.find(e => e.resource.type === k);
+    if (typeSearch) {
+      return typeSearch.resource?.id;
+    }
+    throw new Error(`Couldn't find resource by "${k}"`);
+  };
 
   private static validate(struc: FMLStructureGroup, fhir: StructureMap): void {
     const merged = {

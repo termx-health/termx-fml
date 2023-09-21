@@ -1,7 +1,7 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {FMLStructureGroup} from './fml/fml-structure';
 import {StructureMap} from 'fhir/r5';
-import {HttpCacheService, isDefined, LoadingManager} from '@kodality-web/core-util';
+import {group, HttpCacheService, isDefined, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
@@ -64,9 +64,9 @@ export class AppComponent implements OnInit {
   /* Left side */
 
   // New
-  protected initFromGroup(groupName: string, fmlGroup: FMLStructureGroup): void {
+  protected initFromGroup(fmlGroup: FMLStructureGroup): void {
     const fml = this.editor.initFmlFromGroup(this.ctx.bundle$.getValue(), fmlGroup);
-    const sm = FmlStructureComposer.generate(fml, {mapName: groupName});
+    const sm = FmlStructureComposer.generate(fml, {mapName: group.name});
     this.ctx.importMap(sm);
   }
 

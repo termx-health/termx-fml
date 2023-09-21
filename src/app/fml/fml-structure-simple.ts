@@ -26,10 +26,11 @@ export class FMLStructureSimpleMapper {
     const fml = new FMLStructure();
     fml.bundle = bundle;
     fml.conceptMaps = exp.conceptMaps ?? [];
+    fml.mainGroupName = Object.keys(exp.groups)[0];
 
     Object.keys(exp.groups).forEach(groupName => {
-      const fmlGroup = new FMLStructureGroup(() => fml.bundle);
-      fml.putGroup(groupName, fmlGroup);
+      const fmlGroup = new FMLStructureGroup(groupName, () => fml.bundle);
+      fml.setGroup(fmlGroup);
 
       const _fmlGroup = exp.groups[groupName];
       Object.keys(_fmlGroup.objects).forEach(k => {
@@ -48,8 +49,7 @@ export class FMLStructureSimpleMapper {
 
   public static fromFML(fml: FMLStructure): FMLStructureExportSimple {
     return {
-      groups: group(Object.keys(fml.groups), k => k, k => {
-        const fmlGroup = fml.groups[k];
+      groups: group(fml.groups, g => g.name, fmlGroup => {
         const simpleObjects = Object.values(fmlGroup.objects).map(o => ({
           ...o,
           fields: o.rawFields,

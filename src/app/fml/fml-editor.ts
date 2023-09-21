@@ -63,13 +63,14 @@ export class FMLEditor extends Drawflow {
     this._rerenderNodes();
   }
 
+
   public get _fmlGroup(): FMLStructureGroup {
-    return this._fml?.groups?.[this._groupName];
+    return this._fml?.getGroup(this._groupName);
   }
 
   constructor(
     public _fml: FMLStructure,
-    private _groupName: string,
+    public _groupName: string,
     public element: HTMLElement,
     options?: {render?: object, parent?: object}
   ) {
