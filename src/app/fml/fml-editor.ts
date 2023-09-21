@@ -68,6 +68,30 @@ export class FMLEditor extends Drawflow {
     return this._fml?.getGroup(this._groupName);
   }
 
+  public _updateGroupName(before: string, after: string): void {
+    if (this._fml.mainGroupName === before) {
+      this._fml.mainGroupName = after;
+    }
+
+    const g = this._fml.getGroup(before)
+    g.name = after;
+
+    if (this._groupName === before) {
+      this._groupName = after;
+    }
+
+    Object.values(this._fml.groups)
+      .flatMap(g => g.rules)
+      .filter(r => r.action === 'rulegroup')
+      .forEach(rule => {
+        rule.parameters
+          .filter(p => p.value === before)
+          .forEach(p => p.value = after);
+      });
+
+    this._rerenderNodes();
+  }
+
   constructor(
     public _fml: FMLStructure,
     public _groupName: string,

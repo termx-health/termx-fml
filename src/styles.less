@@ -54,16 +54,49 @@ li {
     font-size: 12px;
     height: var(--tab-height, 32px);
     line-height: var(--tab-height, 32px);
-    min-width: 110px;
-    padding-inline: 10px;
+    min-width: 125px;
     position: relative;
     transition: 100ms;
     box-shadow: inset @mui-border-color-light 0px -11px 7px -11px;
 
+
+    &__group-item {
+      position: relative;
+      padding-inline: 10px;
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+      gap: var(--gap-default);
+
+      .editor-tab__group-name {
+        flex: auto;
+      }
+
+      .editor-tab__edit-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        padding-inline: 10px 0.5rem;
+        visibility: hidden;
+      }
+
+      &:hover {
+        .editor-tab__edit-icon {
+          visibility: visible;
+
+          i {
+            background: var(--color-background-light);
+          }
+        }
+      }
+    }
+
+
     &:not(:first-child) {
       border-left: @mui-border;
     }
-
 
     &:not(&--selected):hover {
       box-shadow: inset @mui-border-color 0px -11px 7px -11px;
@@ -71,8 +104,18 @@ li {
 
     &--selected {
       --tab-background: white;
-      //--tab-color: @mui-primary-color;
       box-shadow: unset;
+    }
+
+
+    .mini-input {
+      input {
+        font-size: 12px;
+        border-radius: 0;
+        border: 0;
+        background: transparent;
+        height: 32px;
+      }
     }
   }
 }

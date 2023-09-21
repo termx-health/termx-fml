@@ -23,23 +23,45 @@
           <ng-container *ngIf="{external: fmlGroup.external, name: fmlGroup.name} as d">
             <div
               *ngIf="!d.external"
-              class="editor-tab m-justify-between"
+              class="editor-tab"
               [class.editor-tab--selected]="d.name === fmlSelectedGroupName"
               (click)="selectGroup(d.name)"
             >
-              <div class="m-items-middle">
-                <m-icon [mCode]="d.name === fml.mainGroupName ? d.name === fmlSelectedGroupName ? 'folder-open' : 'folder' : 'block'"/>
-                <span>{{d.name}}</span>
-              </div>
-              <m-icon *ngIf="d.name !== fml.mainGroupName" class="m-clickable" mCode="close" (click)="deleteGroup(d.name)"/>
+              <ng-container *ngIf="{edit: false, name: fmlGroup.name} as data">
+                <m-input
+                  *ngIf="data.edit"
+                  class="mini-input"
+                  [(ngModel)]="data.name"
+
+                  autofocus
+                  (focusout)="data.edit = false"
+                  (keyup.escape)="data.edit = false"
+                  (keyup.enter)="onGroupNameChange(fmlGroup.name, data.name); data.edit = false"
+
+                  (click)="$event.stopPropagation()"
+                ></m-input>
+
+                <div *ngIf="!data.edit" class="editor-tab__group-item">
+                  <!-- Rule group icon -->
+                  <m-icon [mCode]="d.name === fml.mainGroupName ? d.name === fmlSelectedGroupName ? 'folder-open' : 'folder' : 'block'"/>
+                  <!-- Edit action -->
+                  <m-icon class="editor-tab__edit-icon" mCode="edit" (click)="$event.stopPropagation(); data.edit = true; data.name = fmlGroup.name"/>
+                  <!-- Group name -->
+                  <span class="editor-tab__group-name">{{d.name}}</span>
+                  <!-- Delete action -->
+                  <m-icon class="editor-tab__delete-icon" *ngIf="d.name !== fml.mainGroupName" mCode="close" (click)="deleteGroup(d.name)"/>
+                </div>
+              </ng-container>
             </div>
           </ng-container>
         </ng-container>
 
 
-        <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
-          <m-icon mCode="file-add"/>
-          <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.fmlGroup)"/>
+        <div class="editor-tab " style="min-width: 2.5rem" (click)="fmlSetup.open()">
+          <div class="editor-tab__group-item">
+            <m-icon mCode="file-add"/>
+            <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.fmlGroup)"/>
+          </div>
         </div>
       </ng-container>
     </div>
@@ -51,7 +73,6 @@
         <ng-container *ngIf="!nodeSelected">
           <div class="block">
             <h5>Settings</h5>
-
             <div>
               <m-checkbox [(ngModel)]="fmlGroup.shareContext">
                 <div>Share context</div>

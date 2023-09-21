@@ -139,11 +139,10 @@ export class EditorComponent implements OnInit, OnChanges {
             const fmlGroup = new FMLStructureGroup(fhirGroup.name, () => this.bundle);
             fmlGroup.external = true;
             fmlGroup.externalMapUrl = fhirMap.url;
-            fmlGroup.objects = group(
-              fhirGroup.input ?? [],
-              s => FMLStructureMapper.findResourceId(s.type, {bundle: this.bundle, fhirMap}),
-              (s, k) => fmlGroup.newFMLObject(k, k, s.mode)
-            );
+            fmlGroup.objects = group(fhirGroup.input ?? [], s => s.name, s => {
+              const id = FMLStructureMapper.findResourceId(s.type, {bundle: this.bundle, fhirMap});
+              return fmlGroup.newFMLObject(id, id, s.mode);
+            });
             this.putFmlGroup(fmlGroup);
           });
         });
@@ -183,15 +182,18 @@ export class EditorComponent implements OnInit, OnChanges {
     this.initEditor(this.fml, fmlGroup.name);
   }
 
-  private putFmlGroup(fmlGroup: FMLStructureGroup): void {
+  private putFmlGroup(fmlGroup?: FMLStructureGroup): void {
     this.fml.setGroup(fmlGroup);
+    this.composeRuleGroups();
+  }
+
+  private composeRuleGroups(): void {
     this.ruleGroups = this.fml.groups.map(g => ({
-      mapName: this.externalMaps.find(m => m.group?.find(g => g.name === g.name))?.name,
+      mapName: this.externalMaps.find(m => m.group.some(_g => _g.name === g.name))?.name,
       groupName: g.name,
       external: g.external
     }));
   }
-
 
   /* Public API */
 
@@ -238,6 +240,7 @@ export class EditorComponent implements OnInit, OnChanges {
     return fml;
   }
 
+
   /* Editor bar */
 
   protected selectGroup(name: string): void {
@@ -255,6 +258,11 @@ export class EditorComponent implements OnInit, OnChanges {
 
   protected createGroup(fmlGroup: FMLStructureGroup): void {
     this.setFmlGroup(fmlGroup);
+  }
+
+  protected onGroupNameChange(before: string, after: string): void {
+    this.editor._updateGroupName(before, after);
+    this.composeRuleGroups();
   }
 
 
@@ -298,6 +306,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
 
   /* Editor */
+
 
   private initEditor(fml: FMLStructure, groupName = this.fml.mainGroupName): void {
     this.editor?.element.remove();
@@ -404,8 +413,8 @@ export class EditorComponent implements OnInit, OnChanges {
     });
   }
 
-
   /* Structure tree */
+
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string, type?: string): void {
     let mode: FMLStructureEntityMode = 'object';
@@ -468,7 +477,6 @@ export class EditorComponent implements OnInit, OnChanges {
     }
   }
 
-
   /* Drag & drop */
 
   protected onDragStart(
@@ -482,6 +490,7 @@ export class EditorComponent implements OnInit, OnChanges {
   protected onDragOver(ev: DragEvent): void {
     ev.preventDefault();
   }
+
 
   protected onDrop(ev: DragEvent): void {
     const datum:
@@ -526,7 +535,6 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._rerenderNodes();
   }
 
-
   /* Edit */
 
   protected applyRule(rule: FMLStructureRule): void {
@@ -536,13 +544,13 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._rerenderNodes();
   }
 
+
   protected applyObject(obj: FMLStructureObject): void {
     if ('obj' in this.nodeSelected.data) {
       this.editor._updateObject(this.nodeSelected.id, this.nodeSelected.name, obj);
     }
     this.editor._rerenderNodes();
   }
-
 
   /* Utils */
 

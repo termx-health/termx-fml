@@ -70,6 +70,7 @@ export class FMLStructureMapper {
     const fmlGroup = new FMLStructureGroup(fhirGroup.name, () => bundle);
     fmlGroup.objects = {};
 
+    // fixme: group can have multiple objects with same type, currently they get merged
     // groups
     // [type] -> FMLStructureObject
     fmlGroup.objects = group(
