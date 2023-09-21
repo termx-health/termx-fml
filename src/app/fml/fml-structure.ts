@@ -1,5 +1,5 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {group, isNil, remove, unique} from '@kodality-web/core-util';
+import {group, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
 
 /*
 * DISCLAIMER!
@@ -139,7 +139,10 @@ export class FMLStructureGroup {
 
   public bundle: () => Bundle<StructureDefinition>;
 
-  constructor(bundle: () => Bundle<StructureDefinition>) {
+  constructor(
+    public name: string,
+    bundle: () => Bundle<StructureDefinition>
+  ) {
     // todo: evaluate in future whether this approach is better.
     //  @see FMLStructure.putGroup where bundle is reset.
     this.bundle = bundle;
@@ -340,12 +343,35 @@ export class FMLStructureGroup {
 
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
-  groups: {[groupName: string]: FMLStructureGroup} = {};
+  groups: FMLStructureGroup[] = [];
   conceptMaps: FMLStructureConceptMap[] = [];
 
-  public putGroup(name: string, group: FMLStructureGroup): void {
+  mainGroupName: string;
+
+  public getGroup(name: string): FMLStructureGroup {
+    return this.groups.find(g => g.name === name);
+  }
+
+  public setGroup(group: FMLStructureGroup): void {
+    if (isNil(group.name)) {
+      throw new Error(`FMLStructureGroup is missing the 'name' attribute!`);
+    }
+
     group.bundle = () => this.bundle;
-    this.groups = {...this.groups, [name]: group};
+
+    const _group = this.getGroup(group.name);
+    if (isDefined(_group)) {
+      this.groups.splice(this.groups.indexOf(_group), 1, group);
+    } else {
+      this.groups.push(group);
+    }
+  }
+
+  public removeGroup(name: string): void {
+    const g = this.getGroup(name);
+    if (isDefined(g)) {
+      this.groups = remove(this.groups, g);
+    }
   }
 
   /**
@@ -354,7 +380,7 @@ export class FMLStructure {
    * Bundle & concept maps are fully copied
    */
   public subFML(groupName: string, target: string, field: string): FMLStructure[] {
-    const _fmlGroup = this.groups[groupName];
+    const _fmlGroup = this.getGroup(groupName);
     const _rules = group(_fmlGroup.rules, r => r.name);
     const _objects = _fmlGroup.objects;
 
@@ -363,7 +389,7 @@ export class FMLStructure {
       .filter(c => field === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
       .map(c => {
         // for each connection create sub fml
-        const fmlGroup = new FMLStructureGroup(() => this.bundle);
+        const fmlGroup = new FMLStructureGroup(_fmlGroup.name, () => this.bundle);
         const _copyResources = (obj): void => {
           if (_objects[obj]) {
             fmlGroup.objects[obj] = _objects[obj];
@@ -391,7 +417,8 @@ export class FMLStructure {
         const fml = new FMLStructure();
         fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: performance issue, too much data!
         fml.conceptMaps = structuredClone(this.conceptMaps);
-        fml.putGroup(groupName, fmlGroup);
+        fml.mainGroupName = this.mainGroupName;
+        fml.setGroup(fmlGroup);
         return fml;
       });
   }

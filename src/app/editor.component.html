@@ -6,38 +6,40 @@
     [mResizableMaxWidth]="400"
     style="height: calc(100vh - 2.5rem); background: var(--color-background-component); border-right: var(--border-table); z-index: 10"
   >
-    <app-fml-view [fml]="fmlGroup"/>
+    <app-fml-view [fmlGroup]="fmlGroup"/>
   </m-collapse-panel>
 
 
   <!-- MAIN PANEL -->
   <div style="display: flex; flex-direction: column; max-height: calc(100dvh - 2.5rem)">
     <div class="editor-tabbar">
-      <div *ngIf="!fml.groups[FML_MAIN]" class="editor-tab m-items-middle">
+      <div *ngIf="!fml.groups?.length" class="editor-tab m-items-middle">
         <m-icon mCode="loading"/>
         <span>loading...</span>
       </div>
 
-      <ng-container *ngIf="fml.groups[FML_MAIN]">
-        <ng-container *ngFor="let key of fml.groups | keys">
-          <div
-            *ngIf="!fml.groups[key].external"
-            class="editor-tab m-justify-between"
-            [class.editor-tab--selected]="key === groupName"
-            (click)="selectGroup(key)"
-          >
-            <div class="m-items-middle">
-              <m-icon [mCode]="key === FML_MAIN ? key === groupName ? 'folder-open' : 'folder' : 'block'"/>
-              <span>{{key}}</span>
+      <ng-container *ngIf="fml.groups?.length">
+        <ng-container *ngFor="let fmlGroup of fml.groups">
+          <ng-container *ngIf="{external: fmlGroup.external, name: fmlGroup.name} as d">
+            <div
+              *ngIf="!d.external"
+              class="editor-tab m-justify-between"
+              [class.editor-tab--selected]="d.name === fmlSelectedGroupName"
+              (click)="selectGroup(d.name)"
+            >
+              <div class="m-items-middle">
+                <m-icon [mCode]="d.name === fml.mainGroupName ? d.name === fmlSelectedGroupName ? 'folder-open' : 'folder' : 'block'"/>
+                <span>{{d.name}}</span>
+              </div>
+              <m-icon *ngIf="d.name !== fml.mainGroupName" class="m-clickable" mCode="close" (click)="deleteGroup(d.name)"/>
             </div>
-            <m-icon *ngIf="key !== FML_MAIN" class="m-clickable" mCode="close" (click)="deleteGroup(key)"/>
-          </div>
+          </ng-container>
         </ng-container>
 
 
         <div class="editor-tab" style="min-width: 2.5rem" (click)="fmlSetup.open()">
           <m-icon mCode="file-add"/>
-          <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.name, $event.fmlGroup)"/>
+          <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.fmlGroup)"/>
         </div>
       </ng-container>
     </div>
@@ -47,7 +49,7 @@
       <!-- RIGHT PANEL -->
       <div style="border-left: 1px solid var(--color-borders); height: 100%; overflow: auto; background: var(--color-background-component)">
         <ng-container *ngIf="!nodeSelected">
-          <div class="block" *ngIf="groupName !== FML_MAIN">
+          <div class="block">
             <h5>Settings</h5>
 
             <div>
@@ -58,25 +60,27 @@
             </div>
           </div>
 
-          <div class="block" *ngIf="ruleGroups.length">
-            <h5>Groups</h5>
-            <m-list mSeparated>
-              <m-list-item *ngFor="let rg of ruleGroups" style="cursor: grab;" draggable="true" (dragstart)="onDragStart($event, 'group', rg)">
-                <div class="m-justify-between">
-                  <div class="m-items-middle">
-                    <m-icon mCode="block"/>
-                    <m-divider mVertical></m-divider>
-                    <div>
-                      <div>{{rg.groupName}}</div>
-                      <div *ngIf="rg.mapName" class="description">{{rg.mapName}}</div>
+          <ng-container *ngIf="ruleGroups | apply: availableRuleGroups: fml.mainGroupName: fmlSelectedGroupName as groups">
+            <div class="block" *ngIf="groups.length">
+              <h5>Groups</h5>
+              <m-list mSeparated>
+                <m-list-item *ngFor="let rg of groups" style="cursor: grab;" draggable="true" (dragstart)="onDragStart($event, 'group', rg)">
+                  <div class="m-justify-between">
+                    <div class="m-items-middle">
+                      <m-icon mCode="block"/>
+                      <m-divider mVertical></m-divider>
+                      <div>
+                        <div>{{rg.groupName}}</div>
+                        <div *ngIf="rg.mapName" class="description">{{rg.mapName}}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <m-icon *ngIf="rg.external" mCode="link"/>
-                </div>
-              </m-list-item>
-            </m-list>
-          </div>
+                    <m-icon *ngIf="rg.external" mCode="link"/>
+                  </div>
+                </m-list-item>
+              </m-list>
+            </div>
+          </ng-container>
 
           <div class="block">
             <h5>Transformers</h5>

@@ -83,7 +83,7 @@ import {group, isDefined} from '@kodality-web/core-util';
   `
 })
 export class FmlViewComponent {
-  @Input() fml: FMLStructureGroup;
+  @Input() fmlGroup: FMLStructureGroup;
   protected _dev = isDevMode();
 
 
@@ -93,16 +93,16 @@ export class FmlViewComponent {
     connections: FMLStructureConnection[]
   } {
     return {
-      objects: group(Object.values(this.fml?.objects || {}), o => o.name, o => (<FMLStructureObject>{
+      objects: group(Object.values(this.fmlGroup?.objects || {}), o => o.name, o => (<FMLStructureObject>{
         ...o,
         fields: o.fields,
       })),
-      rules: this.fml?.rules.map(r => ({
+      rules: this.fmlGroup?.rules.map(r => ({
         ...r,
-        sources: this.fml.getSources(r.name).map(n => [n.sourceObject, n.field].filter(isDefined).join(':')),
-        targets: this.fml.getTargets(r.name).map(n => [n.targetObject, n.field].filter(isDefined).join(':')),
+        sources: this.fmlGroup.getSources(r.name).map(n => [n.sourceObject, n.field].filter(isDefined).join(':')),
+        targets: this.fmlGroup.getTargets(r.name).map(n => [n.targetObject, n.field].filter(isDefined).join(':')),
       })),
-      connections: this.fml?.connections as any
+      connections: this.fmlGroup?.connections as any
     };
   }
 }

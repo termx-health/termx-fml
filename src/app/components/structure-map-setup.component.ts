@@ -89,7 +89,7 @@ interface ModalData {
 })
 export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
-  @Output() public created = new EventEmitter<{name: string, fmlGroup: FMLStructureGroup}>();
+  @Output() public created = new EventEmitter<{fmlGroup: FMLStructureGroup}>();
 
   protected modalData: {
     visible: boolean,
@@ -114,7 +114,7 @@ export class StructureMapSetupComponent {
   };
 
   protected initFromWizard(data: Partial<ModalData>): void {
-    const fmlGroup = new FMLStructureGroup(() => this.bundle);
+    const fmlGroup = new FMLStructureGroup(data.name, () => this.bundle);
 
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
       const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings) [url];
@@ -129,7 +129,7 @@ export class StructureMapSetupComponent {
     data.sources.forEach(sd => createObject(sd.url, 'source'));
     data.targets.forEach(sd => createObject(sd.url, 'target'));
 
-    this.created.emit({name: data.name, fmlGroup});
+    this.created.emit({fmlGroup});
     this.close();
   }
 
