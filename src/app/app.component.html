@@ -90,7 +90,12 @@
     Import StructureMap
   </div>
   <div *m-modal-content>
-    <m-textarea [autosize]="{minRows: 10}" placeholder="JSON file content" (mChange)="importStructureMap(importer, $event)"></m-textarea>
+    <m-form-item mLabel="File">
+      <input #i style="width: 100%" type="file" (change)="importStructureMap(importer, i.files[0])"/>
+    </m-form-item>
+    <m-form-item mLabel="JSON">
+      <m-textarea [autosize]="{minRows: 10}" placeholder="Insert raw JSON here..." (mChange)="importStructureMap(importer, $event)"/>
+    </m-form-item>
   </div>
 </m-modal>
 

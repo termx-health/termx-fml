@@ -1,7 +1,7 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {FMLStructureGroup} from './fml/fml-structure';
 import {StructureMap} from 'fhir/r5';
-import {group, HttpCacheService, isDefined, LoadingManager} from '@kodality-web/core-util';
+import {group, HttpCacheService, isNil, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {HttpClient} from '@angular/common/http';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
@@ -71,11 +71,21 @@ export class AppComponent implements OnInit {
   }
 
   // Import
-  protected importStructureMap(m: MuiModalContainerComponent, json: string): void {
-    if (isDefined(json)) {
-      const sm = JSON.parse(json);
+  protected importStructureMap(m: MuiModalContainerComponent, data: string | File): void {
+    if (isNil(data)) {
+      return;
+    }
+
+    const importMap = (val: string): void => {
+      const sm = JSON.parse(val);
       this.ctx.importMap(sm);
       m.close();
+    };
+
+    if (typeof data === 'object') {
+      data.text().then(value => importMap(value));
+    } else {
+      importMap(data);
     }
   }
 

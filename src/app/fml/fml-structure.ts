@@ -1,5 +1,5 @@
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {group, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
+import {group as utilGroup, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
 
 /*
 * DISCLAIMER!
@@ -30,12 +30,12 @@ export class FMLStructureEntity {
    * * 'element' - source's sub element
    * * 'object' - target's sub element
    */
-  mode: FMLStructureEntityMode | string;
+  mode: FMLStructureEntityMode;
   position?: FMLPosition;
   expanded?: boolean = true;
 }
 
-export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'rule' | 'group';
+export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'rule';
 
 
 /* Object */
@@ -89,6 +89,11 @@ export class FMLStructureRule extends FMLStructureEntity {
   action: string;
   parameters?: FMLStructureRuleParameter[];
   condition?: string;
+
+  constructor() {
+    super();
+    this.mode = 'rule';
+  }
 }
 
 export interface FMLStructureRuleParameter {
@@ -381,7 +386,7 @@ export class FMLStructure {
    */
   public subFML(groupName: string, target: string, field: string): FMLStructure[] {
     const _fmlGroup = this.getGroup(groupName);
-    const _rules = group(_fmlGroup.rules, r => r.name);
+    const _rules = utilGroup(_fmlGroup.rules, r => r.name);
     const _objects = _fmlGroup.objects;
 
     return _fmlGroup.connections

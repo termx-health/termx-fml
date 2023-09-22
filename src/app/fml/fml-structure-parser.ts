@@ -1,12 +1,12 @@
 import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroup, StructureMapGroupRule} from 'fhir/r5';
 import {FMLRuleParserVariables} from './rule/parsers/parser';
-import {FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {getRuleParser} from './rule/parsers/_parsers';
 import {FMLStructureExportSimple, FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
-export class FMLStructureMapper {
+export class FmlStructureParser {
   public static map(bundle: Bundle<StructureDefinition>, fhir: StructureMap): FMLStructure {
     const exported = fhir.extension?.find(ext => ext.url === 'fml-export')?.valueString;
 
@@ -75,8 +75,8 @@ export class FMLStructureMapper {
     // [type] -> FMLStructureObject
     fmlGroup.objects = group(
       fhirGroup.input ?? [],
-      s => FMLStructureMapper.findResourceId(s.type, {bundle, fhirMap}) ?? s.name,
-      (s, k) => fmlGroup.newFMLObject(k, k, s.mode as FMLStructureEntityMode)
+      s => FmlStructureParser.findResourceId(s.type, {bundle, fhirMap}) ?? s.name,
+      (s, k) => fmlGroup.newFMLObject(k, k, s.mode)
     );
 
     fhirGroup.rule ??= [];

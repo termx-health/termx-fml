@@ -177,6 +177,10 @@ export class FmlStructureComposer {
         }
 
         const target = fmlGroup.getTargets(obj.name).find(t => t.field);
+        if (isNil(target)) {
+          //xxx
+          return;
+        }
 
         // full create, e.g. "create('Resource') as r"
         return [{
@@ -191,7 +195,8 @@ export class FmlStructureComposer {
               : obj.url
           }]
         }];
-      });
+      })
+      .filter(isDefined);
 
 
     let ctx: FMLStructureObject;

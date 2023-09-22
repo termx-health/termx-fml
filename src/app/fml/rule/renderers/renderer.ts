@@ -27,12 +27,7 @@ export abstract class FMLRuleRenderer {
     editor: FMLEditor,
     rule: FMLStructureRule
   ): string {
-    return `
-      <h5 class="node-header">
-        <div class="m-justify-between">${rule.action} ${this.renderExpandToggle ? this._renderExpand(editor, rule) : ''}</div>
-        ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
-      </h5>
-    `;
+    return this._renderTitle(editor, rule);
   }
 
 
@@ -41,7 +36,7 @@ export abstract class FMLRuleRenderer {
   protected _renderMeta(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
       <div class="node-meta" style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
-        ${rule.name}
+       ${rule.mode} ${rule.name}
       </div>
     `;
   }

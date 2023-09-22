@@ -1,5 +1,5 @@
 import {FMLRuleRenderer} from './renderer';
-import {FMLStructureEntityMode, FMLStructureRule} from '../../fml-structure';
+import {FMLStructureEntityMode, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLEditor} from '../../fml-editor';
 import {collect, isDefined} from '@kodality-web/core-util';
 import {DrawflowNode} from 'drawflow';
@@ -20,13 +20,15 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
     const fml = editor._fml.getGroup(fmlKey);
     if (isDefined(fml)) {
       const node = (): DrawflowNode => editor._getNodeByName(rule.name);
-      const objects = collect(Object.values(fml.objects), o => o.mode as FMLStructureEntityMode);
+      const objects = collect<FMLStructureEntityMode, FMLStructureObject>(Object.values(fml.objects), o => o.mode);
 
-      while (Object.keys(node().inputs).length < objects.source.length) {
+      const BOUND = 2023;
+      let inptCnt = 0, outCnt = 0;
+
+      while (Object.keys(node().inputs).length < objects.source?.length && inptCnt++ < BOUND) {
         editor.addNodeInput(node().id);
       }
-
-      while (Object.keys(node().outputs).length < objects.target.length) {
+      while (Object.keys(node().outputs).length < objects.target?.length && outCnt++ < BOUND) {
         editor.addNodeOutput(node().id);
       }
     }
@@ -38,9 +40,9 @@ export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {
 
     const keys = editor._fml.groups.map(g => g.name);
     const fmlKey = rule.parameters.filter(p => p.type === 'const').map(p => p.value).find(v => keys.includes(v));
-    const objects = collect(
+    const objects = collect<FMLStructureEntityMode, FMLStructureObject, string>(
       Object.values(editor._fml.getGroup(fmlKey)?.objects),
-      o => o.mode as FMLStructureEntityMode,
+      o => o.mode,
       o => o.element.id
     );
 

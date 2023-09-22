@@ -91,8 +91,11 @@
                       <m-icon mCode="block"/>
                       <m-divider mVertical></m-divider>
                       <div>
-                        <div>{{rg.groupName}}</div>
-                        <div *ngIf="rg.mapName" class="description">{{rg.mapName}}</div>
+                        <div>{{rg.groupName}} <span *ngIf="rg.external" class="description">{{rg.mapName}}</span></div>
+                        <div class="description" *ngIf="rg.sources?.length || rg.targets?.length">
+                          <span *ngIf="rg.sources?.length">{{rg.sources | join: ', '}}, </span>
+                          <span *ngIf="rg.targets?.length">{{rg.targets | join: ', '}}</span>
+                        </div>
                       </div>
                     </div>
 

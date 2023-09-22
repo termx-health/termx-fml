@@ -4,7 +4,7 @@ import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {group, isNil, unique} from '@kodality-web/core-util';
-import {FMLStructureMapper} from './fml/fml-structure-mapper';
+import {FmlStructureParser} from './fml/fml-structure-parser';
 import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
@@ -78,8 +78,11 @@ const RULES: RuleDescription[] = [
 
 interface RuleGroup {
   groupName: string,
+
   external: boolean,
   mapName?: string,
+  sources?: string[],
+  targets?: string[]
 }
 
 @Component({
@@ -140,7 +143,7 @@ export class EditorComponent implements OnInit, OnChanges {
             fmlGroup.external = true;
             fmlGroup.externalMapUrl = fhirMap.url;
             fmlGroup.objects = group(fhirGroup.input ?? [], s => s.name, s => {
-              const id = FMLStructureMapper.findResourceId(s.type, {bundle: this.bundle, fhirMap});
+              const id = FmlStructureParser.findResourceId(s.type, {bundle: this.bundle, fhirMap});
               return fmlGroup.newFMLObject(id, id, s.mode);
             });
             this.putFmlGroup(fmlGroup);
@@ -160,7 +163,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   private init(): void {
-    const fml = FMLStructureMapper.map(this.bundle, this.structureMap);
+    const fml = FmlStructureParser.map(this.bundle, this.structureMap);
     this.fml = fml;
     this.setFmlGroup(fml.getGroup(fml.mainGroupName));
   }
@@ -188,11 +191,15 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   private composeRuleGroups(): void {
-    this.ruleGroups = this.fml.groups.map(g => ({
-      mapName: this.externalMaps.find(m => m.group.some(_g => _g.name === g.name))?.name,
-      groupName: g.name,
-      external: g.external
-    }));
+    this.ruleGroups = this.fml.groups.map(g => {
+      return ({
+        groupName: g.name,
+        external: g.external,
+        mapName: this.externalMaps.find(m => m.group.some(_g => _g.name === g.name))?.name,
+        sources: Object.values(g.objects).filter(o => o.mode === 'source').map(o => `src: ${o.resource}`),
+        targets: Object.values(g.objects).filter(o => o.mode === 'target').map(o => `tgt: ${o.resource}`)
+      });
+    });
   }
 
   /* Public API */
@@ -307,7 +314,6 @@ export class EditorComponent implements OnInit, OnChanges {
 
   /* Editor */
 
-
   private initEditor(fml: FMLStructure, groupName = this.fml.mainGroupName): void {
     this.editor?.element.remove();
 
@@ -386,7 +392,6 @@ export class EditorComponent implements OnInit, OnChanges {
 
         const _rule = new FMLStructureRule();
         _rule.name = asResourceVariable(substringBeforeLast(rule.name, VARIABLE_SEP));
-        _rule.mode = rule.mode;
         _rule.position = rule.position;
         _rule.action = rule.action;
         _rule.parameters = structuredClone(rule.parameters);
@@ -413,14 +418,11 @@ export class EditorComponent implements OnInit, OnChanges {
     });
   }
 
+
   /* Structure tree */
 
-
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string, type?: string): void {
-    let mode: FMLStructureEntityMode = 'object';
-    if (['source', 'element'].includes(parentObj.mode)) {
-      mode = 'element';
-    }
+    const mode: FMLStructureEntityMode = ['source', 'element'].includes(parentObj.mode) ? 'element' : 'object';
 
     const structureDefinition = this.fmlGroup.findStructureDefinition(parentObj.element.id);
 
@@ -477,6 +479,7 @@ export class EditorComponent implements OnInit, OnChanges {
     }
   }
 
+
   /* Drag & drop */
 
   protected onDragStart(
@@ -490,7 +493,6 @@ export class EditorComponent implements OnInit, OnChanges {
   protected onDragOver(ev: DragEvent): void {
     ev.preventDefault();
   }
-
 
   protected onDrop(ev: DragEvent): void {
     const datum:
@@ -535,6 +537,7 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._rerenderNodes();
   }
 
+
   /* Edit */
 
   protected applyRule(rule: FMLStructureRule): void {
@@ -544,13 +547,13 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._rerenderNodes();
   }
 
-
   protected applyObject(obj: FMLStructureObject): void {
     if ('obj' in this.nodeSelected.data) {
       this.editor._updateObject(this.nodeSelected.id, this.nodeSelected.name, obj);
     }
     this.editor._rerenderNodes();
   }
+
 
   /* Utils */
 
