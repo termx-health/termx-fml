@@ -1,4 +1,4 @@
-import {FMLStructureRule, FMLStructureRuleParameter} from '../../fml-structure';
+import {$THIS, FMLStructureRule, FMLStructureRuleParameter} from '../../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
 
 export abstract class FMLRuleRenderer {
@@ -97,7 +97,9 @@ export abstract class FMLRuleRenderer {
 
     editor._updateRule(node.id, node.name, rule => {
       if (editor._initialized) {
-        const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+        const paramName = editor._isObj(source)
+          ? [source.name, source.data.obj.fields[sourcePort - 1]?.name].filter(n => n !== $THIS).join('.')
+          : source.name;
         rule.parameters ??= [];
         rule.parameters.push({type: 'var', value: paramName});
       }
@@ -128,7 +130,9 @@ export abstract class FMLRuleRenderer {
     editor._fmlGroup.removeConnection(source.name, sourcePort - 1, node.name, nodePort - 1);
 
     // removes parameter if exists
-    const paramName = editor._isObj(source) ? `${source.name}.${source.data.obj.fields[sourcePort - 1]?.name}` : source.name;
+    const paramName = editor._isObj(source)
+      ? [source.name, source.data.obj.fields[sourcePort - 1]?.name].filter(n => n !== $THIS).join('.')
+      : source.name;
     const paramIdx = node.data.rule.parameters.findIndex(p => p.value === paramName);
     if (paramIdx !== -1) {
       editor._updateRule(node.id, node.name, rule => {

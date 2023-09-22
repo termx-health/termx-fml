@@ -42,13 +42,13 @@
                 ></m-input>
 
                 <div *ngIf="!data.edit" class="editor-tab__group-item">
-                  <!-- Rule group icon -->
+                  <!-- Icon -->
                   <m-icon [mCode]="d.name === fml.mainGroupName ? d.name === fmlSelectedGroupName ? 'folder-open' : 'folder' : 'block'"/>
-                  <!-- Edit action -->
+                  <!-- Edit -->
                   <m-icon class="editor-tab__edit-icon" mCode="edit" (click)="$event.stopPropagation(); data.edit = true; data.name = fmlGroup.name"/>
-                  <!-- Group name -->
+                  <!-- Name -->
                   <span class="editor-tab__group-name">{{d.name}}</span>
-                  <!-- Delete action -->
+                  <!-- Delete -->
                   <m-icon class="editor-tab__delete-icon" *ngIf="d.name !== fml.mainGroupName" mCode="close" (click)="deleteGroup(d.name)"/>
                 </div>
               </ng-container>
