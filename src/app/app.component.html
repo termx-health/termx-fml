@@ -1,13 +1,30 @@
 <div style="height: 2.5rem; display: flex; align-items: center; background: linear-gradient(45deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2)">
   <div style="width: 100%; padding-inline: 1rem; white-space: nowrap;" class="m-justify-between">
     <div class="m-items-middle menu">
-      <m-button mDisplay="text" (mClick)="wizard.open()" mSize="small">New</m-button>
-      <m-button mDisplay="text" (mClick)="importer.open()" mSize="small">Import</m-button>
-      <m-button mDisplay="text" (mClick)="exportStructureMap()" mSize="small">Export</m-button>
-      <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">Preview</m-button>
-
-      <m-divider mVertical/>
-      <m-button mDisplay="primary" (mClick)="save()" mSize="small">Save</m-button>
+      <m-dropdown>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">File</m-button>
+        <a *m-dropdown-item (mClick)="wizard.open()">New</a>
+        <a *m-dropdown-item (mClick)="importer.open()">Import</a>
+        <a *m-dropdown-item (mClick)="exportStructureMap()">Export</a>
+      </m-dropdown>
+      <m-dropdown>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">Edit</m-button>
+        <a *m-dropdown-item style="color: var(--color-text-disabled)">Add source</a>
+        <a *m-dropdown-item style="color: var(--color-text-disabled)">Add target</a>
+      </m-dropdown>
+      <m-dropdown>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">View</m-button>
+        <a *m-dropdown-item (mClick)="autoLayout()">Auto-layout</a>
+        <a *m-dropdown-item (mClick)="topology()">Topology</a>
+        <a *m-dropdown-item (mClick)="collapseAll()">Collapse elements</a>
+        <a *m-dropdown-item (mClick)="expandAll()">Expand elements</a>
+      </m-dropdown>
+      <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">
+        Preview
+      </m-button>
+      <m-button mDisplay="primary" (mClick)="save()" mSize="small">
+        Save
+      </m-button>
 
       <span *ngIf="isIframe" class="m-primary-color">{{ctx.selectedMapName}}</span>
       <m-dropdown *ngIf="!isIframe" [mHideIfEmpty]="false">
@@ -38,14 +55,6 @@
 
       <m-icon-button mIcon="zoom-out" m-tooltip mTitle="Zoom Out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" m-tooltip mTitle="Zoom In" (mClick)="zoomIn()"/>
-      <m-divider mVertical/>
-
-      <m-icon-button mIcon="compress" m-tooltip mTitle="Collapse elements" (mClick)="collapseAll()"/>
-      <m-icon-button mIcon="expand" m-tooltip mTitle="Expand elements" (mClick)="expandAll()"/>
-      <m-divider mVertical/>
-
-      <m-button (mClick)="autoLayout()" mSize="small">Auto-layout</m-button>
-      <m-button (mClick)="topology()" mSize="small">Topology</m-button>
 
       <ng-container *ngIf="isIframe">
         <m-divider mVertical/>

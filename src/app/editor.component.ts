@@ -213,6 +213,10 @@ export class EditorComponent implements OnInit, OnChanges {
     this.editor._autoLayout();
   }
 
+  public get zoomFactor(): number {
+    return Math.round(this.editor.zoom * 100) / 100;
+  }
+
   public zoomIn(): void {
     this.editor.zoom_in();
   }
@@ -336,7 +340,7 @@ export class EditorComponent implements OnInit, OnChanges {
       }
     });
 
-    editor.on('zoom', v => localStorage.setItem(this.ZOOM_KEY, String(Math.round(v * 100) / 100)));
+    editor.on('zoom', () => localStorage.setItem(this.ZOOM_KEY, String(this.zoomFactor)));
     if (localStorage.getItem(this.ZOOM_KEY)) {
       editor.zoom = Number(localStorage.getItem(this.ZOOM_KEY));
       editor.zoom_refresh();

@@ -36,7 +36,7 @@ export abstract class FMLRuleRenderer {
   protected _renderMeta(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
       <div class="node-meta" style="position: absolute; top: -1.2rem; left: 0; font-size: 0.7rem; color: var(--color-text-secondary)">
-       ${rule.mode} ${rule.name}
+       ${rule.name}
       </div>
     `;
   }

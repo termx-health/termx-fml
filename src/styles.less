@@ -17,7 +17,6 @@ li {
   line-height: 1.1rem;
 }
 
-
 .form-view {
   .ant-form-item-label {
     overflow: initial;
@@ -36,8 +35,15 @@ li {
 }
 
 
+/* Editor */
+
 .menu .ant-btn-text {
   color: @mui-primary-color-7;
+}
+
+.block {
+  padding: 1rem;
+  border-bottom: var(--border-table);
 }
 
 .editor-tabbar {
@@ -120,6 +126,8 @@ li {
   }
 }
 
+
+/* Drawflow */
 
 .drawflow {
   .drawflow-node {
@@ -209,12 +217,14 @@ li {
       animation: dashdraw .5s linear infinite;
     }
   }
-}
 
-.drawflow kbd {
-  color: var(--color-text-secondary);
-  box-shadow: none;
-  border-radius: 4px;
+
+  &--main-group .node--source,
+  &--main-group .node--target {
+    .drawflow-delete {
+      display: none;
+    }
+  }
 }
 
 .drawflow {
@@ -247,11 +257,6 @@ li {
     }
   }
 
-  .node--source, .node--target {
-    .drawflow-delete {
-      display: none;
-    }
-  }
 
   .node--rule {
     padding-block: 6px;
@@ -285,15 +290,16 @@ li {
   }
 }
 
+.drawflow kbd {
+  color: var(--color-text-secondary);
+  box-shadow: none;
+  border-radius: 4px;
+}
 
 .hidden {
   display: none;
 }
 
-.block {
-  padding: 1rem;
-  border-bottom: var(--border-table);
-}
 
 @keyframes dashdraw {
   0% {

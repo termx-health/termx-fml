@@ -100,6 +100,8 @@ export class FMLEditor extends Drawflow {
   ) {
     super(element, options?.render, options?.parent);
     this.curvature = 0.4;
+    this.zoom_min = 0.3;
+    this.zoom_max = 1.8;
 
 
     this.on('nodeMoved', nodeId => {
@@ -202,20 +204,17 @@ export class FMLEditor extends Drawflow {
     const _removeNodeId = this.removeNodeId;
     this.removeNodeId = function (id: string): void {
       const node = this.getNodeFromId(id.slice('node-'.length));
-      if (this._isObj(node) && ['source', 'target'].includes(node.data.obj.mode)) {
-        console.warn("source/target node deletion is forbidden!");
+      if (
+        _fml.mainGroupName === _groupName &&
+        this._isObj(node) && ['source', 'target'].includes(node.data.obj.mode)
+      ) {
+        console.warn("source/target node deletion is forbidden in the main group!");
         return;
       }
       return _removeNodeId.bind(this)(id);
     };
   }
 
-  // public override removeNodeId(id: string): void {
-  //   // const deleteNode = confirm("Confirm Delete");
-  //   // if (deleteNode == true) {
-  //   //   this._removeNodeId(id)
-  //   // }
-  // }
 
   /* Creator */
 
