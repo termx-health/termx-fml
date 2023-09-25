@@ -210,9 +210,7 @@ export class AppComponent implements OnInit {
   }
 
   protected configureActiveGroup(): void {
-    if (this.editor.fmlSelectedGroupName !== this.editor.fml.mainGroupName) {
-      this.editor.configureActiveGroup();
-    }
+    this.editor.configureActiveGroup();
   }
 
   protected exit(): void {

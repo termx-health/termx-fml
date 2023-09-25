@@ -15,8 +15,10 @@ import {ObjectViewComponent} from './components/fml/object-view.component';
 import {StructureMapSetupComponent} from './components/structure-map-setup.component';
 
 
+type RuleAction = 'constant' | 'uuid' | 'copy' | 'evaluate' | 'truncate' | 'cast' | 'append' | 'translate' | 'reference' | 'pointer' | 'cc';
+
 interface RuleDescription {
-  action: string,
+  action: RuleAction,
   name: string,
   description?: string
 }
@@ -261,7 +263,9 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   public configureActiveGroup(): void {
-    this.setup.open(this.fmlGroup);
+    if (this.fmlSelectedGroupName !== this.editor._fml.mainGroupName) {
+      this.setup.open(this.fmlGroup);
+    }
   }
 
 
@@ -274,7 +278,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected deleteGroup(name: string): void {
-    if (name !== this.fml.mainGroupName) {
+    if (!this.fml.isMainGroup(name)) {
       this.fml.removeGroup(name);
       this.setFmlGroup(this.fml.getGroup(this.fml.mainGroupName));
     }
@@ -290,7 +294,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected updateGroup(current: FMLStructureGroup, updated: FMLStructureGroup): void {
-    if (current.name === this.fml.mainGroupName) {
+    if (this.fml.isMainGroup(current.name)) {
       console.warn("Cannot change objects of main FML group");
       return;
     }
@@ -473,6 +477,10 @@ export class EditorComponent implements OnInit, OnChanges {
         this.ruleViewComponent.editParameter();
         return false;
       }
+    });
+
+    Mousetrap.bind(['option+o'], () => {
+      this.configureActiveGroup();
     });
   }
 

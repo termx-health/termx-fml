@@ -80,11 +80,11 @@
       <div style="border-left: 1px solid var(--color-borders); height: 100%; overflow: auto; background: var(--color-background-component)">
         <ng-container *ngIf="!nodeSelected">
           <div class="block">
-            <h5 class="m-justify-between">
+            <h5 style="position: relative">
               Settings
               <m-icon-button
                 *ngIf="fml.mainGroupName !== fmlSelectedGroupName"
-                style="height: 0; margin-top: -32px"
+                style="position: absolute; right: 0; top: -6px"
                 mIcon="setting"
                 m-tooltip
                 mTitle="Configure Group"

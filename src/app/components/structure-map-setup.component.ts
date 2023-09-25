@@ -1,17 +1,17 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
 import {asResourceVariable} from '../fml/fml.utils';
 import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
 
 interface ModalData {
-  new: boolean;
   name: string;
   sources: StructureDefinition[];
   sourceMappings: {[url: string]: string};
   targets: StructureDefinition[];
   targetMappings: {[url: string]: string};
 
+  _new: boolean;
   _fmlGroup?: FMLStructureGroup;
 }
 
@@ -23,7 +23,7 @@ interface ModalData {
       <ng-container *ngIf="modalData.visible">
         <form #f="ngForm" *ngIf="modalData.data as data">
           <div *m-modal-header>
-            {{data.new ? 'Setup' : 'Group Settings'}}
+            {{data._new ? 'Setup' : 'Group Settings'}}
           </div>
 
           <div *m-modal-content>
@@ -82,7 +82,7 @@ interface ModalData {
 
           <div *m-modal-footer>
             <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
-              {{data.new ? "Let's Go" : 'Confirm changes'}}
+              {{data._new ? "Let's Go" : 'Confirm changes'}}
             </m-button>
           </div>
         </form>
@@ -95,6 +95,7 @@ export class StructureMapSetupComponent {
   @Output() public created = new EventEmitter<{fmlGroup: FMLStructureGroup}>();
   @Output() public updated = new EventEmitter<{updated: FMLStructureGroup, current: FMLStructureGroup}>();
 
+  private cdr = inject(ChangeDetectorRef);
   protected modalData: {
     visible: boolean,
     data?: Partial<ModalData>
@@ -102,11 +103,12 @@ export class StructureMapSetupComponent {
     visible: false
   };
 
+
   public open(fmlGroup?: FMLStructureGroup): void {
     this.modalData = {
       visible: true,
       data: {
-        new: isNil(fmlGroup)
+        _new: isNil(fmlGroup)
       }
     };
 
@@ -121,12 +123,14 @@ export class StructureMapSetupComponent {
         .map(e => e.resource);
 
       this.modalData.data.targetMappings = group(map.target, o => o.url, o => o.element.id);
-      this.modalData.data.targets  = map.target
+      this.modalData.data.targets = map.target
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
       this.modalData.data.name = fmlGroup.name;
       this.modalData.data._fmlGroup = fmlGroup;
+
+      this.cdr.detectChanges();
     }
   }
 
@@ -150,7 +154,7 @@ export class StructureMapSetupComponent {
     data.sources.forEach(sd => createObject(sd.url, 'source'));
     data.targets.forEach(sd => createObject(sd.url, 'target'));
 
-    if (data.new) {
+    if (data._new) {
       this.created.emit({fmlGroup});
     } else {
       this.updated.emit({current: data._fmlGroup, updated: fmlGroup});

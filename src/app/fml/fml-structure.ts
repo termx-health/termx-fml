@@ -352,6 +352,10 @@ export class FMLStructure {
   conceptMaps: FMLStructureConceptMap[] = [];
 
   mainGroupName: string;
+  public isMainGroup = (name: string): boolean => {
+    return this.mainGroupName === name;
+  };
+
 
   public getGroup(name: string): FMLStructureGroup {
     return this.groups.find(g => g.name === name);

@@ -69,12 +69,12 @@ export class FMLEditor extends Drawflow {
   }
 
   public _updateGroupName(before: string, after: string): void {
-    if (this._fml.mainGroupName === before) {
+    if (this._fml.isMainGroup(before)) {
       this._fml.mainGroupName = after;
     }
 
-    const g = this._fml.getGroup(before)
-    g.name = after;
+    const _group = this._fml.getGroup(before);
+    _group.name = after;
 
     if (this._groupName === before) {
       this._groupName = after;
@@ -205,7 +205,7 @@ export class FMLEditor extends Drawflow {
     this.removeNodeId = function (id: string): void {
       const node = this.getNodeFromId(id.slice('node-'.length));
       if (
-        _fml.mainGroupName === _groupName &&
+        _fml.isMainGroup(_groupName) &&
         this._isObj(node) && ['source', 'target'].includes(node.data.obj.mode)
       ) {
         console.warn("source/target node deletion is forbidden in the main group!");
