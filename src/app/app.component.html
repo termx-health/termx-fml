@@ -10,7 +10,11 @@
 
       <m-dropdown>
         <m-button *m-dropdown-container mDisplay="text" mSize="small">Edit</m-button>
-        <a *m-dropdown-item (mClick)="editor.configureActiveGroup()" class="m-items-middle">
+        <a *m-dropdown-item
+          class="m-items-middle"
+          [class.m-disabled]="editor?.fmlSelectedGroupName === editor?.fml?.mainGroupName"
+          (mClick)="configureActiveGroup()"
+        >
           <m-icon mCode="setting"/>
           Configure group
         </a>

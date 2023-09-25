@@ -111,20 +111,19 @@ export class StructureMapSetupComponent {
     };
 
     if (isDefined(fmlGroup)) {
-      const map = collect(Object.values(fmlGroup.objects), o => o.mode)
-      const sourceElements = map.source
+      const map = collect(Object.values(fmlGroup.objects), o => o.mode);
+      map.source ??= [];
+      map.target ??= [];
+
+      this.modalData.data.sourceMappings = group(map.source, o => o.url, o => o.element.id);
+      this.modalData.data.sources = map.source
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
-      const targetElements = map.target
+      this.modalData.data.targetMappings = group(map.target, o => o.url, o => o.element.id);
+      this.modalData.data.targets  = map.target
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
-
-      this.modalData.data.sources = sourceElements;
-      this.initMappings(sourceElements, 'source');
-
-      this.modalData.data.targets = targetElements;
-      this.initMappings(targetElements, 'target');
 
       this.modalData.data.name = fmlGroup.name;
       this.modalData.data._fmlGroup = fmlGroup;

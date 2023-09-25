@@ -109,7 +109,7 @@ export class EditorComponent implements OnInit, OnChanges {
 
   // FML editor
   public editor: FMLEditor;
-  protected fml: FMLStructure;
+  public fml: FMLStructure;
   protected nodeSelected: DrawflowNode;
 
   // component
@@ -126,8 +126,10 @@ export class EditorComponent implements OnInit, OnChanges {
 
   @ViewChild(RuleViewComponent)
   private ruleViewComponent: RuleViewComponent;
+
   @ViewChild(ObjectViewComponent)
   private objectViewComponent: ObjectViewComponent;
+
 
   constructor(injector: EnvironmentInjector) {
     if (!customElements.get('ce-icon')) {
@@ -288,8 +290,8 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected updateGroup(current: FMLStructureGroup, updated: FMLStructureGroup): void {
-    if (current.name !== this.fmlSelectedGroupName) {
-      console.warn("Cannot change inactive group. Please select group beforehand.");
+    if (current.name !== this.fml.mainGroupName) {
+      console.warn("Cannot change objects of main FML group");
       return;
     }
 
@@ -309,8 +311,8 @@ export class EditorComponent implements OnInit, OnChanges {
         added: added.map(k => curMap[k]) ?? [],
       };
     };
-    const sourceDiff = diff(prev.source, cur.source, o => o.url);
-    const targetDiff = diff(prev.target, cur.target, o => o.url);
+    const sourceDiff = diff(prev.source ?? [], cur.source ?? [], o => o.element.id);
+    const targetDiff = diff(prev.target ?? [], cur.target ?? [], o => o.element.id);
 
     [...sourceDiff.removed, ...targetDiff.removed].forEach(obj => {
       const nodeId = this.editor._getNodeId(obj.name);

@@ -209,6 +209,12 @@ export class AppComponent implements OnInit {
     setTimeout(() => nodeEls.forEach(e => e.closest<HTMLElement>('.drawflow-node').style.backgroundColor = ''), (order.length + 1) * timeout);
   }
 
+  protected configureActiveGroup(): void {
+    if (this.editor.fmlSelectedGroupName !== this.editor.fml.mainGroupName) {
+      this.editor.configureActiveGroup();
+    }
+  }
+
   protected exit(): void {
     this.ctx.exit();
   }

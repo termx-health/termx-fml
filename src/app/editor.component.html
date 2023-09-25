@@ -80,8 +80,17 @@
       <div style="border-left: 1px solid var(--color-borders); height: 100%; overflow: auto; background: var(--color-background-component)">
         <ng-container *ngIf="!nodeSelected">
           <div class="block">
-            <h5 class="m-justify-between">Settings
-              <m-icon-button mIcon="setting" (mClick)="configureActiveGroup()"/>
+            <h5 class="m-justify-between">
+              Settings
+              <m-icon-button
+                *ngIf="fml.mainGroupName !== fmlSelectedGroupName"
+                style="height: 0; margin-top: -32px"
+                mIcon="setting"
+                m-tooltip
+                mTitle="Configure Group"
+                mPosition="left"
+                (mClick)="configureActiveGroup()"
+              />
             </h5>
             <div>
               <m-checkbox [(ngModel)]="fmlGroup.shareContext">
