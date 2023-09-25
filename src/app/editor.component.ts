@@ -3,7 +3,7 @@ import {FMLStructure, FMLStructureConceptMap, FMLStructureEntityMode, FMLStructu
 import {FMLEditor} from './fml/fml-editor';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {group, isNil, unique} from '@kodality-web/core-util';
+import {collect, group, isNil, unique} from '@kodality-web/core-util';
 import {FmlStructureParser} from './fml/fml-structure-parser';
 import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
@@ -12,6 +12,7 @@ import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
 import {createCustomElement} from '@angular/elements';
 import {ObjectViewComponent} from './components/fml/object-view.component';
+import {StructureMapSetupComponent} from './components/structure-map-setup.component';
 
 
 interface RuleDescription {
@@ -116,11 +117,17 @@ export class EditorComponent implements OnInit, OnChanges {
   protected ruleGroups: RuleGroup[] = [];
   protected isAnimated = true;
 
-  @ViewChild('conceptMapModal') public conceptMapModal: MuiModalContainerComponent;
+  @ViewChild(StructureMapSetupComponent)
+  private setup: StructureMapSetupComponent;
+
+  @ViewChild('conceptMapModal')
+  private conceptMapModal: MuiModalContainerComponent;
   protected conceptMap: FMLStructureConceptMap;
 
-  @ViewChild(RuleViewComponent) private ruleViewComponent: RuleViewComponent;
-  @ViewChild(ObjectViewComponent) private objectViewComponent: ObjectViewComponent;
+  @ViewChild(RuleViewComponent)
+  private ruleViewComponent: RuleViewComponent;
+  @ViewChild(ObjectViewComponent)
+  private objectViewComponent: ObjectViewComponent;
 
   constructor(injector: EnvironmentInjector) {
     if (!customElements.get('ce-icon')) {
@@ -251,6 +258,10 @@ export class EditorComponent implements OnInit, OnChanges {
     return fml;
   }
 
+  public configureActiveGroup(): void {
+    this.setup.open(this.fmlGroup);
+  }
+
 
   /* Editor bar */
 
@@ -274,6 +285,47 @@ export class EditorComponent implements OnInit, OnChanges {
   protected onGroupNameChange(before: string, after: string): void {
     this.editor._updateGroupName(before, after);
     this.composeRuleGroups();
+  }
+
+  protected updateGroup(current: FMLStructureGroup, updated: FMLStructureGroup): void {
+    if (current.name !== this.fmlSelectedGroupName) {
+      console.warn("Cannot change inactive group. Please select group beforehand.");
+      return;
+    }
+
+    const prev = collect(Object.values(current.objects), o => o.mode);
+    const cur = collect(Object.values(updated.objects), o => o.mode);
+
+    const diff = <T>(prev: T[], cur: T[], k: (e: T) => string): {removed: T[], added: T[], unchanged: T[]} => {
+      const prevMap = group(prev, e => k(e));
+      const curMap = group(cur, e => k(e));
+
+      const changes = collect(Object.keys(prevMap), k => isNil(curMap[k]) ? 'removed' : 'unchanged');
+      const added = Object.keys(curMap).filter(k => isNil(prevMap[k]));
+
+      return {
+        removed: changes.removed?.map(k => prevMap[k]) ?? [],
+        unchanged: changes.unchanged?.map(k => curMap[k]) ?? [],
+        added: added.map(k => curMap[k]) ?? [],
+      };
+    };
+    const sourceDiff = diff(prev.source, cur.source, o => o.url);
+    const targetDiff = diff(prev.target, cur.target, o => o.url);
+
+    [...sourceDiff.removed, ...targetDiff.removed].forEach(obj => {
+      const nodeId = this.editor._getNodeId(obj.name);
+      // deletion from FML structure is handled inside of editor
+      this.editor.removeNodeId(`node-${nodeId}`);
+    });
+
+    [...sourceDiff.added, ...targetDiff.added].forEach(obj => {
+      current.objects[obj.name] = obj;
+      this.editor._createObjectNode(obj);
+    });
+
+    this.onGroupNameChange(current.name, updated.name);
+
+    this.editor._rerenderNodes();
   }
 
 

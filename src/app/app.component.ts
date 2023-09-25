@@ -27,10 +27,12 @@ export class AppComponent implements OnInit {
   protected isDev = isDev();
   protected isAnimated = true;
 
-  @ViewChild('changeModal') public changeModal: MuiModalContainerComponent;
+  @ViewChild('changeModal')
+  public changeModal: MuiModalContainerComponent;
   protected changes: {text: string, apply: () => void}[] = [];
 
-  @ViewChild(EditorComponent) public editor: EditorComponent;
+  @ViewChild(EditorComponent)
+  public editor: EditorComponent;
 
   protected loader = new LoadingManager();
 
@@ -295,4 +297,6 @@ export class AppComponent implements OnInit {
       return undefined;
     });
   }
+
+  protected readonly group = group;
 }

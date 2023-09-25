@@ -1,6 +1,9 @@
+<app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.fmlGroup)" (updated)="updateGroup($event.current, $event.updated)"/>
+
 <div style="display: grid; grid-template-columns: auto 1fr">
   <!-- LEFT PANEL -->
   <m-collapse-panel
+    class="fml-left-panel"
     mKey="fml-left-panel"
     mResizable
     [mResizableMaxWidth]="400"
@@ -60,7 +63,6 @@
         <div class="editor-tab " style="min-width: 2.5rem" (click)="fmlSetup.open()">
           <div class="editor-tab__group-item">
             <m-icon mCode="file-add"/>
-            <app-structure-map-setup #fmlSetup [bundle]="bundle" (created)="createGroup($event.fmlGroup)"/>
           </div>
         </div>
       </ng-container>
@@ -78,7 +80,9 @@
       <div style="border-left: 1px solid var(--color-borders); height: 100%; overflow: auto; background: var(--color-background-component)">
         <ng-container *ngIf="!nodeSelected">
           <div class="block">
-            <h5>Settings</h5>
+            <h5 class="m-justify-between">Settings
+              <m-icon-button mIcon="setting" (mClick)="configureActiveGroup()"/>
+            </h5>
             <div>
               <m-checkbox [(ngModel)]="fmlGroup.shareContext">
                 <div>Share context</div>

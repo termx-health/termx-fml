@@ -7,7 +7,8 @@ import {group, isDefined} from '@kodality-web/core-util';
   template: `
     <div *ngIf="simpleFML as fml">
       <!-- Objects -->
-      <m-form-item mLabel="Objects">
+      <div style="padding: 1rem 1rem 0 1rem">
+        <h5>Objects</h5>
         <m-table mSize="small">
           <tr *ngFor="let o of fml.objects | values ">
             <td>
@@ -24,11 +25,12 @@ import {group, isDefined} from '@kodality-web/core-util';
             </td>
           </tr>
         </m-table>
-      </m-form-item>
+      </div>
 
 
       <!-- Rules -->
-      <m-form-item mLabel="Rules">
+      <div style="padding: 1rem 1rem 0 1rem">
+        <h5>Rules</h5>
         <m-table mSize="small">
           <tr *ngFor="let r of fml.rules">
             <td>
@@ -59,11 +61,12 @@ import {group, isDefined} from '@kodality-web/core-util';
             </td>
           </tr>
         </m-table>
-      </m-form-item>
+      </div>
 
 
       <!-- Connections -->
-      <m-form-item *ngIf="_dev" mLabel="Connections">
+      <div *ngIf="_dev" style="padding: 1rem 1rem 0 1rem">
+        <h5>Connections</h5>
         <m-table mSize="small">
           <tr *ngFor="let con of fml.connections">
             <td>{{con.sourceObject}}</td>
@@ -78,7 +81,7 @@ import {group, isDefined} from '@kodality-web/core-util';
             </td>
           </tr>
         </m-table>
-      </m-form-item>
+      </div>
     </div>
   `
 })

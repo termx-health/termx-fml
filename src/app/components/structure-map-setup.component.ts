@@ -2,14 +2,17 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
 import {asResourceVariable} from '../fml/fml.utils';
-import {group} from '@kodality-web/core-util';
+import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
 
 interface ModalData {
-  name: string,
-  sources: StructureDefinition[],
-  sourceMappings: {[url: string]: string}
-  targets: StructureDefinition[]
-  targetMappings: {[url: string]: string}
+  new: boolean;
+  name: string;
+  sources: StructureDefinition[];
+  sourceMappings: {[url: string]: string};
+  targets: StructureDefinition[];
+  targetMappings: {[url: string]: string};
+
+  _fmlGroup?: FMLStructureGroup;
 }
 
 @Component({
@@ -20,7 +23,7 @@ interface ModalData {
       <ng-container *ngIf="modalData.visible">
         <form #f="ngForm" *ngIf="modalData.data as data">
           <div *m-modal-header>
-            Setup
+            {{data.new ? 'Setup' : 'Group Settings'}}
           </div>
 
           <div *m-modal-content>
@@ -50,7 +53,7 @@ interface ModalData {
                     [bundle]="bundle"
                     multiple
                     required
-                  />
+                  ></app-structure-definition-select>
                 </m-form-item>
                 <ng-container *ngTemplateOutlet="tree; context: {defs: data.targets, mappings: data.targetMappings, mode: 'target'}"></ng-container>
               </div>
@@ -70,7 +73,7 @@ interface ModalData {
                       [definition]="def"
                       [selectFn]="selectableBackbone"
                       (selected)="mappings[def.url] = $event; d.edit = false"
-                    />
+                    ></app-structure-definition-tree>
                   </m-form-item>
                 </ng-container>
               </m-card>
@@ -79,7 +82,7 @@ interface ModalData {
 
           <div *m-modal-footer>
             <m-button mDisplay="primary" style="width: 100%" (mClick)="initFromWizard(data)" [disabled]="f.invalid">
-              Let's Go
+              {{data.new ? "Let's Go" : 'Confirm changes'}}
             </m-button>
           </div>
         </form>
@@ -90,6 +93,7 @@ interface ModalData {
 export class StructureMapSetupComponent {
   @Input() public bundle: Bundle<StructureDefinition>;
   @Output() public created = new EventEmitter<{fmlGroup: FMLStructureGroup}>();
+  @Output() public updated = new EventEmitter<{updated: FMLStructureGroup, current: FMLStructureGroup}>();
 
   protected modalData: {
     visible: boolean,
@@ -98,26 +102,44 @@ export class StructureMapSetupComponent {
     visible: false
   };
 
-  public open(): void {
+  public open(fmlGroup?: FMLStructureGroup): void {
     this.modalData = {
       visible: true,
-      data: {}
+      data: {
+        new: isNil(fmlGroup)
+      }
     };
+
+    if (isDefined(fmlGroup)) {
+      const map = collect(Object.values(fmlGroup.objects), o => o.mode)
+      const sourceElements = map.source
+        .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
+        .map(e => e.resource);
+
+      const targetElements = map.target
+        .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
+        .map(e => e.resource);
+
+      this.modalData.data.sources = sourceElements;
+      this.initMappings(sourceElements, 'source');
+
+      this.modalData.data.targets = targetElements;
+      this.initMappings(targetElements, 'target');
+
+      this.modalData.data.name = fmlGroup.name;
+      this.modalData.data._fmlGroup = fmlGroup;
+    }
   }
 
   public close(): void {
     this.modalData = {visible: false};
   }
 
-  protected selectableBackbone = (e: ElementDefinition): boolean => {
-    return e.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
-  };
-
   protected initFromWizard(data: Partial<ModalData>): void {
     const fmlGroup = new FMLStructureGroup(data.name, () => this.bundle);
 
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
-      const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings) [url];
+      const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings)[url];
 
       const obj = fmlGroup.newFMLObject(mapping, mapping, mode);
       if (obj.resource !== obj.name) {
@@ -129,15 +151,23 @@ export class StructureMapSetupComponent {
     data.sources.forEach(sd => createObject(sd.url, 'source'));
     data.targets.forEach(sd => createObject(sd.url, 'target'));
 
-    this.created.emit({fmlGroup});
+    if (data.new) {
+      this.created.emit({fmlGroup});
+    } else {
+      this.updated.emit({current: data._fmlGroup, updated: fmlGroup});
+    }
     this.close();
   }
 
-  public initMappings(defs: StructureDefinition[], mode: 'source' | 'target'): void {
+  protected initMappings(defs: StructureDefinition[], mode: 'source' | 'target'): void {
     if (mode === 'target') {
       this.modalData.data.targetMappings = group(defs, d => d.url, d => this.modalData.data.targetMappings?.[d.url] ?? d.id);
     } else {
       this.modalData.data.sourceMappings = group(defs, d => d.url, d => this.modalData.data.sourceMappings?.[d.url] ?? d.id);
     }
   }
+
+  protected selectableBackbone = (e: ElementDefinition): boolean => {
+    return e.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
+  };
 }
