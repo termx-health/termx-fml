@@ -290,7 +290,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected updateGroup(current: FMLStructureGroup, updated: FMLStructureGroup): void {
-    if (current.name !== this.fml.mainGroupName) {
+    if (current.name === this.fml.mainGroupName) {
       console.warn("Cannot change objects of main FML group");
       return;
     }
