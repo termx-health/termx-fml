@@ -12,7 +12,7 @@ import {IframeContext} from './context/iframe.context';
 import {EditorContext} from './context/editor.context';
 import {StandaloneContext} from './context/standalone.context';
 import {toSvg} from 'html-to-image';
-import {fromPx} from './fml/fml.utils';
+import {formatFML, fromPx, tokenize} from './fml/fml.utils';
 import {isDev, isIframe} from './global';
 
 
@@ -102,10 +102,15 @@ export class AppComponent implements OnInit {
   protected viewAsFML(m: MuiModalContainerComponent): void {
     const map = this.export();
     this.loader.wrap('render-fml', this.ctx.renderFML(map)).subscribe(fml => {
+      let text: string;
+      try {
+        text = formatFML(fml);
+      } catch (e) {
+        text = fml;
+      }
+
       this.fml = {
-        text: fml
-          .replaceAll(',  ', ',\n    ')
-          .replaceAll(' ->  ', ' ->\n    '),
+        text,
         json: map
       };
       m.open();
@@ -302,5 +307,15 @@ export class AppComponent implements OnInit {
     });
   }
 
-  protected readonly group = group;
+  protected formatFmlOutput(fml: string, sm: StructureMap): string {
+    let tokens = [];
+    // tokens = sm.group.flatMap(g => g.input.map(i => i.name));
+    // fml = tokenize(fml, tokens).map(el => el.type === 'var' ? `<b>${el.value}</b>` : el.value).join('');
+
+    tokens = ['(source', ', source', '(target', ', target'];
+    tokens.push(...sm.group.map(g => g.name));
+    fml = tokenize(fml, tokens).map(el => el.type === 'var' ? `<em>${el.value}</em>` : el.value).join('');
+
+    return fml;
+  }
 }

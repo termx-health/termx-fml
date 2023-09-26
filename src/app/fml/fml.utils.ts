@@ -44,9 +44,58 @@ export function renderExpand(editor: FMLEditor, name: string): void {
   editor.updateConnectionNodes(`node-${node.id}`);
 }
 
-
 export function getPortNumber(str: string): number {
   return Number(str.split("_")[1]);
+}
+
+export function formatFML(fml: string): string {
+  const lines = fml
+    .replaceAll(',  ', ',\n    ')
+    .replaceAll(' -> ', ' ->\n    ')
+
+  return lines;
+
+  /*
+    todo: please somehow make it work
+
+    const render = (offset: number, l: string): string => '  '.repeat(Math.max(0, offset)) + l;
+
+    ...
+      .split('\n')
+      .map(l => l.trim());
+
+    const ruleStart = [];
+    let offset = 0;
+    return lines.map(l => {
+      if (l.startsWith('group')) {
+        offset = 1;
+        return render(0, l);
+      }
+      if (l.includes('}')) {
+        offset--;
+      }
+      if (l.endsWith('->') || l.endsWith('then {')) {
+        ruleStart.push(offset);
+        return render(offset++, l);
+      }
+      if (l.includes('then') && l.includes(';')) {
+        const t = render(offset, l);
+        offset = ruleStart.pop() ?? 1;
+        return t;
+      }
+      if (l.endsWith('";')) {
+        const pop = ruleStart.pop();
+        if (l.startsWith('}')) {
+          offset = pop;
+          return render(offset, l);
+        }
+
+        const t = render(offset, l);
+        offset = pop;
+        return t;
+      }
+      return render(offset, l);
+    }).join("\n");*/
 }
 
 

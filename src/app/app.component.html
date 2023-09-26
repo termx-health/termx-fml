@@ -95,7 +95,7 @@
       </m-radio-group>
 
       <ng-container [ngSwitch]="d.t">
-        <pre *ngSwitchCase="'fml'" style="font-size: 13px; line-height: 1.25;">{{fml.text}}</pre>
+        <pre *ngSwitchCase="'fml'" style="font-size: 13px; line-height: 1.25;"><div [innerHTML]="fml.text | apply: formatFmlOutput: fml.json"></div></pre>
         <pre *ngSwitchCase="'json'" style="font-size: 13px; line-height: 1.25;">{{fml.json | json}}</pre>
       </ng-container>
     </ng-container>
