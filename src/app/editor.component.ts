@@ -263,9 +263,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   public configureActiveGroup(): void {
-    if (this.fmlSelectedGroupName !== this.editor._fml.mainGroupName) {
-      this.setup.open(this.fmlGroup);
-    }
+    this.setup.open(this.fmlGroup);
   }
 
 
@@ -294,11 +292,6 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
   protected updateGroup(current: FMLStructureGroup, updated: FMLStructureGroup): void {
-    if (this.fml.isMainGroup(current.name)) {
-      console.warn("Cannot change objects of main FML group");
-      return;
-    }
-
     const prev = collect(Object.values(current.objects), o => o.mode);
     const cur = collect(Object.values(updated.objects), o => o.mode);
 
@@ -317,14 +310,15 @@ export class EditorComponent implements OnInit, OnChanges {
     };
     const sourceDiff = diff(prev.source ?? [], cur.source ?? [], o => o.element.id);
     const targetDiff = diff(prev.target ?? [], cur.target ?? [], o => o.element.id);
+    const producedDiff = diff(prev.produced ?? [], cur.produced ?? [], o => o.element.id);
 
-    [...sourceDiff.removed, ...targetDiff.removed].forEach(obj => {
+    [...sourceDiff.removed, ...targetDiff.removed, ...producedDiff.removed].forEach(obj => {
       const nodeId = this.editor._getNodeId(obj.name);
       // deletion from FML structure is handled inside of editor
       this.editor.removeNodeId(`node-${nodeId}`);
     });
 
-    [...sourceDiff.added, ...targetDiff.added].forEach(obj => {
+    [...sourceDiff.added, ...targetDiff.added, ...producedDiff.added].forEach(obj => {
       current.objects[obj.name] = obj;
       this.editor._createObjectNode(obj);
     });

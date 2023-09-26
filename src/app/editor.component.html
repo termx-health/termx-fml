@@ -72,7 +72,6 @@
       <div
         id="drawflow-parent"
         [class.drawflow--animated]="isAnimated"
-        [class.drawflow--main-group]="fml.mainGroupName === fmlSelectedGroupName"
         (dragover)="onDragOver($event)"
         (drop)="onDrop($event)"
       ></div>
@@ -83,7 +82,6 @@
             <h5 style="position: relative">
               Settings
               <m-icon-button
-                *ngIf="fml.mainGroupName !== fmlSelectedGroupName"
                 style="position: absolute; right: 0; top: -6px"
                 mIcon="setting"
                 m-tooltip

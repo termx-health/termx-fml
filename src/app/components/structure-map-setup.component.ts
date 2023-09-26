@@ -10,6 +10,7 @@ interface ModalData {
   sourceMappings: {[url: string]: string};
   targets: StructureDefinition[];
   targetMappings: {[url: string]: string};
+  produced: StructureDefinition[];
 
   _new: boolean;
   _fmlGroup?: FMLStructureGroup;
@@ -35,11 +36,11 @@ interface ModalData {
               <div *m-form-col>
                 <m-form-item mName="sources" mLabel="Sources" required>
                   <app-structure-definition-select name="sources"
-                    [(ngModel)]="data.sources"
-                    (ngModelChange)="initMappings($event, 'source')"
-                    [bundle]="bundle"
-                    multiple
-                    required
+                      [(ngModel)]="data.sources"
+                      (ngModelChange)="initMappings($event, 'source')"
+                      [bundle]="bundle"
+                      multiple
+                      required
                   />
                 </m-form-item>
                 <ng-container *ngTemplateOutlet="tree; context: {defs: data.sources, mappings: data.sourceMappings, mode: 'source'}"></ng-container>
@@ -48,11 +49,11 @@ interface ModalData {
               <div *m-form-col>
                 <m-form-item mName="targets" mLabel="Target" required>
                   <app-structure-definition-select name="targets"
-                    [(ngModel)]="data.targets"
-                    (ngModelChange)="initMappings($event, 'target')"
-                    [bundle]="bundle"
-                    multiple
-                    required
+                      [(ngModel)]="data.targets"
+                      (ngModelChange)="initMappings($event, 'target')"
+                      [bundle]="bundle"
+                      multiple
+                      required
                   ></app-structure-definition-select>
                 </m-form-item>
                 <ng-container *ngTemplateOutlet="tree; context: {defs: data.targets, mappings: data.targetMappings, mode: 'target'}"></ng-container>
@@ -69,15 +70,28 @@ interface ModalData {
                     </div>
 
                     <app-structure-definition-tree
-                      *ngIf="d.edit"
-                      [definition]="def"
-                      [selectFn]="selectableBackbone"
-                      (selected)="mappings[def.url] = $event; d.edit = false"
+                        *ngIf="d.edit"
+                        [definition]="def"
+                        [selectFn]="selectableBackbone"
+                        (selected)="mappings[def.url] = $event; d.edit = false"
                     ></app-structure-definition-tree>
                   </m-form-item>
                 </ng-container>
               </m-card>
             </ng-template>
+
+
+            <m-form-item mName="produced" mLabel="Produced">
+              <app-structure-definition-select name="produced" [(ngModel)]="data.produced" [bundle]="bundle" multiple/>
+              <m-alert
+                  class="m-alert--vertical"
+                  style="margin-top: 0.5rem"
+                  mType="info"
+                  mTitle="Produced API may change!"
+                  mDescription="Use produced objects at your own responsibility"
+                  mShowIcon
+              />
+            </m-form-item>
           </div>
 
           <div *m-modal-footer>
@@ -116,6 +130,7 @@ export class StructureMapSetupComponent {
       const map = collect(Object.values(fmlGroup.objects), o => o.mode);
       map.source ??= [];
       map.target ??= [];
+      map.produced ??= [];
 
       this.modalData.data.sourceMappings = group(map.source, o => o.url, o => o.element.id);
       this.modalData.data.sources = map.source
@@ -124,6 +139,10 @@ export class StructureMapSetupComponent {
 
       this.modalData.data.targetMappings = group(map.target, o => o.url, o => o.element.id);
       this.modalData.data.targets = map.target
+        .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
+        .map(e => e.resource);
+
+      this.modalData.data.produced = map.produced
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
@@ -142,7 +161,13 @@ export class StructureMapSetupComponent {
     const fmlGroup = new FMLStructureGroup(data.name, () => this.bundle);
 
     const createObject = (url: string, mode: FMLStructureEntityMode): void => {
-      const mapping = (mode === 'source' ? data.sourceMappings : data.targetMappings)[url];
+      const mapping = {
+        'source': (u: string) => data.sourceMappings[u],
+        'target': (u: string) => data.targetMappings[u],
+        'produced': (u: string) => this.bundle.entry.find(e => e.resource.url === u)?.resource?.id
+      } [mode](url);
+
+      console.log(mapping)
 
       const obj = fmlGroup.newFMLObject(mapping, mapping, mode);
       if (obj.resource !== obj.name) {
@@ -151,8 +176,9 @@ export class StructureMapSetupComponent {
       fmlGroup.objects[obj.name] = obj;
     };
 
-    data.sources.forEach(sd => createObject(sd.url, 'source'));
-    data.targets.forEach(sd => createObject(sd.url, 'target'));
+    data.sources?.forEach(sd => createObject(sd.url, 'source'));
+    data.targets?.forEach(sd => createObject(sd.url, 'target'));
+    data.produced?.forEach(sd => createObject(sd.url, 'produced'));
 
     if (data._new) {
       this.created.emit({fmlGroup});

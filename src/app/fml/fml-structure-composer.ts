@@ -163,9 +163,10 @@ export class FmlStructureComposer {
 
     // creates objects in reverse order, starting from target
     const newObjects = copyDeep(topologicalOrder).reverse()
-      .filter(name => 'object' === fmlGroup.objects[name]?.mode)
+      .filter(name => ['object', 'produced'].includes(fmlGroup.objects[name]?.mode))
       .flatMap<StructureMapGroupRuleTarget>(name => {
         const obj = fmlGroup.objects[name];
+        const objResourceType = obj.url.startsWith('http://hl7.org/fhir/StructureDefinition/') ? obj.resource : obj.url; // todo: configurable URL
 
         if (FMLStructureGroup.isBackboneElement(obj.resource)) {
           // sub element select, e.g. "objekti.v2li as field"
@@ -178,8 +179,11 @@ export class FmlStructureComposer {
 
         const target = fmlGroup.getTargets(obj.name).find(t => t.field);
         if (isNil(target)) {
-          //xxx
-          return;
+          return [{
+            variable: toVar(obj.name),
+            transform: 'create',
+            parameter: [{valueString: objResourceType}]
+          }];
         }
 
         // full create, e.g. "create('Resource') as r"
@@ -188,12 +192,7 @@ export class FmlStructureComposer {
           element: target.field,
           variable: toVar(obj.name),
           transform: 'create',
-          parameter: [{
-            // todo: configurable URL
-            valueString: obj.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
-              ? obj.resource // obj.url.slice('http://hl7.org/fhir/StructureDefinition/'.length)
-              : obj.url
-          }]
+          parameter: [{valueString: objResourceType}]
         }];
       })
       .filter(isDefined);
@@ -245,7 +244,7 @@ export class FmlStructureComposer {
             if (obj.mode === 'element' && n.name === $THIS) {
               const fieldSources = fmlGroup.getSources(obj.name, n.name);
               if (fieldSources.length >= 2) {
-                console.warn("Has multiple sources");
+                console.warn(`"${obj.name}" has multiple sources`);
               }
               const {sourceObject, field} = fieldSources[0];
               vars[obj.name] ??= vars[`${sourceObject}.${field}`];
@@ -334,6 +333,10 @@ export class FmlStructureComposer {
         }
 
 
+        if (isNil(smRule)) {
+          throw new Error("Rule is not initialized.");
+        }
+
         /*
          * target - objects provided as outputs, places where data should be mapped to
          * object - target object's sub element
@@ -343,18 +346,20 @@ export class FmlStructureComposer {
           fmlGroup.inputFields(obj).forEach(n => {
             const fieldSources = fmlGroup.getSources(obj.name, n.name);
             if (fieldSources.length >= 2) {
-              console.warn("Has multiple sources");
+              console.warn(`"${obj.name}" has multiple sources`);
             }
 
             const {sourceObject, field} = fieldSources[0];
             if (field === $THIS) {
               // do not assign when connection comes from $this.
               // assumes this is object creation, the assignment is done above;
+              console.warn(`Ignoring "${$THIS}" variable assignment`);
               return;
             }
 
             if (smRule.dependent.length > 0) {
               // dependant rule must be the last one, variable assignments are forbidden after
+              console.warn("Ignoring variable assigment, because dependant rule is already set");
               return;
             }
 
@@ -374,7 +379,7 @@ export class FmlStructureComposer {
 
 
       const rule = fmlGroup.rules.find(r => r.name === name);
-      if (rule) {
+      if (isDefined(rule)) {
         const {target, dependent} = getRuleComposer(rule.action).generate(fml, fmlGroup, rule, ctx, vars);
         if (isDefined(target)) {
           smRule.target.push(target);

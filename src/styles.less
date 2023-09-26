@@ -38,6 +38,15 @@ li {
   color: @mui-text-color-disabled;
 }
 
+.m-alert--vertical {
+  margin: 0;
+
+  &:after {
+    height: 100%;
+    width: 2px;
+  }
+}
+
 /* Editor */
 
 .menu .ant-btn-text {
@@ -222,14 +231,6 @@ li {
       stroke-width: 2px;
       stroke-dasharray: 5;
       animation: dashdraw .5s linear infinite;
-    }
-  }
-
-
-  &--main-group .node--source,
-  &--main-group .node--target {
-    .drawflow-delete {
-      display: none;
     }
   }
 }

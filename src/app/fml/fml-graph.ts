@@ -34,7 +34,7 @@ export class FMLGraph {
 
   private dfsHelper(v, n, visited, topNums): number {
     visited[v] = true;
-    const neighbors = this.adjacencyList[v];
+    const neighbors = this.adjacencyList[v] ?? [];
     for (const neighbor of neighbors) {
       if (!visited[neighbor]) {
         n = this.dfsHelper(neighbor, n, visited, topNums);

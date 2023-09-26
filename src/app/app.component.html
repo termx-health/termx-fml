@@ -12,7 +12,6 @@
         <m-button *m-dropdown-container mDisplay="text" mSize="small">Edit</m-button>
         <a *m-dropdown-item
           class="m-items-middle"
-          [class.m-disabled]="editor?.fmlSelectedGroupName === editor?.fml?.mainGroupName"
           (mClick)="configureActiveGroup()"
         >
           <m-icon mCode="setting"/>

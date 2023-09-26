@@ -1,5 +1,5 @@
 import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
-import {FMLPosition, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLPosition, FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {isDefined, isNil, remove} from '@kodality-web/core-util';
 import dagre from "dagre";
 import {asResourceVariable, fromPx, getPortNumber, renderExpand} from './fml.utils';
@@ -203,14 +203,7 @@ export class FMLEditor extends Drawflow {
 
     const _removeNodeId = this.removeNodeId;
     this.removeNodeId = function (id: string): void {
-      const node = this.getNodeFromId(id.slice('node-'.length));
-      if (
-        _fml.isMainGroup(_groupName) &&
-        this._isObj(node) && ['source', 'target'].includes(node.data.obj.mode)
-      ) {
-        console.warn("source/target node deletion is forbidden in the main group!");
-        return;
-      }
+      // const node = this.getNodeFromId(id.slice('node-'.length));
       return _removeNodeId.bind(this)(id);
     };
   }
@@ -225,23 +218,25 @@ export class FMLEditor extends Drawflow {
 
 
     const fieldCount = obj.fields.length;
-    const inputs = {
+    const inputs: { [k in Exclude<FMLStructureEntityMode, 'rule'>]: number } = {
       source: 0,
       target: fieldCount,
       object: fieldCount,
-      element: 1
-    }[obj.mode];
-    const outputs = {
+      element: 1,
+      produced: 1
+    };
+    const outputs: { [k in Exclude<FMLStructureEntityMode, 'rule'>]: number } = {
       source: fieldCount,
       target: 0,
       object: 1,
       element: fieldCount,
-    }[obj.mode];
+      produced: 1
+    };
 
 
     const nodeId = this.addNode(
       obj.name,
-      inputs, outputs,
+      inputs[obj.mode], outputs[obj.mode],
       options?.x && !isNaN(options.x) ? options.x : 50, // x
       options?.y && !isNaN(options.y) ? options.y : 50, // y
       `node--atom node--${obj.mode}`, {obj},

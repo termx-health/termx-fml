@@ -29,13 +29,14 @@ export class FMLStructureEntity {
    * * 'target' - element to which fields should be mapped
    * * 'element' - source's sub element
    * * 'object' - target's sub element
+   * * 'produced' - intermediate element/object, similar to 'object', but element is not set anywhere
    */
   mode: FMLStructureEntityMode;
   position?: FMLPosition;
   expanded?: boolean = true;
 }
 
-export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'rule';
+export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'produced' |'rule';
 
 
 /* Object */
