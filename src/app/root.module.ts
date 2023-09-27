@@ -53,7 +53,7 @@ import {StandaloneContext} from './context/standalone.context';
   providers: [
     {
       provide: APP_BASE_HREF,
-      useFactory: () => environment.baseHref
+      useFactory: (): string => environment.baseHref
     },
     {
       provide: EditorContext,

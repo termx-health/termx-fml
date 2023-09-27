@@ -93,6 +93,10 @@ export class FmlStructureComposer {
       sm.group.push(smGroup);
     });
 
+
+    // optimize
+    this.optimize(sm);
+
     return sm;
   }
 
@@ -388,6 +392,38 @@ export class FmlStructureComposer {
           smRule.dependent.push(dependent);
         }
       }
+    });
+  }
+
+  private static optimize(sm: StructureMap): void {
+    sm.group.forEach(g => {
+      const varMap = {};
+      const traverseRules = (rules: StructureMapGroupRule[]): void => {
+        for (const r of rules) {
+          traverseRules(r.rule);
+
+          r.target.forEach(t => {
+            varMap[t.variable] = normalize(t.variable);
+          });
+        }
+      };
+
+      const optimizeRules = (rules: StructureMapGroupRule[]): void => {
+        for (const r of rules) {
+          optimizeRules(r.rule);
+
+          r.target.forEach(t => {
+            // normalize variable names
+            // 1. declared in target
+            // 2. used by other targets
+            t.variable = varMap[t.variable] ?? t.variable;
+            t.parameter.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId);
+          });
+        }
+      };
+
+      traverseRules(g.rule);
+      optimizeRules(g.rule);
     });
   }
 }
