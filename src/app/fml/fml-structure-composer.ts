@@ -396,29 +396,29 @@ export class FmlStructureComposer {
   }
 
   private static optimize(sm: StructureMap): void {
-    sm.group.forEach(g => {
+    sm.group?.forEach(g => {
       const varMap = {};
       const traverseRules = (rules: StructureMapGroupRule[]): void => {
         for (const r of rules) {
-          traverseRules(r.rule);
-
-          r.target.forEach(t => {
+          r.target?.forEach(t => {
             varMap[t.variable] = normalize(t.variable);
           });
+
+          traverseRules(r.rule);
         }
       };
 
       const optimizeRules = (rules: StructureMapGroupRule[]): void => {
         for (const r of rules) {
-          optimizeRules(r.rule);
-
-          r.target.forEach(t => {
+          r.target?.forEach(t => {
             // normalize variable names
             // 1. declared in target
             // 2. used by other targets
             t.variable = varMap[t.variable] ?? t.variable;
-            t.parameter.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId);
+            t.parameter?.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId);
           });
+
+          optimizeRules(r.rule);
         }
       };
 
