@@ -1,8 +1,7 @@
 import {Bundle, FhirResource, StructureDefinition, StructureMap} from 'fhir/r5';
 import {BehaviorSubject, Observable, Subject, take} from 'rxjs';
-import {EditorContext} from './editor.context';
-
-type ExportFormat = 'json' | 'json+svg' | string;
+import {EditorContext, ExportFormat} from './editor.context';
+import {Injectable} from '@angular/core';
 
 
 type Requests = LoadAction | ExportAction | RenderFmlAction;
@@ -52,13 +51,9 @@ interface ExitMessage {
 }
 
 
-export class IframeContext implements EditorContext {
-  public maps$ = new BehaviorSubject<string[]>([]);
-  public externalStructureMaps$ = new BehaviorSubject<StructureMap[]>([]);
-  public structureMap$ = new BehaviorSubject<StructureMap>(undefined);
-  public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
+@Injectable({providedIn: 'root'})
+export class IframeContext extends EditorContext {
   public contained$ = new BehaviorSubject<FhirResource[]>([]);
-
   private _renderFml$ = new Subject<string>();
 
   private _postMessage(msg: Messages): void {
@@ -66,13 +61,11 @@ export class IframeContext implements EditorContext {
   }
 
 
-  public constructor(private opt: {
-    exportMap: (format: ExportFormat) => Promise<StructureMap>
-  }) {
+  public constructor() {
+    super();
     this._attachListener();
     this._postMessage({event: 'init'});
   }
-
 
   private _attachListener(): void {
     window.addEventListener("message", event => {
@@ -93,7 +86,7 @@ export class IframeContext implements EditorContext {
             this.contained$.next(msg.contained ?? []);
             break;
           case 'export':
-            this.opt.exportMap(msg.format).then(sm => {
+            this.opts.exportMap(msg.format).then(sm => {
               this._postMessage({event: 'export', data: JSON.stringify(sm), format: msg.format});
             });
             break;
@@ -106,13 +99,14 @@ export class IframeContext implements EditorContext {
   }
 
 
+  public get selectedMapName(): string {
+    return this.structureMap$.getValue()?.name;
+  }
+
   public selectMap(): void {
     throw Error('Not supported!');
   }
 
-  public get selectedMapName(): string {
-    return this.structureMap$.getValue()?.name;
-  }
 
   public renderFML(sm: StructureMap): Observable<string> {
     this._postMessage({
@@ -134,6 +128,7 @@ export class IframeContext implements EditorContext {
   public exit(): void {
     this._postMessage({event: 'exit'});
   }
+
 
   public isSaved(): boolean {
     return false;

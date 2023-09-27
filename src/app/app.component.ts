@@ -1,27 +1,22 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {FMLStructureGroup} from './fml/fml-structure';
 import {StructureMap} from 'fhir/r5';
-import {group, HttpCacheService, isNil, LoadingManager} from '@kodality-web/core-util';
+import {group, isNil, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
-import {HttpClient} from '@angular/common/http';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {EditorComponent} from './editor.component';
-import {IframeContext} from './context/iframe.context';
-import {EditorContext} from './context/editor.context';
-import {StandaloneContext} from './context/standalone.context';
+import {EditorContext, ExportFormat} from './context/editor.context';
 import {toSvg} from 'html-to-image';
 import {formatFML, fromPx, tokenize} from './fml/fml.utils';
 import {isDev, isIframe} from './global';
 
 
 @Component({
-  selector: 'app-root',
   templateUrl: 'app.component.html'
 })
-export class AppComponent implements OnInit {
-  protected ctx: EditorContext;
+export class AppComponent {
   protected fml: {text: string, json: StructureMap};
   protected isIframe = isIframe();
   protected isDev = isDev();
@@ -37,29 +32,21 @@ export class AppComponent implements OnInit {
   protected loader = new LoadingManager();
 
   constructor(
-    private http: HttpClient,
-    private cache: HttpCacheService,
+    public ctx: EditorContext,
     private notificationService: MuiNotificationService,
-  ) { }
-
-
-  public ngOnInit(): void {
-    this.ctx = this.isIframe
-      ? new IframeContext({
-        exportMap: async format => {
-          const sm = this.export();
-          if (format === 'json+svg') {
-            sm.extension.push({
-              url: 'fml-svg',
-              valueString: await this.generateSvg()
-            });
-            return sm;
-          }
-          await Promise.resolve();
-          return sm;
+  ) {
+    ctx.configure({
+      exportMap: async (format: ExportFormat) => {
+        const sm = this.export();
+        if (format === 'json+svg') {
+          sm.extension.push({
+            url: 'fml-svg',
+            valueString: await this.generateSvg()
+          });
         }
-      })
-      : new StandaloneContext(this.http, this.cache);
+        return sm;
+      }
+    });
   }
 
 

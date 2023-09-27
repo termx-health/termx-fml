@@ -1,20 +1,16 @@
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {BehaviorSubject, forkJoin, map, mergeMap, Observable, of} from 'rxjs';
+import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {HttpCacheService, isDefined, unique, uniqueBy} from '@kodality-web/core-util';
 import {EditorContext} from './editor.context';
 import {substringAfterLast} from '../fml/fml.utils';
+import {Injectable} from '@angular/core';
 
 
-export class StandaloneContext implements EditorContext {
+@Injectable({providedIn: 'root'})
+export class StandaloneContext extends EditorContext {
   private SELECTED_STRUCTURE_MAPS_KEY = "selected_structure_map";
   private STRUCTURE_MAPS_KEY = "structure_maps";
-
-
-  public maps$ = new BehaviorSubject<string[]>([]);
-  public externalStructureMaps$ = new BehaviorSubject<StructureMap[]>([]);
-  public structureMap$ = new BehaviorSubject<StructureMap>(undefined);
-  public bundle$ = new BehaviorSubject<Bundle<StructureDefinition>>(undefined);
 
 
   private get localMaps(): {[k: string]: StructureMap} {
@@ -55,6 +51,8 @@ export class StandaloneContext implements EditorContext {
     private http: HttpClient,
     private cache: HttpCacheService
   ) {
+    super();
+
     this.http.get<string[]>("assets/StructureMap/index.json").subscribe(namesPersisted => {
       const namesLocal = Object.values(this.localMaps).map(m => m.name);
       const names = [...namesPersisted, ...namesLocal].filter(unique);
@@ -76,13 +74,13 @@ export class StandaloneContext implements EditorContext {
   }
 
 
+  public get selectedMapName(): string {
+    return this.structureMap$.getValue()?.name;
+  }
+
   public selectMap(name: string): void {
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, name);
     this.reinit();
-  }
-
-  public get selectedMapName(): string {
-    return this.structureMap$.getValue()?.name;
   }
 
 
@@ -110,6 +108,7 @@ export class StandaloneContext implements EditorContext {
   public exit(): void {
     throw Error('not implemented');
   }
+
 
   public isSaved = (name: string): boolean => {
     return name in this.localMaps;
