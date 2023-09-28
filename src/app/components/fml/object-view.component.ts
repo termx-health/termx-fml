@@ -40,9 +40,9 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
         </h5>
 
         <app-structure-definition-tree
-            *ngIf="treeView"
-            [definition]="object | apply: findDefinition: fmlGroup"
-            [definitionBase]="object.element.path"
+          *ngIf="treeView"
+          [definition]="object | apply: findDefinition: fmlGroup"
+          [definitionBase]="object.element.path"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -50,17 +50,17 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
             <td>
               <div class="m-items-top m-justify-between">
                 <div>
-                  <a *ngIf="f | apply: isResourceSelectable; else name" (mClick)="onFieldClick(object, f.name)">
+                  <a *ngIf="f | apply: isResourceSelectable: object; else name" (mClick)="onFieldClick(object, f.name)">
                     <ng-container *ngTemplateOutlet="name"></ng-container>
                   </a>
                   <div class="description">{{f.types | join: ', '}}</div>
                 </div>
                 <ng-template #name>
                   <span
-                      [mPopover]="f | apply: isBackboneElementField"
-                      [mTitle]="backboneRawFields"
-                      [mTitleContext]="{base: f.name}"
-                      mPosition="left"
+                    [mPopover]="f | apply: isBackboneElementField"
+                    [mTitle]="backboneRawFields"
+                    [mTitleContext]="{base: f.name}"
+                    mPosition="left"
                   >
                     {{f.name}}
                   </span>
@@ -105,10 +105,10 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
           <div *m-modal-content>
             <m-form-item mName="sources" required>
               <app-structure-definition-select
-                  name="sources"
-                  [(ngModel)]="resourceModal.resource"
-                  [bundle]="fmlGroup.bundle() | apply: bundle: resourceModal.types"
-                  required
+                name="sources"
+                [(ngModel)]="resourceModal.resource"
+                [bundle]="fmlGroup.bundle() | apply: bundle: resourceModal.types"
+                required
               />
             </m-form-item>
           </div>
@@ -212,8 +212,8 @@ export class ObjectViewComponent {
       .filter(n => this.fmlGroup.objects[n]);
   };
 
-  protected isResourceSelectable = (f: FMLStructureObjectField): boolean => {
-    return this.fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource');
+  protected isResourceSelectable = (f: FMLStructureObjectField, object: FMLStructureObject): boolean => {
+    return object.mode !== 'produced' && (this.fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource'));
   };
 
   protected isBackboneElementField = FMLStructureGroup.isBackboneElementField;
