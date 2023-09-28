@@ -11,6 +11,7 @@ import {EditorContext, ExportFormat} from './context/editor.context';
 import {toSvg} from 'html-to-image';
 import {formatFML, fromPx, tokenize} from './fml/fml.utils';
 import {isDev, isIframe} from './global';
+import {Router} from '@angular/router';
 
 
 @Component({
@@ -33,6 +34,7 @@ export class AppComponent {
 
   constructor(
     public ctx: EditorContext,
+    private router: Router,
     private notificationService: MuiNotificationService,
   ) {
     ctx.configure({
@@ -138,7 +140,7 @@ export class AppComponent {
 
     try {
       const sm = this.export();
-      this.ctx.saveMap(sm);
+      this.ctx.persistMap(sm);
       if (!this.isIframe) {
         this.notificationService.success("Saved", 'Check console for any errors!', {placement: 'top'});
       }
@@ -158,6 +160,13 @@ export class AppComponent {
     this.changeModal.close();
   }
 
+  // Validate
+
+  protected validate(): void {
+    const sm = this.export();
+    this.ctx.saveMap(sm);
+    this.router.navigate(['validate']);
+  }
 
   /* Right side */
 

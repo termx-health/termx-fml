@@ -23,6 +23,7 @@ import {isIframe} from './global';
 import {EditorContext} from './context/editor.context';
 import {IframeContext} from './context/iframe.context';
 import {StandaloneContext} from './context/standalone.context';
+import {ValidationComponent} from './validate/validation.component';
 
 
 @NgModule({
@@ -39,6 +40,8 @@ import {StandaloneContext} from './context/standalone.context';
 
     StructureDefinitionTreeComponent,
     StructureDefinitionSelectComponent,
+
+    ValidationComponent
   ],
   imports: [
     BrowserModule,

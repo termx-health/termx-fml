@@ -96,6 +96,11 @@ export class StandaloneContext extends EditorContext {
   }
 
   public saveMap(sm: StructureMap): void {
+    this.persistMap(sm);
+    this.structureMap$.next(sm);
+  }
+
+  public persistMap(sm: StructureMap): void {
     localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, sm.name);
     localStorage.setItem(this.STRUCTURE_MAPS_KEY, JSON.stringify({
       ...this.localMaps,

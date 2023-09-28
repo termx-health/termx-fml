@@ -58,6 +58,11 @@
     </div>
 
     <div class="m-items-middle">
+      <ng-container *ngIf="isDev">
+        <m-icon-button mIcon="rocket" (mClick)="validate()"/>
+        <m-divider mVertical/>
+      </ng-container>
+
       <m-icon-button mIcon="zoom-out" m-tooltip mTitle="Zoom Out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" m-tooltip mTitle="Zoom In" (mClick)="zoomIn()"/>
 

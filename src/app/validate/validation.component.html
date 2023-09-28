@@ -1,0 +1,29 @@
+<div class="wrapper">
+  <div class="container">
+    <div style="margin-bottom: 1rem">
+      <m-button mDisplay="text" (mClick)="location.back()">
+        <div class="m-items-middle description">
+          <m-icon mCode="left"/>
+          <span>Back</span>
+        </div>
+      </m-button>
+    </div>
+
+
+    <div style="width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: 0.5rem">
+      <div  *ngFor="let res of rules" class="m-rounded" style="padding: 1rem; background: var(--color-background-component)">
+        <b class="m-items-middle m-justify-between">
+          <span>{{res.name}}</span>
+          <span style="display: inline-block; height: 8px; width: 8px; background: var(--color-{{res.status}}); border-radius: 50%"></span>
+        </b>
+
+        <div style="font-size: 0.9rem;" *ngIf="res.description">
+          {{res.description}}
+        </div>
+        <div style="color: var(--color-text-secondary);" *ngIf="res.status === 'error' && res.details">
+          {{res.details}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

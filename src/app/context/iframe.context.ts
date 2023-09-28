@@ -121,7 +121,11 @@ export class IframeContext extends EditorContext {
     this.structureMap$.next(sm);
   }
 
-  public saveMap(): void {
+  public saveMap(sm: StructureMap): void {
+    this.structureMap$.next(sm);
+  }
+
+  public persistMap(): void {
     this._postMessage({event: 'save'});
   }
 

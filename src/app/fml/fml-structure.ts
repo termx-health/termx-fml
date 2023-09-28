@@ -36,7 +36,7 @@ export class FMLStructureEntity {
   expanded?: boolean = true;
 }
 
-export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'produced' |'rule';
+export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'produced' | 'rule';
 
 
 /* Object */

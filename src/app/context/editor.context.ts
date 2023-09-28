@@ -32,7 +32,14 @@ export abstract class EditorContext {
 
   abstract importMap(sm: StructureMap): void;
 
+  /** Saves map into storage */
   abstract saveMap(sm: StructureMap): void;
+
+  /**
+   * Saves map in memory.
+   * Changes are lost when page is reloaded.
+   */
+  abstract persistMap(sm: StructureMap): void;
 
   abstract exit(): void;
 
