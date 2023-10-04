@@ -4,7 +4,7 @@ import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
 export class FMLCopyRuleComposer extends FMLRuleComposer {
   public action = 'copy';
 
-  public override generate(
+  public override generateEvaluate(
     fml: FMLStructure,
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,

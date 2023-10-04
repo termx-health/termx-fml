@@ -388,10 +388,12 @@ export class FMLEditor extends Drawflow {
       // recalculate connection positions
       this.updateConnectionNodes(`node-${nodeId}`);
 
-      // desaturate connections going from $this of current object
-      Array.from(document.getElementsByClassName(`node_out_node-${nodeId} output_1`))
-        .map(wrapper => wrapper.firstElementChild)
-        .forEach((svg: SVGPathElement) => svg.style.setProperty('--stroke-color', 'var(--color-borders)'));
+      if (['object'].includes(this._fmlGroup.objects[name]?.mode)) {
+        // highlight connections going from $this of current object
+        Array.from(document.getElementsByClassName(`node_out_node-${nodeId} output_1`))
+          .map(wrapper => wrapper.firstElementChild)
+          .forEach((svg: SVGPathElement) => svg.style.setProperty('--stroke-color', 'var(--color-primary-5)'));
+      }
 
       // expand
       renderExpand(this, name);

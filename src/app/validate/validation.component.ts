@@ -32,7 +32,7 @@ interface RuleValidationResult {
   details?: string
 }
 
-const RULES: ((map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLStructure) => RuleValidationResult)[] = [
+const RULES: ((map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLStructure) => RuleValidationResult | RuleValidationResult[])[] = [
   (map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLStructure) => {
     const ruleNames = [];
     map.group.forEach(g => traverseRules(g.rule, r => ruleNames.push(r.name)));
@@ -156,7 +156,6 @@ export class ValidationComponent implements OnInit {
   protected location = inject(Location);
   protected rules: RuleValidationResult[] = [];
 
-
   public ngOnInit(): void {
     combineLatest([
       this.ctx.structureMap$,
@@ -167,7 +166,7 @@ export class ValidationComponent implements OnInit {
       }
 
       const fml = FmlStructureParser.map(bundle, map);
-      this.rules = RULES.map(fun => fun(map, bundle, fml));
+      this.rules = RULES.flatMap(fun => fun(map, bundle, fml));
     });
   }
 }

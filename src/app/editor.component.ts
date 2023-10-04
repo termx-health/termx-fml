@@ -173,13 +173,15 @@ export class EditorComponent implements OnInit, OnChanges {
     });
   }
 
+
   private init(): void {
     const fml = FmlStructureParser.map(this.bundle, this.structureMap);
     this.fml = fml;
     this.setFmlGroup(fml.getGroup(fml.mainGroupName));
   }
 
-  protected setFmlGroup(fmlGroup: FMLStructureGroup): void {
+
+  private setFmlGroup(fmlGroup: FMLStructureGroup): void {
     this.nodeSelected = undefined;
     this.putFmlGroup(fmlGroup);
 
@@ -212,6 +214,7 @@ export class EditorComponent implements OnInit, OnChanges {
       });
     });
   }
+
 
   /* Public API */
 
@@ -480,6 +483,13 @@ export class EditorComponent implements OnInit, OnChanges {
 
 
   /* Structure tree */
+
+  protected onFmlNotationChange(isSelected: boolean): void {
+    this.fmlGroup.notation = isSelected ? 'fml' : 'evaluate';
+    if (isSelected) {
+      this.fmlGroup.shareContext = false;
+    }
+  }
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string, type?: string): void {
     const mode: FMLStructureEntityMode = ['source', 'element'].includes(parentObj.mode) ? 'element' : 'object';

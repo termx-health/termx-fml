@@ -1,15 +1,32 @@
 <div style="height: 2.5rem; display: flex; align-items: center; background: linear-gradient(45deg, var(--color-primary-1), var(--color-background-component)); border-bottom: 1px solid var(--color-primary-2)">
   <div style="width: 100%; padding-inline: 1rem; white-space: nowrap;" class="m-justify-between">
     <div class="m-items-middle menu">
+      <ng-template #chevron>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="11px">
+          <!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+          <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+        </svg>
+      </ng-template>
+
       <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">File</m-button>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">
+          <div class="m-items-middle">
+            <span>File</span>
+            <ng-container *ngTemplateOutlet="chevron"/>
+          </div>
+        </m-button>
         <a *m-dropdown-item (mClick)="wizard.open()">New</a>
         <a *m-dropdown-item (mClick)="importer.open()">Import</a>
         <a *m-dropdown-item (mClick)="exportStructureMap()">Export</a>
       </m-dropdown>
 
       <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">Edit</m-button>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">
+          <div class="m-items-middle">
+            <span>Edit</span>
+            <ng-container *ngTemplateOutlet="chevron"/>
+          </div>
+        </m-button>
         <a *m-dropdown-item
           class="m-items-middle"
           (mClick)="configureActiveGroup()"
@@ -20,7 +37,12 @@
       </m-dropdown>
 
       <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">View</m-button>
+        <m-button *m-dropdown-container mDisplay="text" mSize="small">
+          <div class="m-items-middle">
+            <span>View</span>
+            <ng-container *ngTemplateOutlet="chevron"/>
+          </div>
+        </m-button>
         <a *m-dropdown-item (mClick)="autoLayout()">Auto-layout</a>
         <a *m-dropdown-item (mClick)="topology()">Topology</a>
         <a *m-dropdown-item (mClick)="collapseAll()">Collapse elements</a>

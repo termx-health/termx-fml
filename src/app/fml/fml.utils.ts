@@ -49,11 +49,11 @@ export function getPortNumber(str: string): number {
 }
 
 export function formatFML(fml: string): string {
-  const lines = fml
-    .replaceAll(',  ', ',\n    ')
-    .replaceAll(' -> ', ' ->\n    ')
+  // const lines = fml
+  //   .replaceAll(',  ', ',\n    ')
+  //   .replaceAll(' -> ', ' ->\n    ')
 
-  return lines;
+  return fml;
 
   /*
     todo: please somehow make it work

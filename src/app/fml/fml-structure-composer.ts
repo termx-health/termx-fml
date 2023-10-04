@@ -1,4 +1,4 @@
-import {copyDeep, group, isDefined, isNil, unique} from '@kodality-web/core-util';
+import {copyDeep, flat, group, isDefined, isNil, unique} from '@kodality-web/core-util';
 import {
   StructureMap,
   StructureMapGroup,
@@ -8,7 +8,7 @@ import {
   StructureMapGroupRuleTarget,
   StructureMapStructure
 } from 'fhir/r5';
-import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
+import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {getAlphabet, SEQUENCE, substringBeforeLast, VARIABLE_SEP} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleComposer} from './rule/composers/_composers';
@@ -22,6 +22,28 @@ const nextVar = (): string => {
   const times = Math.floor(varCnt / 26);
   return [...Array.from({length: times - 1}).fill(0), varCnt % 26].map(i => alphabet[i as number]).join('');
 };
+
+
+function variableHolder(inputObjects: FMLStructureObject[]): {
+  vars: Record<string, string>,
+  toVar: (name: string) => string,
+  asVar: (name: string, raw?: boolean) => string
+} {
+  const vars = group(inputObjects, o => o.name, o => o.name);
+  return {
+    vars,
+    toVar: (name: string): string => vars[name] = nextVar(),
+    asVar: (name: string, raw = false): string => raw ? vars[name] ?? name : normalize(vars[name] ?? name)
+  };
+}
+
+function normalize(txt: string): string {
+  if (isDefined(txt)) {
+    return txt
+      .replaceAll(/[.#_]/gm, '_')
+      .replaceAll('_', '');
+  }
+}
 
 
 interface FmlStructureComposeOptions {
@@ -156,14 +178,160 @@ export class FmlStructureComposer {
     return smGroup;
   }
 
+
   private static generateRule(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
+    if (fmlGroup.notation === 'fml') {
+      this._fmlRuleGeneration(fml, fmlGroup, smGroup);
+    } else {
+      this._evaluateRuleGeneration(fml, fmlGroup, smGroup);
+    }
+  }
+
+  private static _fmlRuleGeneration(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
+    const topology = FMLGraph.fromFML(fmlGroup).topologySort();
+    const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse().filter(n => fmlGroup.objects[n]);
+
+    const sourceTopology = topologicalOrder
+      .map(n => fmlGroup.objects[n])
+      .filter(o => ['source', 'element'].includes(o.mode));
+    const targetTopology = topologicalOrder
+      .map(n => fmlGroup.objects[n])
+      .filter(o => ['target', 'object'].includes(o.mode))
+      .reverse();
+
+
+    const collectRules = (obj: string, name?: string): FMLStructureRule[] => {
+      const conns = fmlGroup.getSources(obj, name).map(c => c.sourceObject);
+      const rules = fmlGroup.rules.filter(r => conns.includes(r.name));
+      return flat([...rules, ...rules.flatMap(r => collectRules(r.name))]).filter(Boolean);
+    };
+
+
+    const inputObjects = Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode));
+    const {vars, asVar, toVar} = variableHolder(inputObjects);
+
+    let smRule: StructureMapGroupRule;
+    let frontOffset = -1, backOffset = -1;
+
+    for (let i = 0; i < 101; i++) {
+      if (frontOffset >= sourceTopology.length - 1 && backOffset >= targetTopology.length - 1) {
+        break;
+      }
+
+      const src = sourceTopology[++frontOffset] ?? sourceTopology[--frontOffset];
+      const tgt = targetTopology[++backOffset] ?? targetTopology[--backOffset];
+
+      const {sourceObject, field: sourceField} = fmlGroup.getSources(src.name)[0] ?? {};
+      const srcName = sourceObject ? `${asVar(sourceObject)}|$|${sourceField}` : src.name;
+
+      const {targetObject, field: targetField} = fmlGroup.getTargets(tgt.name)[0] ?? {};
+      const tgtName = targetObject ? `${asVar(targetObject)}|$|${targetField}` : tgt.name;
+
+
+      // create new subgroup
+      const _rule: StructureMapGroupRule = {
+        name: `rule_${SEQUENCE.next()}`,
+        source: [
+          srcName in vars ? {
+            context: asVar(srcName),
+          } : {
+            context: srcName.split('|$|')[0],
+            element: srcName.split('|$|')[1],
+            variable: vars[srcName] = toVar(src.name)
+          }
+        ],
+        target: [
+          tgtName in vars ? {
+            transform: 'copy',
+            parameter: [
+              {valueId: asVar(tgtName)}
+            ],
+          } : {
+            context: tgtName.split('|$|')[0],
+            element: tgtName.split('|$|')[1],
+            variable: vars[tgtName] = toVar(tgt.name)
+          }
+        ],
+        rule: [],
+        dependent: []
+      };
+
+      if (smRule) {
+        smRule.rule.push(smRule = _rule);
+      } else {
+        smGroup.rule.push(smRule = _rule);
+      }
+
+
+      fmlGroup.inputFields(tgt).forEach(field => {
+        // find rules that lead to this "target.field"
+        collectRules(tgt.name, field.name)
+          .forEach(rule => {
+            const s = fmlGroup.getSources(rule.name)[0];
+            const t = fmlGroup.getTargets(rule.name)[0];
+            // const {target, dependent} = getRuleComposer(rule.action).generate(fml, fmlGroup, rule, undefined, vars);
+
+            smRule.rule.push({
+              name: `o-rule_${SEQUENCE.next()}`,
+              source: [{
+                context: asVar(s.sourceObject),
+                element: s.field
+              }],
+              target: [{
+                context: asVar(t.targetObject),
+                element: t.field,
+                transform: rule.action as StructureMapGroupRuleTarget['transform'],
+                parameter: rule.parameters.map(p => p.type === 'var' ? ({valueId: p.value}) : ({valueString: p.value}))
+              }],
+              rule: [],
+              dependent: []
+            });
+          });
+
+
+        // direct connections between "src" and "tgt"
+        fmlGroup.getSources(tgt.name, field.name)
+          .filter(s => isDefined(s.field))
+          .forEach(s => {
+            if (s.sourceObject !== src.name) {
+              return;
+            }
+            if (s.field === $THIS) {
+              console.warn(`Ignoring "${$THIS}" variable assignment`);
+              return;
+            }
+
+            const variable = toVar([s.sourceObject, s.field].filter(Boolean).join('.'));
+
+            smRule.rule.push({
+              name: `r-rule_${SEQUENCE.next()}`,
+              source: [{
+                context: asVar(s.sourceObject),
+                element: s.field,
+                variable: variable
+              }],
+              target: [{
+                context: asVar(tgt.name),
+                element: field.name,
+                transform: 'copy',
+                parameter: [
+                  {valueId: variable}
+                ]
+              }],
+              rule: [],
+              dependent: []
+            });
+          });
+      });
+    }
+  }
+
+  private static _evaluateRuleGeneration(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
     const topology = FMLGraph.fromFML(fmlGroup).topologySort();
     const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
     const inputObjects = Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode));
-    const vars = group(inputObjects, o => o.name, o => normalize(o.name));
-    const toVar = (name: string): string => vars[name] = nextVar();
-    const asVar = (name: string, raw = false): string => raw ? vars[name] ?? name : normalize(vars[name] ?? name);
+    const {vars, asVar, toVar} = variableHolder(inputObjects);
 
     // creates objects in reverse order, starting from target
     const newObjects = copyDeep(topologicalOrder).reverse()
@@ -384,7 +552,7 @@ export class FmlStructureComposer {
 
       const rule = fmlGroup.rules.find(r => r.name === name);
       if (isDefined(rule)) {
-        const {target, dependent} = getRuleComposer(rule.action).generate(fml, fmlGroup, rule, ctx, vars);
+        const {target, dependent} = getRuleComposer(rule.action).generateEvaluate(fml, fmlGroup, rule, ctx, vars);
         if (isDefined(target)) {
           smRule.target.push(target);
         }
@@ -425,14 +593,5 @@ export class FmlStructureComposer {
       traverseRules(g.rule);
       optimizeRules(g.rule);
     });
-  }
-}
-
-
-function normalize(txt: string): string {
-  if (isDefined(txt)) {
-    return txt
-      .replaceAll(/[.#_]/gm, '_')
-      .replaceAll('_', '');
   }
 }

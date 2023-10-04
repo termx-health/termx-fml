@@ -4,7 +4,7 @@ import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
 export class FMLRulegroupRuleComposer extends FMLRuleComposer {
   public action = 'rulegroup';
 
-  public override generate(
+  public override generateEvaluate(
     fml: FMLStructure,
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
