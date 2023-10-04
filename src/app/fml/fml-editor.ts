@@ -64,32 +64,10 @@ export class FMLEditor extends Drawflow {
   }
 
 
+  // Getters
+
   public get _fmlGroup(): FMLStructureGroup {
     return this._fml?.getGroup(this._groupName);
-  }
-
-  public _updateGroupName(before: string, after: string): void {
-    if (this._fml.isMainGroup(before)) {
-      this._fml.mainGroupName = after;
-    }
-
-    const _group = this._fml.getGroup(before);
-    _group.name = after;
-
-    if (this._groupName === before) {
-      this._groupName = after;
-    }
-
-    Object.values(this._fml.groups)
-      .flatMap(g => g.rules)
-      .filter(r => r.action === 'rulegroup')
-      .forEach(rule => {
-        rule.parameters
-          .filter(p => p.value === before)
-          .forEach(p => p.value = after);
-      });
-
-    this._rerenderNodes();
   }
 
   constructor(
@@ -208,6 +186,32 @@ export class FMLEditor extends Drawflow {
     };
   }
 
+
+  /* */
+
+  public _updateGroupName(before: string, after: string): void {
+    if (this._fml.isMainGroup(before)) {
+      this._fml.mainGroupName = after;
+    }
+
+    const _group = this._fml.getGroup(before);
+    _group.name = after;
+
+    if (this._groupName === before) {
+      this._groupName = after;
+    }
+
+    Object.values(this._fml.groups)
+      .flatMap(g => g.rules)
+      .filter(r => r.action === 'rulegroup')
+      .forEach(rule => {
+        rule.parameters
+          .filter(p => p.value === before)
+          .forEach(p => p.value = after);
+      });
+
+    this._rerenderNodes();
+  }
 
   /* Creator */
 
@@ -368,7 +372,6 @@ export class FMLEditor extends Drawflow {
     return {nodeId, ...position};
   };
 
-
   public _rerenderNodes(): void {
     if (!this._initialized) {
       return;
@@ -443,6 +446,7 @@ export class FMLEditor extends Drawflow {
       }
     });
   }
+
 
   /* Utils */
 

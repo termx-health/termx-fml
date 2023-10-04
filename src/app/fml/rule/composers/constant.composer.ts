@@ -37,14 +37,14 @@ export class FMLConstantRuleComposer extends FMLRuleComposer {
     const tgt = requireSingle(fmlGroup.getTargets(rule.name), `"${rule.name}" MUST have one target`);
 
     return {
-      name: `${this.action}_rule_${SEQUENCE.next()}`,
+      name: `const_${SEQUENCE.next()}`,
       source: [{
         context: asVar(src.sourceObject)
       }],
       target: [{
+        transform: 'evaluate',
         context: asVar(tgt.targetObject),
         element: tgt.field,
-        transform: 'evaluate',
         variable: rule.name,
         parameter: rule.parameters.map(p => ({valueString: `'${p.value}'`}))
       }],

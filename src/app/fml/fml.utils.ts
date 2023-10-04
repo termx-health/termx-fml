@@ -198,6 +198,10 @@ export const getAlphabet = (): string[] => {
   return alpha.map((x) => String.fromCharCode(x));
 };
 
+export const join = (...els: string[]): string => {
+  return els.filter(isDefined).join('.');
+}
+
 export const normalize = (txt: string): string => {
   if (isDefined(txt)) {
     return txt

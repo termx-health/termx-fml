@@ -1,6 +1,6 @@
 import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {StructureMapGroupRule, StructureMapGroupRuleDependent, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {nestRules, SEQUENCE, VariableHolder} from '../../fml.utils';
+import {join, nestRules, SEQUENCE, VariableHolder} from '../../fml.utils';
 
 
 export type FMLRuleComposerEvaluateReturnType = Partial<{
@@ -21,12 +21,14 @@ export abstract class FMLRuleComposer {
     ctx: FMLStructureObject,
     vh: VariableHolder
   ): FMLRuleComposerEvaluateReturnType {
+    const {asVar} = vh;
+
     return {
       target: {
         transform: rule.action as any,
         variable: rule.name,
         parameter: rule.parameters.map(p => {
-          return p.type === 'var' ? ({valueId: vh.vars[p.value] ?? p.value}) : ({valueString: p.value});
+          return p.type === 'var' ? ({valueId: asVar(p.value, true)}) : ({valueString: p.value});
         })
       }
     };
@@ -40,23 +42,26 @@ export abstract class FMLRuleComposer {
     tgtCtx: FMLStructureObject,
     vh: VariableHolder
   ): FMLRuleComposerFmlReturnType {
-    const {asVar} = vh;
+    const {asVar, toVar} = vh;
 
-    const s = fmlGroup.getSources(rule.name)[0];
-    const t = fmlGroup.getTargets(rule.name)[0];
+    const src = fmlGroup.getSources(rule.name)[0];
+    const tgt = fmlGroup.getTargets(rule.name)[0];
+
+    const srcName = join(src.sourceObject, src.field);
 
     return {
       name: `rule_${SEQUENCE.next()}`,
       source: [{
-        context: asVar(s.sourceObject),
-        element: s.field !== $THIS ? s.field : undefined
+        context: asVar(src.sourceObject),
+        element: src.field !== $THIS ? src.field : undefined,
+        variable: rule.parameters.some(p => p.value === srcName) ? toVar(srcName) : undefined
       }],
       target: [{
-        context: asVar(t.targetObject),
-        element: t.field,
         transform: rule.action as StructureMapGroupRuleTarget['transform'],
+        context: asVar(tgt.targetObject),
+        element: tgt.field,
         variable: rule.name,
-        parameter: rule.parameters.map(p => p.type === 'var' ? ({valueId: p.value}) : ({valueString: p.value}))
+        parameter: rule.parameters.map(p => p.type === 'var' ? ({valueId: asVar(p.value, true)}) : ({valueString: p.value}))
       }],
       rule: [],
       dependent: []

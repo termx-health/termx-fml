@@ -1,7 +1,7 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType, FMLRuleComposerFmlReturnType} from './composer';
 import {isDefined} from '@kodality-web/core-util';
-import {requireSingle, SEQUENCE, VariableHolder} from '../../fml.utils';
+import {join, requireSingle, SEQUENCE, VariableHolder} from '../../fml.utils';
 
 export class FMLTranslateRuleComposer extends FMLRuleComposer {
   public action = 'translate';
@@ -38,16 +38,16 @@ export class FMLTranslateRuleComposer extends FMLRuleComposer {
     const tgt = requireSingle(fmlGroup.getTargets(rule.name), `"${rule.name}" MUST have one target`);
 
     return {
-      name: `${this.action}_rule_${SEQUENCE.next()}`,
+      name: `translate_${SEQUENCE.next()}`,
       source: [{
         context: asVar(src.sourceObject),
         element: src.field,
-        variable: toVar(`${src.sourceObject}.${src.field}`)
+        variable: toVar(join(src.sourceObject,src.field))
       }],
       target: [{
+        transform: 'translate',
         context: asVar(tgt.targetObject),
         element: tgt.field,
-        transform: 'translate',
         variable: rule.name,
         parameter: rule.parameters.map(this.transformParameter(fml, asVar))
       }],

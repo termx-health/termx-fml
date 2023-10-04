@@ -18,11 +18,11 @@ export class FMLAppendRuleComposer extends FMLRuleComposer {
     const sources = fmlGroup.getSources(rule.name);
     const target = requireSingle(fmlGroup.getTargets(rule.name), `"${rule.name}" MUST have one target`);
 
-    const {last, main} = this.fmlCombineSources(`append_rule_${SEQUENCE.next()}`, sources, vh);
+    const {last, main} = this.fmlCombineSources(`append_${SEQUENCE.next()}`, sources, vh);
     last.target = [{
+      transform: 'append',
       context: asVar(target.targetObject),
       element: target.field,
-      transform: 'append',
       variable: rule.name,
       parameter: rule.parameters.map(p => p.type === 'var' ? ({valueId: asVar(p.value, true)}) : ({valueString: p.value}))
     }];

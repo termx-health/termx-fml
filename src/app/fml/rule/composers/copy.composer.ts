@@ -1,6 +1,6 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType, FMLRuleComposerFmlReturnType} from './composer';
-import {requireSingle, SEQUENCE, VariableHolder} from '../../fml.utils';
+import {join, requireSingle, SEQUENCE, VariableHolder} from '../../fml.utils';
 
 export class FMLCopyRuleComposer extends FMLRuleComposer {
   public action = 'copy';
@@ -39,20 +39,20 @@ export class FMLCopyRuleComposer extends FMLRuleComposer {
     const src = requireSingle(fmlGroup.getSources(rule.name), `"${rule.name}" MUST have one source`);
     const tgt = requireSingle(fmlGroup.getTargets(rule.name), `"${rule.name}" MUST have one target`);
 
+    const srcAsVar = toVar(join(src.sourceObject, src.field));
+
     return {
-      name: `cp_rule_${SEQUENCE.next()}`,
+      name: `copy_${SEQUENCE.next()}`,
       source: [{
         context: asVar(src.sourceObject),
         element: src.field,
-        variable: toVar(`${src.sourceObject}.${src.field}`)
+        variable: srcAsVar
       }],
       target: [{
+        transform: 'copy',
         context: asVar(tgt.targetObject),
         element: tgt.field,
-        transform: 'copy',
-        parameter: [
-          {valueId: asVar(`${src.sourceObject}.${src.field}`, true)}
-        ]
+        parameter: [{valueId: srcAsVar}]
       }],
       rule: [],
       dependent: []
