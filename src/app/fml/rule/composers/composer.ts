@@ -1,7 +1,6 @@
-import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
+import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {StructureMapGroupRule, StructureMapGroupRuleDependent, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {SEQUENCE, VariableHolder} from '../../fml.utils';
-import {isDefined} from '@kodality-web/core-util';
+import {nestRules, SEQUENCE, VariableHolder} from '../../fml.utils';
 
 
 export type FMLRuleComposerEvaluateReturnType = Partial<{
@@ -37,6 +36,8 @@ export abstract class FMLRuleComposer {
     fml: FMLStructure,
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
+    srcCtx: FMLStructureObject,
+    tgtCtx: FMLStructureObject,
     vh: VariableHolder
   ): FMLRuleComposerFmlReturnType {
     const {asVar} = vh;
@@ -48,7 +49,7 @@ export abstract class FMLRuleComposer {
       name: `rule_${SEQUENCE.next()}`,
       source: [{
         context: asVar(s.sourceObject),
-        element: s.field
+        element: s.field !== $THIS ? s.field : undefined
       }],
       target: [{
         context: asVar(t.targetObject),
@@ -62,14 +63,16 @@ export abstract class FMLRuleComposer {
     };
   }
 
-  public fmlCombineSources(prefix: string, sources: {sourceObject: string, field?: string}[], {toVar, asVar}: VariableHolder): {
-    rule: StructureMapGroupRule,
+  public fmlCombineSources(prefix: string, sources: {sourceObject: string, field?: string}[], vh: VariableHolder): {
+    main: StructureMapGroupRule,
     last: StructureMapGroupRule
   } {
+    const {toVar, asVar} = vh;
+
     const smRules: StructureMapGroupRule[] = sources.map((s, idx) => {
       const sAsVar = toVar(`${s.sourceObject}.${s.field}`);
       return {
-        name: `${prefix}_src_${idx}`,
+        name: `${prefix}_${idx + 1}`,
         source: [{
           context: asVar(s.sourceObject),
           element: s.field,
@@ -83,16 +86,11 @@ export abstract class FMLRuleComposer {
       };
     });
 
-    let _smRule: StructureMapGroupRule;
-
-    smRules.forEach(r => {
-      if (isDefined(_smRule)) {
-        _smRule.rule.push(r);
-      }
-      _smRule = r;
-    });
-
-    return {rule: smRules[0], last: _smRule};
+    const res = nestRules(smRules);
+    return {
+      main: res.main,
+      last: res.last
+    };
   }
 }
 

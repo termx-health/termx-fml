@@ -1,14 +1,15 @@
 import {FMLEditor} from './fml-editor';
 import {FMLStructureObject} from './fml-structure';
 import {group, isDefined} from '@kodality-web/core-util';
+import {StructureMapGroupRule} from 'fhir/r5';
 
 /* StructureMap */
+
 export interface VariableHolder {
   vars: Record<string, string>,
   toVar: (name: string) => string,
   asVar: (name: string, raw?: boolean) => string
 }
-
 
 export function variableHolder(inputObjects: FMLStructureObject[]): VariableHolder {
   const vars = group(inputObjects, o => o.name, o => o.name);
@@ -20,7 +21,6 @@ export function variableHolder(inputObjects: FMLStructureObject[]): VariableHold
     const times = Math.floor(seq / 26);
     return [...Array.from({length: times - 1}).fill(0), seq % 26].map(i => alphabet[i as number]).join('');
   };
-
 
   return {
     vars,
@@ -35,13 +35,39 @@ export function variableHolder(inputObjects: FMLStructureObject[]): VariableHold
   };
 }
 
-export function normalize(txt: string): string {
-  if (isDefined(txt)) {
-    return txt
-      .replaceAll(/[.#_]/gm, '_')
-      .replaceAll('_', '');
-  }
-}
+
+export const nestRules = (smRules: StructureMapGroupRule[]): {main: StructureMapGroupRule, last: StructureMapGroupRule} => {
+  let _smRule: StructureMapGroupRule;
+  let ctx = smRules[0].source[0];
+
+  smRules.forEach(r => {
+    // const src = r.source[0];
+    // const tgt = r.target[0];
+    //
+    // if (isNil(src.element)) {
+    //   // if src doesn't have element, it means it came from another rule
+    //   // substitute parameters with src.context
+    //   tgt.parameter
+    //     .filter(p => p.valueId === src.variable)
+    //     .forEach(p => p.valueId = src.context);
+    //
+    //   src.context = ctx?.context;
+    //   src.variable = undefined;
+    // } else {
+    //   ctx = src;
+    // }
+    //
+    // if (isNil(tgt.element)) {
+    //   tgt.context = undefined;
+    // }
+
+    if (isDefined(_smRule)) {
+      _smRule.rule.push(r);
+    }
+    _smRule = r;
+  });
+  return {main: smRules[0], last: _smRule};
+};
 
 
 /* FML  */
@@ -172,11 +198,35 @@ export const getAlphabet = (): string[] => {
   return alpha.map((x) => String.fromCharCode(x));
 };
 
+export const normalize = (txt: string): string => {
+  if (isDefined(txt)) {
+    return txt
+      .replaceAll(/[.#_]/gm, '_')
+      .replaceAll('_', '');
+  }
+};
 
 /* Style */
 
 export const fromPx = (v: string): number => {
   return Number(v.replace('px', ''));
+};
+
+
+/* Array */
+
+export const getSingle = <T>(arr: T[], err = 'Array has multiple elements'): T => {
+  if (arr.length > 1) {
+    throw new Error(err);
+  }
+  return arr[0];
+};
+
+export const requireSingle = <T>(arr: T[], err = 'Array MUST have one value'): T => {
+  if (arr.length !== 1) {
+    throw new Error(err);
+  }
+  return arr[0];
 };
 
 
@@ -199,6 +249,3 @@ export const tokenize = (str: string, tokens: string[]): {type: 'const' | 'var',
 
   return temp.map(el => typeof el === "string" ? {type: 'const', value: el} : el);
 };
-
-
-
