@@ -1,5 +1,6 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
-import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
+import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType} from './composer';
+import {VariableHolder} from '../../fml.utils';
 
 export class FMLRulegroupRuleComposer extends FMLRuleComposer {
   public action = 'rulegroup';
@@ -9,14 +10,15 @@ export class FMLRulegroupRuleComposer extends FMLRuleComposer {
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
     ctx: FMLStructureObject,
-    vars: {[p: string]: string}
-  ): FMLRuleComposerReturnType {
+    vh: VariableHolder
+  ): FMLRuleComposerEvaluateReturnType {
+    const {asVar} = vh;
     return {
       dependent: {
         name: rule.parameters.find(p => p.type === 'const')?.value,
         parameter: [
-          ...fmlGroup.getSources(rule.name).map(s => ({valueId: vars[s.sourceObject] ?? s.sourceObject})),
-          ...fmlGroup.getTargets(rule.name).map(s => ({valueId: vars[s.targetObject] ?? s.targetObject}))
+          ...fmlGroup.getSources(rule.name).map(s => ({valueId: asVar(s.sourceObject, true)})),
+          ...fmlGroup.getTargets(rule.name).map(s => ({valueId: asVar(s.targetObject, true)}))
         ]
       }
     };

@@ -1,4 +1,47 @@
 import {FMLEditor} from './fml-editor';
+import {FMLStructureObject} from './fml-structure';
+import {group, isDefined} from '@kodality-web/core-util';
+
+/* StructureMap */
+export interface VariableHolder {
+  vars: Record<string, string>,
+  toVar: (name: string) => string,
+  asVar: (name: string, raw?: boolean) => string
+}
+
+
+export function variableHolder(inputObjects: FMLStructureObject[]): VariableHolder {
+  const vars = group(inputObjects, o => o.name, o => o.name);
+  const alphabet = getAlphabet().map(el => el.toLowerCase());
+
+  let seq = -1;
+  const nextVar = (): string => {
+    seq++;
+    const times = Math.floor(seq / 26);
+    return [...Array.from({length: times - 1}).fill(0), seq % 26].map(i => alphabet[i as number]).join('');
+  };
+
+
+  return {
+    vars,
+    toVar: (name: string): string => {
+      return vars[name] = nextVar();
+    },
+    asVar: (name: string, raw = false): string => {
+      return raw
+        ? vars[name] ?? name
+        : normalize(vars[name] ?? name);
+    }
+  };
+}
+
+export function normalize(txt: string): string {
+  if (isDefined(txt)) {
+    return txt
+      .replaceAll(/[.#_]/gm, '_')
+      .replaceAll('_', '');
+  }
+}
 
 
 /* FML  */
@@ -156,3 +199,6 @@ export const tokenize = (str: string, tokens: string[]): {type: 'const' | 'var',
 
   return temp.map(el => typeof el === "string" ? {type: 'const', value: el} : el);
 };
+
+
+

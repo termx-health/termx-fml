@@ -4,13 +4,15 @@ import {FMLDefaultRuleComposer} from './default.composer';
 import {FMLConstantRuleComposer} from './constant.composer';
 import {FMLRulegroupRuleComposer} from './rulegroup.composer';
 import {FMLTranslateRuleComposer} from './translate.composer';
+import {FMLAppendRuleComposer} from './append.composer';
 
 export const RULE_COMPOSERS = [
+  new FMLAppendRuleComposer(),
   new FMLConstantRuleComposer(),
   new FMLCopyRuleComposer(),
   new FMLDefaultRuleComposer(),
   new FMLRulegroupRuleComposer(),
-  new FMLTranslateRuleComposer()
+  new FMLTranslateRuleComposer(),
 ];
 
 export function getRuleComposer(action: string): FMLRuleComposer {

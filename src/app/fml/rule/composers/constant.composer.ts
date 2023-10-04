@@ -1,5 +1,6 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
-import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
+import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType} from './composer';
+import {VariableHolder} from '../../fml.utils';
 
 export class FMLConstantRuleComposer extends FMLRuleComposer {
   public action = 'constant';
@@ -9,8 +10,8 @@ export class FMLConstantRuleComposer extends FMLRuleComposer {
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
     ctx: FMLStructureObject,
-    vars: {[p: string]: string}
-  ): FMLRuleComposerReturnType {
+    vh: VariableHolder
+  ): FMLRuleComposerEvaluateReturnType {
     return {
       target: {
         transform: 'evaluate',

@@ -1,5 +1,6 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
-import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
+import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType} from './composer';
+import {VariableHolder} from '../../fml.utils';
 
 export class FMLCopyRuleComposer extends FMLRuleComposer {
   public action = 'copy';
@@ -9,15 +10,16 @@ export class FMLCopyRuleComposer extends FMLRuleComposer {
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,
     ctx: FMLStructureObject,
-    vars: {[p: string]: string}
-  ): FMLRuleComposerReturnType {
+    vh: VariableHolder
+  ): FMLRuleComposerEvaluateReturnType {
+    const {asVar} = vh;
     return {
       target: {
         transform: 'evaluate',
         variable: rule.name,
         parameter: [
-          {valueId: vars[rule.parameters[0].value]},
-          {valueString: vars[rule.parameters[0].value]}
+          {valueId: asVar(rule.parameters[0].value, true)},
+          {valueString: asVar(rule.parameters[0].value, true)}
         ]
       }
     };
