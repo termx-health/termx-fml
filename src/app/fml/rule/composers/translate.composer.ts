@@ -5,7 +5,7 @@ import {isDefined} from '@kodality-web/core-util';
 export class FMLTranslateRuleComposer extends FMLRuleComposer {
   public action = 'translate';
 
-  public generate(
+  public override generateEvaluate(
     fml: FMLStructure,
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,

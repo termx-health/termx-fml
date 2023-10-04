@@ -12,13 +12,14 @@ export interface FMLStructureSimple {
   objects: {[name: string]: Omit<FMLStructureObject, 'rawFields'>},
   rules: FMLStructureRule[],
   connections: FMLStructureConnection[],
-  shareContext: boolean
+  shareContext: boolean,
+  notation: string
 }
 
 export interface FMLStructureExportSimple {
   groups: {[groupName: string]: FMLStructureSimple};
   conceptMaps: FMLStructureConceptMap[];
-  version: '1.3';
+  version: '1.4';
 }
 
 export class FMLStructureSimpleMapper {
@@ -42,6 +43,7 @@ export class FMLStructureSimpleMapper {
       fmlGroup.rules = plainToInstance(FMLStructureRule, _fmlGroup.rules);
       fmlGroup._connections = plainToInstance(FMLStructureConnection, _fmlGroup.connections);
       fmlGroup.shareContext = _fmlGroup.shareContext;
+      fmlGroup.notation = _fmlGroup.notation as any;
     });
 
     return fml;
@@ -60,11 +62,12 @@ export class FMLStructureSimpleMapper {
           objects: group(simpleObjects, o => o.name),
           rules: fmlGroup.rules,
           connections: fmlGroup.connections,
-          shareContext: fmlGroup.shareContext
+          shareContext: fmlGroup.shareContext,
+          notation: fmlGroup.notation
         };
       }),
       conceptMaps: fml.conceptMaps,
-      version: '1.3'
+      version: '1.4'
     };
   }
 }

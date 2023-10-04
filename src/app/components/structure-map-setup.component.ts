@@ -87,7 +87,6 @@ interface ModalData {
                   class="m-alert--vertical"
                   style="margin-top: 0.5rem"
                   mType="info"
-                  mTitle="Produced API may change!"
                   mDescription="Use produced objects at your own responsibility"
                   mShowIcon
               />

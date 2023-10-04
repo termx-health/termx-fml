@@ -4,7 +4,7 @@ import {FMLRuleComposer, FMLRuleComposerReturnType} from './composer';
 export class FMLWhereRuleComposer extends FMLRuleComposer {
   public action = 'where';
 
-  public generate(
+  public generateEvaluate(
     fml: FMLStructure,
     fmlGroup: FMLStructureGroup,
     rule: FMLStructureRule,

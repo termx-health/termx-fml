@@ -140,6 +140,7 @@ export class FMLStructureGroup {
 
   /* true = generate single rule */
   shareContext = false;
+  notation: 'fml' | 'evaluate' = 'fml';
   external = false;
   externalMapUrl: string;
 
@@ -400,6 +401,12 @@ export class FMLStructure {
       .map(c => {
         // for each connection create sub fml
         const fmlGroup = new FMLStructureGroup(_fmlGroup.name, () => this.bundle);
+        // fixme: very tedious to copy every new field
+        fmlGroup.shareContext = _fmlGroup.shareContext;
+        fmlGroup.notation = _fmlGroup.notation;
+        fmlGroup.external = _fmlGroup.external;
+        fmlGroup.externalMapUrl = _fmlGroup.externalMapUrl;
+
         const _copyResources = (obj): void => {
           if (_objects[obj]) {
             fmlGroup.objects[obj] = _objects[obj];
