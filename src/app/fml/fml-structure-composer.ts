@@ -270,7 +270,7 @@ export class FmlStructureComposer {
             }
 
             smRule.rule.push({
-              name: `DSET_${SEQUENCE.next()}`,
+              name: `dset_${SEQUENCE.next()}`,
               source: [{
                 context: asVar(src.sourceObject),
                 element: src.field,

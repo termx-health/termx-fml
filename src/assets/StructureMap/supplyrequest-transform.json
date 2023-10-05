@@ -1,0 +1,288 @@
+{
+  "resourceType": "StructureMap",
+  "url": "http://termx.health/fhir/StructureMap/structuremap-supplyrequest-transform",
+  "name": "supplyrequest-transform",
+  "status": "draft",
+  "group": [
+    {
+      "name": "main",
+      "input": [
+        {
+          "name": "ActivityDefinition",
+          "type": "ActivityDefinition",
+          "mode": "source"
+        },
+        {
+          "name": "SupplyRequest",
+          "type": "SupplyRequest",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "rule_21",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "status1",
+              "parameter": [
+                {
+                  "valueString": "'draft'"
+                },
+                {
+                  "valueId": "ActivityDefinition"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "status",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "status1"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_22",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "category2",
+              "parameter": [
+                {
+                  "valueString": "'non-stock'"
+                },
+                {
+                  "valueId": "ActivityDefinition"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "category",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "category2"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_23",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "a",
+              "parameter": [
+                {
+                  "valueString": "%ActivityDefinition.quantity"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "category",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "a"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_24",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "priority3",
+              "parameter": [
+                {
+                  "valueString": "'routine'"
+                },
+                {
+                  "valueId": "ActivityDefinition"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "priority",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "priority3"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_25",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "context": "SupplyRequest",
+              "element": "item",
+              "variable": "a",
+              "transform": "create",
+              "parameter": [
+                {
+                  "valueString": "CodeableReference"
+                }
+              ]
+            },
+            {
+              "transform": "evaluate",
+              "variable": "b",
+              "parameter": [
+                {
+                  "valueString": "%ActivityDefinition.code"
+                }
+              ]
+            },
+            {
+              "context": "a",
+              "element": "concept",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "b"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_26",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "when7",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                },
+                {
+                  "valueId": "ActivityDefinition"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "occurrence",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "when7"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        },
+        {
+          "name": "rule_27",
+          "source": [
+            {
+              "context": "ActivityDefinition"
+            }
+          ],
+          "target": [
+            {
+              "transform": "evaluate",
+              "variable": "authoredOn8",
+              "parameter": [
+                {
+                  "valueString": "now()"
+                },
+                {
+                  "valueId": "ActivityDefinition"
+                }
+              ]
+            },
+            {
+              "context": "SupplyRequest",
+              "element": "authoredOn",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "authoredOn8"
+                }
+              ]
+            }
+          ],
+          "rule": [],
+          "dependent": []
+        }
+      ]
+    }
+  ],
+  "extension": [
+    {
+      "url": "fml-export",
+      "valueString": "{\"groups\":{\"main\":{\"objects\":{\"ActivityDefinition\":{\"expanded\":false,\"element\":{\"id\":\"ActivityDefinition\",\"path\":\"ActivityDefinition\",\"short\":\"The definition of a specific activity to be taken, independent of any particular patient or context\",\"definition\":\"This resource allows for the definition of some activity to be performed, independent of a particular patient, practitioner, or other performance context.\",\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"ActivityDefinition\",\"min\":0,\"max\":\"*\"},\"constraint\":[{\"key\":\"cnl-0\",\"severity\":\"warning\",\"human\":\"Name should be usable as an identifier for the module by machine processing applications such as code generation\",\"expression\":\"name.exists() implies name.matches('^[A-Z]([A-Za-z0-9_]){1,254}$')\",\"source\":\"http://hl7.org/fhir/StructureDefinition/ActivityDefinition\"}],\"mustSupport\":false,\"isModifier\":false,\"isSummary\":false,\"mapping\":[{\"identity\":\"w5\",\"map\":\"conformance.behavior,clinical.general\"},{\"identity\":\"workflow\",\"map\":\"Definition\"},{\"identity\":\"rim\",\"map\":\"Act[classCode=ACT; moodCode=DEFN]\"}]},\"resource\":\"ActivityDefinition\",\"url\":\"http://hl7.org/fhir/StructureDefinition/ActivityDefinition\",\"name\":\"ActivityDefinition\",\"mode\":\"source\",\"_nodeId\":1,\"position\":{\"x\":94,\"y\":301},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"url\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"version\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"versionAlgorithm\",\"types\":[\"string\",\"Coding\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"name\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"title\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"subtitle\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"experimental\",\"types\":[\"boolean\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"subject\",\"types\":[\"CodeableConcept\",\"Reference\",\"canonical\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"date\",\"types\":[\"dateTime\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"publisher\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"contact\",\"types\":[\"ContactDetail\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"description\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"useContext\",\"types\":[\"UsageContext\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"jurisdiction\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"purpose\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"usage\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"copyright\",\"types\":[\"markdown\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"copyrightLabel\",\"types\":[\"string\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"approvalDate\",\"types\":[\"date\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"lastReviewDate\",\"types\":[\"date\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"effectivePeriod\",\"types\":[\"Period\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"topic\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"author\",\"types\":[\"ContactDetail\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"editor\",\"types\":[\"ContactDetail\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"reviewer\",\"types\":[\"ContactDetail\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"endorser\",\"types\":[\"ContactDetail\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"relatedArtifact\",\"types\":[\"RelatedArtifact\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"library\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"kind\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"profile\",\"types\":[\"canonical\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"intent\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"priority\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"doNotPerform\",\"types\":[\"boolean\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"timing\",\"types\":[\"Timing\",\"Age\",\"Range\",\"Duration\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"asNeeded\",\"types\":[\"boolean\",\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"location\",\"types\":[\"CodeableReference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"participant\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"participant.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.type\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.typeCanonical\",\"types\":[\"canonical\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.typeReference\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.role\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"participant.function\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"product\",\"types\":[\"Reference\",\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"quantity\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"dosage\",\"types\":[\"Dosage\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"bodySite\",\"types\":[\"CodeableConcept\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"specimenRequirement\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"observationRequirement\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"observationResultRequirement\",\"types\":[\"canonical\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"transform\",\"types\":[\"canonical\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"dynamicValue\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"dynamicValue.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"dynamicValue.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"dynamicValue.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"dynamicValue.path\",\"types\":[\"string\"],\"multiple\":false,\"required\":true,\"backbonePart\":true},{\"name\":\"dynamicValue.expression\",\"types\":[\"Expression\"],\"multiple\":false,\"required\":true,\"backbonePart\":true}]},\"SupplyRequest\":{\"expanded\":false,\"element\":{\"id\":\"SupplyRequest\",\"path\":\"SupplyRequest\",\"short\":\"Request for a medication, substance or device\",\"definition\":\"A record of a request to deliver a medication, substance or device used in the healthcare setting to a particular destination for a particular person or organization.\",\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"SupplyRequest\",\"min\":0,\"max\":\"*\"},\"constraint\":[{\"key\":\"dom-2\",\"severity\":\"error\",\"human\":\"If the resource is contained in another resource, it SHALL NOT contain nested Resources\",\"expression\":\"contained.contained.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-3\",\"severity\":\"error\",\"human\":\"If the resource is contained in another resource, it SHALL be referred to from elsewhere in the resource or SHALL refer to the containing resource\",\"expression\":\"contained.where((('#'+id in (%resource.descendants().reference | %resource.descendants().ofType(canonical) | %resource.descendants().ofType(uri) | %resource.descendants().ofType(url))) or descendants().where(reference = '#').exists() or descendants().where(ofType(canonical) = '#').exists() or descendants().where(ofType(canonical) = '#').exists()).not()).trace('unmatched', id).empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-4\",\"severity\":\"error\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a meta.versionId or a meta.lastUpdated\",\"expression\":\"contained.meta.versionId.empty() and contained.meta.lastUpdated.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"key\":\"dom-5\",\"severity\":\"error\",\"human\":\"If a resource is contained in another resource, it SHALL NOT have a security label\",\"expression\":\"contained.meta.security.empty()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"},{\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice\",\"valueBoolean\":true},{\"url\":\"http://hl7.org/fhir/StructureDefinition/elementdefinition-bestpractice-explanation\",\"valueMarkdown\":\"When a resource has no narrative, only systems that fully understand the data can display the resource to a human safely. Including a human readable representation in the resource makes for a much more robust eco-system and cheaper handling of resources by intermediary systems. Some ecosystems restrict distribution of resources to only those systems that do fully understand the resources, and as a consequence implementers may believe that the narrative is superfluous. However experience shows that such eco-systems often open up to new participants over time.\"}],\"key\":\"dom-6\",\"severity\":\"warning\",\"human\":\"A resource should have narrative for robust management\",\"expression\":\"text.`div`.exists()\",\"source\":\"http://hl7.org/fhir/StructureDefinition/DomainResource\"}],\"mustSupport\":false,\"isModifier\":false,\"isSummary\":false,\"mapping\":[{\"identity\":\"rim\",\"map\":\"Entity, Role, or Act,Act[moodCode<=INT]\"},{\"identity\":\"workflow\",\"map\":\"Request\"},{\"identity\":\"w5\",\"map\":\"workflow.order\"},{\"identity\":\"v2\",\"map\":\"ORC\"}]},\"resource\":\"SupplyRequest\",\"url\":\"http://hl7.org/fhir/StructureDefinition/SupplyRequest\",\"name\":\"SupplyRequest\",\"mode\":\"target\",\"_nodeId\":2,\"position\":{\"x\":905,\"y\":226},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"meta\",\"types\":[\"Meta\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"implicitRules\",\"types\":[\"uri\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"language\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"text\",\"types\":[\"Narrative\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"contained\",\"types\":[\"Resource\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"identifier\",\"types\":[\"Identifier\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"status\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"basedOn\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"category\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"priority\",\"types\":[\"code\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"deliverFor\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"item\",\"types\":[\"CodeableReference\"],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"quantity\",\"types\":[\"Quantity\"],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"parameter\",\"types\":[\"BackboneElement\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"parameter.id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"parameter.extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"parameter.modifierExtension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":true},{\"name\":\"parameter.code\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"parameter.value\",\"types\":[\"CodeableConcept\",\"Quantity\",\"Range\",\"boolean\"],\"multiple\":false,\"required\":false,\"backbonePart\":true},{\"name\":\"occurrence\",\"types\":[\"dateTime\",\"Period\",\"Timing\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"authoredOn\",\"types\":[\"dateTime\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"requester\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"supplier\",\"types\":[\"Reference\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"reason\",\"types\":[\"CodeableReference\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"deliverFrom\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"deliverTo\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false}]},\"SupplyRequest.item\":{\"expanded\":false,\"element\":{\"id\":\"CodeableReference\",\"extension\":[{\"url\":\"http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status\",\"valueCode\":\"draft\"}],\"path\":\"CodeableReference\",\"short\":\"Reference to a resource or a concept\",\"definition\":\"A reference to a resource (by instance), or instead, a reference to a concept defined in a terminology or ontology (by class).\",\"min\":0,\"max\":\"*\",\"base\":{\"path\":\"CodeableReference\",\"min\":0,\"max\":\"*\"},\"constraint\":[{\"key\":\"ele-1\",\"severity\":\"error\",\"human\":\"All FHIR elements must have a @value or children\",\"expression\":\"hasValue() or (children().count() > id.count())\",\"source\":\"http://hl7.org/fhir/StructureDefinition/Element\"}],\"isModifier\":false,\"mapping\":[{\"identity\":\"rim\",\"map\":\"n/a\"}]},\"resource\":\"CodeableReference\",\"url\":\"http://hl7.org/fhir/StructureDefinition/CodeableReference\",\"name\":\"SupplyRequest.item\",\"mode\":\"object\",\"_nodeId\":3,\"position\":{\"x\":624,\"y\":302},\"fields\":[{\"name\":\"$this\",\"types\":[],\"multiple\":false,\"required\":true,\"backbonePart\":false},{\"name\":\"id\",\"types\":[\"http://hl7.org/fhirpath/System.String\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"extension\",\"types\":[\"Extension\"],\"multiple\":true,\"required\":false,\"backbonePart\":false},{\"name\":\"concept\",\"types\":[\"CodeableConcept\"],\"multiple\":false,\"required\":false,\"backbonePart\":false},{\"name\":\"reference\",\"types\":[\"Reference\"],\"multiple\":false,\"required\":false,\"backbonePart\":false}]}},\"rules\":[{\"expanded\":true,\"mode\":\"rule\",\"name\":\"status#1\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"'draft'\"},{\"type\":\"var\",\"value\":\"ActivityDefinition\"}],\"_nodeId\":4,\"position\":{\"x\":424,\"y\":72}},{\"expanded\":true,\"mode\":\"rule\",\"name\":\"category#2\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"'non-stock'\"},{\"type\":\"var\",\"value\":\"ActivityDefinition\"}],\"_nodeId\":5,\"position\":{\"x\":425,\"y\":161}},{\"expanded\":true,\"mode\":\"rule\",\"name\":\"priority#3\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"'routine'\"},{\"type\":\"var\",\"value\":\"ActivityDefinition\"}],\"_nodeId\":6,\"position\":{\"x\":424,\"y\":251}},{\"expanded\":true,\"mode\":\"rule\",\"name\":\"when#7\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"now()\"},{\"type\":\"var\",\"value\":\"ActivityDefinition\"}],\"_nodeId\":7,\"position\":{\"x\":420,\"y\":485}},{\"expanded\":true,\"mode\":\"rule\",\"name\":\"authoredOn#8\",\"action\":\"evaluate\",\"parameters\":[{\"type\":\"const\",\"value\":\"now()\"},{\"type\":\"var\",\"value\":\"ActivityDefinition\"}],\"_nodeId\":8,\"position\":{\"x\":419,\"y\":577}}],\"connections\":[{\"sourceObject\":\"status#1\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":10},{\"sourceObject\":\"category#2\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":12},{\"sourceObject\":\"priority#3\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":13},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":50,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":12},{\"sourceObject\":\"SupplyRequest.item\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":15},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":41,\"targetObject\":\"SupplyRequest.item\",\"targetFieldIdx\":3},{\"sourceObject\":\"when#7\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":18},{\"sourceObject\":\"authoredOn#8\",\"sourceFieldIdx\":0,\"targetObject\":\"SupplyRequest\",\"targetFieldIdx\":19},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":0,\"targetObject\":\"status#1\",\"targetFieldIdx\":0},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":0,\"targetObject\":\"category#2\",\"targetFieldIdx\":0},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":0,\"targetObject\":\"priority#3\",\"targetFieldIdx\":0},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":0,\"targetObject\":\"when#7\",\"targetFieldIdx\":0},{\"sourceObject\":\"ActivityDefinition\",\"sourceFieldIdx\":0,\"targetObject\":\"authoredOn#8\",\"targetFieldIdx\":0}],\"shareContext\":false,\"notation\":\"evaluate\"}},\"conceptMaps\":[],\"version\":\"1.4\"}"
+    }
+  ],
+  "contained": [],
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/ActivityDefinition",
+      "mode": "source",
+      "alias": "ActivityDefinition"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/SupplyRequest",
+      "mode": "target",
+      "alias": "SupplyRequest"
+    }
+  ],
+  "import": []
+}

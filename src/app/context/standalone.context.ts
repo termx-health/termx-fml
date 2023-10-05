@@ -63,7 +63,7 @@ export class StandaloneContext extends EditorContext {
   }
 
   private reinit(): void {
-    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY) ?? "step3");
+    localStorage.setItem(this.SELECTED_STRUCTURE_MAPS_KEY, localStorage.getItem(this.SELECTED_STRUCTURE_MAPS_KEY) ?? "supplyrequest-transform");
 
     this.loadStructureMap().subscribe(resp => {
       this.loadBundle(resp).subscribe(bundle => {
