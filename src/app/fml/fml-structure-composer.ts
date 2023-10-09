@@ -258,7 +258,7 @@ export class FmlStructureComposer {
           .filter(isDefined);
 
         if (ruleSmRules.length) {
-          smRule.rule.push(nestRules(ruleSmRules).main);
+          smRule.rule.push(nestRules(ruleSmRules).mainOptimized);
         }
 
 

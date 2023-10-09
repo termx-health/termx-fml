@@ -1,7 +1,7 @@
 import {FMLEditor} from './fml-editor';
 import {FMLStructureObject} from './fml-structure';
-import {group, isDefined} from '@kodality-web/core-util';
-import {StructureMapGroupRule} from 'fhir/r5';
+import {group, isDefined, isNil} from '@kodality-web/core-util';
+import {StructureMapGroupRule, StructureMapGroupRuleSource} from 'fhir/r5';
 
 /* StructureMap */
 
@@ -36,37 +36,57 @@ export function variableHolder(inputObjects: FMLStructureObject[] = []): Variabl
 }
 
 
-export const nestRules = (smRules: StructureMapGroupRule[]): {main: StructureMapGroupRule, last: StructureMapGroupRule} => {
+export const nestRules = (smRules: StructureMapGroupRule[]): {
+  main: StructureMapGroupRule,
+  mainOptimized: StructureMapGroupRule,
+  last: StructureMapGroupRule
+} => {
   let _smRule: StructureMapGroupRule;
-  const ctx = smRules[0].source[0];
-
   smRules.forEach(r => {
-    // const src = r.source[0];
-    // const tgt = r.target[0];
-    //
-    // if (isNil(src.element)) {
-    //   // if src doesn't have element, it means it came from another rule
-    //   // substitute parameters with src.context
-    //   tgt.parameter
-    //     .filter(p => p.valueId === src.variable)
-    //     .forEach(p => p.valueId = src.context);
-    //
-    //   src.context = ctx?.context;
-    //   src.variable = undefined;
-    // } else {
-    //   ctx = src;
-    // }
-    //
-    // if (isNil(tgt.element)) {
-    //   tgt.context = undefined;
-    // }
-
     if (isDefined(_smRule)) {
       _smRule.rule.push(r);
     }
     _smRule = r;
   });
-  return {main: smRules[0], last: _smRule};
+
+  const _main = smRules[0];
+  const _mainOptimized = structuredClone(_main);
+  optimizeNestRules(_mainOptimized);
+
+  return {
+    main: _main,
+    mainOptimized: _mainOptimized,
+    last: _smRule
+  };
+};
+
+
+export const optimizeNestRules = (smRule: StructureMapGroupRule, ctx?: StructureMapGroupRuleSource): void => {
+  const src = requireSingle(smRule.source, `${smRule.name} too many sources`);
+  const tgt = requireSingle(smRule.target, `${smRule.name} too many targets`);
+
+  ctx ??= src;
+
+  if (isNil(src.element)) {
+    // {context: 'rule_12', variable: 'a'}
+    // if src doesn't have element, it means it came from another rule
+    // substitute parameters with src.context
+    tgt.parameter
+      .filter(p => p.valueId === src.variable)
+      .forEach(p => p.valueId = src.context);
+
+    src.context = ctx?.context;
+    src.variable = undefined;
+  } else {
+    ctx = src;
+  }
+
+  if (isNil(tgt.element)) {
+    // tgt.element does not exist when connection is made with another rule
+    tgt.context = undefined;
+  }
+
+  smRule.rule?.forEach(r => optimizeNestRules(r, ctx));
 };
 
 
