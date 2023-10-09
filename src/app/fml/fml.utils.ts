@@ -35,7 +35,6 @@ export function variableHolder(inputObjects: FMLStructureObject[] = []): Variabl
   };
 }
 
-
 export const nestRules = (smRules: StructureMapGroupRule[]): {
   main: StructureMapGroupRule,
   mainOptimized: StructureMapGroupRule,
@@ -60,30 +59,31 @@ export const nestRules = (smRules: StructureMapGroupRule[]): {
   };
 };
 
-
 export const optimizeNestRules = (smRule: StructureMapGroupRule, ctx?: StructureMapGroupRuleSource): void => {
-  const src = requireSingle(smRule.source, `${smRule.name} too many sources`);
-  const tgt = requireSingle(smRule.target, `${smRule.name} too many targets`);
+  const src = requireSingle(smRule.source, `${smRule.name} insufficient amount of sources`);
+  const tgt = getSingle(smRule.target, `${smRule.name} too many targets`);
 
   ctx ??= src;
 
-  if (isNil(src.element)) {
-    // {context: 'rule_12', variable: 'a'}
-    // if src doesn't have element, it means it came from another rule
-    // substitute parameters with src.context
-    tgt.parameter
-      .filter(p => p.valueId === src.variable)
-      .forEach(p => p.valueId = src.context);
+  if (isDefined(tgt)) {
+    if (isNil(src.element)) {
+      // {context: 'rule_12', variable: 'a'}
+      // if src doesn't have element, it means it came from another rule
+      // substitute parameters with src.context
+      tgt.parameter
+        .filter(p => p.valueId === src.variable)
+        .forEach(p => p.valueId = src.context);
 
-    src.context = ctx?.context;
-    src.variable = undefined;
-  } else {
-    ctx = src;
-  }
+      src.context = ctx?.context;
+      src.variable = undefined;
+    } else {
+      ctx = src;
+    }
 
-  if (isNil(tgt.element)) {
-    // tgt.element does not exist when connection is made with another rule
-    tgt.context = undefined;
+    if (isNil(tgt.element)) {
+      // tgt.element does not exist when connection is made with another rule
+      tgt.context = undefined;
+    }
   }
 
   smRule.rule?.forEach(r => optimizeNestRules(r, ctx));
@@ -196,7 +196,6 @@ export const SEQUENCE = {
     return ++this.current;
   }
 };
-
 export const VARIABLE_SEP = '#';
 export const asResourceVariable = (name: string): string => {
   return `${name}${VARIABLE_SEP}${SEQUENCE.next()}`;
@@ -229,6 +228,7 @@ export const normalize = (txt: string): string => {
       .replaceAll('_', '');
   }
 };
+
 
 /* Style */
 

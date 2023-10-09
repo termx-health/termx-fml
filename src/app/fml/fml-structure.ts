@@ -133,6 +133,8 @@ export class FMLStructureConceptMapMapping {
 
 /* Structure group */
 
+export type FMLStructureGroupNotation = 'fml' | 'evaluate';
+
 export class FMLStructureGroup {
   objects: {[name: string]: FMLStructureObject} = {};
   rules: FMLStructureRule[] = [];
@@ -140,7 +142,7 @@ export class FMLStructureGroup {
 
   /* true = generate single rule */
   shareContext = false;
-  notation: 'fml' | 'evaluate' = 'fml';
+  notation: FMLStructureGroupNotation = 'fml';
   external = false;
   externalMapUrl: string;
 
