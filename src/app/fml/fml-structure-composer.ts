@@ -212,9 +212,11 @@ export class FmlStructureComposer {
         ],
         target: [
           tgtName in vars ? {
+            // reuse, e.g. ".. -> Y then {"
             transform: 'copy',
             parameter: [{valueId: asVar(tgtName)}],
           } : {
+            // sub element select, e.g. "objekti.v2li as field"
             context: tgtName.split(MAGIC_STR)[0],
             element: tgtName.split(MAGIC_STR)[1],
             variable: vars[tgtName] = toVar(tgtCtx.name)
@@ -223,6 +225,23 @@ export class FmlStructureComposer {
         rule: [],
         dependent: []
       };
+
+
+      // handle "create('Resource')"
+      if (['object'].includes(tgtCtx.mode)) {
+        // todo: configurable URL
+        const objResourceType = tgtCtx.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
+          ? tgtCtx.resource
+          : tgtCtx.url;
+
+        if (FMLStructureGroup.isBackboneElement(tgtCtx.resource)) {
+          // do nothing, everything is already set
+        } else {
+          const target = _rule.target.at(-1);
+          target.transform = 'create';
+          target.parameter = [{valueString: objResourceType}];
+        }
+      }
 
 
       if (smRule) {
@@ -442,7 +461,7 @@ export class FmlStructureComposer {
                   element: n.name,
                   variable:
                     vars[tgtObjBaseName] =
-                      toVar(`${asVar(baseName, true)}.${n.name}`), // todo: document what it does?
+                      toVar(`${asVar(baseName, true)}.${n.name}`),
                   condition: transformConditionParam(tgtObj.condition),
                   listMode: listMapping[tgtObj.listOption]
                 });
@@ -456,7 +475,7 @@ export class FmlStructureComposer {
                 transform: 'evaluate',
                 variable:
                   vars[`${obj.name}.${n.name}`] =
-                    toVar(`${asVar(obj.name, true)}.${n.name}`), // todo: document what it does?
+                    toVar(`${asVar(obj.name, true)}.${n.name}`),
 
                 parameter: [
                   {valueString: `%${asVar(baseName)}.${n.name}`},
