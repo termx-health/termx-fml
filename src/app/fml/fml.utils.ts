@@ -11,8 +11,8 @@ export interface VariableHolder {
   asVar: (name: string, raw?: boolean) => string
 }
 
-export function variableHolder(inputObjects: FMLStructureObject[]): VariableHolder {
-  const vars = group(inputObjects, o => o.name, o => o.name);
+export function variableHolder(inputObjects: FMLStructureObject[] = []): VariableHolder {
+  const vars = group(inputObjects, o => o.name, o => normalize(o.name));
   const alphabet = getAlphabet().map(el => el.toLowerCase());
 
   let seq = -1;
@@ -38,7 +38,7 @@ export function variableHolder(inputObjects: FMLStructureObject[]): VariableHold
 
 export const nestRules = (smRules: StructureMapGroupRule[]): {main: StructureMapGroupRule, last: StructureMapGroupRule} => {
   let _smRule: StructureMapGroupRule;
-  let ctx = smRules[0].source[0];
+  const ctx = smRules[0].source[0];
 
   smRules.forEach(r => {
     // const src = r.source[0];
@@ -200,12 +200,12 @@ export const getAlphabet = (): string[] => {
 
 export const join = (...els: string[]): string => {
   return els.filter(isDefined).join('.');
-}
+};
 
 export const normalize = (txt: string): string => {
   if (isDefined(txt)) {
     return txt
-      .replaceAll(/[.#_]/gm, '_')
+      .replaceAll(/[.#_-]/gm, '_')
       .replaceAll('_', '');
   }
 };

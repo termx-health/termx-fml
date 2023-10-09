@@ -167,8 +167,6 @@ export class StructureMapSetupComponent {
         'produced': (u: string) => this.bundle.entry.find(e => e.resource.url === u)?.resource?.id
       } [mode](url);
 
-      console.log(mapping)
-
       const obj = fmlGroup.newFMLObject(mapping, mapping, mode);
       if (obj.resource !== obj.name) {
         obj.name = asResourceVariable(obj.name);

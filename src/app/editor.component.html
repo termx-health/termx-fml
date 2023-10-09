@@ -91,7 +91,7 @@
               />
             </h5>
             <div style="display: flex; flex-direction: column; gap: var(--gap-default)">
-              <m-checkbox [(ngModel)]="fmlGroup.shareContext" [disabled]="fmlGroup.notation === 'fml'">
+              <m-checkbox [(ngModel)]="fmlGroup.shareContext">
                 <div>Share context</div>
                 <div class="description">Creates single rule. Result of rule transformation could be used by other rules</div>
               </m-checkbox>
@@ -100,7 +100,7 @@
                 [ngModel]="fmlGroup.notation === 'fml'"
                 (ngModelChange)="onFmlNotationChange($event)"
               >
-                <div>FML notation <m-icon mCode="warning" m-tooltip mTitle="Transformers are not supported, yet." mPosition="right"/></div>
+                <div>FML notation <m-icon mCode="warning" m-tooltip mTitle="Groups are not supported yet" mPosition="right"/></div>
                 <div class="description">Uses FML syntax for StructureMap generation</div>
               </m-checkbox>
             </div>

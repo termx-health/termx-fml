@@ -79,7 +79,7 @@ export class FmlStructureComposer {
 
     // structure groups
     fml.groups.filter(g => !g.external).forEach(fmlGroup => {
-      const smGroup = this.generateGroup(fml, fmlGroup);
+      const smGroup = this.generateGroup(fml, fmlGroup, sm);
       sm.group.push(smGroup);
     });
 
@@ -90,7 +90,7 @@ export class FmlStructureComposer {
     return sm;
   }
 
-  private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup): StructureMapGroup {
+  private static generateGroup(fml: FMLStructure, fmlGroup: FMLStructureGroup, sm: StructureMap): StructureMapGroup {
     const smGroup: StructureMapGroup = {
       name: fmlGroup.name,
       input: [],
@@ -100,11 +100,14 @@ export class FmlStructureComposer {
     // group inputs
     smGroup.input = Object.values(fmlGroup.objects)
       .filter(o => ['source', 'target'].includes(o.mode))
-      .map(o => ({
-        name: normalize(o.name),
-        type: o.element.id.includes('.') ? 'Any' : o.name,
-        mode: o.mode as StructureMapGroupInput['mode'],
-      }));
+      .map(o => {
+        const smInput = sm.structure.find(s => s.url === o.url);
+        return ({
+          name: normalize(o.name),
+          type: o.element.id.includes('.') ? 'Any' : smInput?.alias ?? o.name,
+          mode: o.mode as StructureMapGroupInput['mode'],
+        });
+      });
 
 
     // group rules
@@ -190,9 +193,9 @@ export class FmlStructureComposer {
       const srcObj = getSingle(fmlGroup.getSources(srcCtx.name), "Has multiple sources");
       const tgtObj = getSingle(fmlGroup.getTargets(tgtCtx.name), "Has multiple targets");
 
-      const srcName = srcObj ? `${asVar(srcObj.sourceObject)}|$|${srcObj.field}` : srcCtx.name;
-      const tgtName = tgtObj ? `${asVar(tgtObj.targetObject)}|$|${tgtObj.field}` : tgtCtx.name;
-      //                                                           ^^^ MAGIC STRING
+      const MAGIC_STR = '|$|';
+      const srcName = srcObj ? `${asVar(srcObj.sourceObject)}${MAGIC_STR}${srcObj.field}` : srcCtx.name;
+      const tgtName = tgtObj ? `${asVar(tgtObj.targetObject)}${MAGIC_STR}${tgtObj.field}` : tgtCtx.name;
 
 
       // create sub-rule
@@ -202,8 +205,8 @@ export class FmlStructureComposer {
           srcName in vars ? {
             context: asVar(srcName),
           } : {
-            context: srcName.split('|$|')[0],
-            element: srcName.split('|$|')[1],
+            context: srcName.split(MAGIC_STR)[0],
+            element: srcName.split(MAGIC_STR)[1],
             variable: vars[srcName] = toVar(srcCtx.name)
           }
         ],
@@ -212,8 +215,8 @@ export class FmlStructureComposer {
             transform: 'copy',
             parameter: [{valueId: asVar(tgtName)}],
           } : {
-            context: tgtName.split('|$|')[0],
-            element: tgtName.split('|$|')[1],
+            context: tgtName.split(MAGIC_STR)[0],
+            element: tgtName.split(MAGIC_STR)[1],
             variable: vars[tgtName] = toVar(tgtCtx.name)
           }
         ],
