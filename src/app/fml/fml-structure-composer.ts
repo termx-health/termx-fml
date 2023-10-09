@@ -173,12 +173,11 @@ export class FmlStructureComposer {
       .filter(o => ['target', 'object'].includes(o.mode))
       .reverse();
 
-
     const vh = variableHolder(Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode)));
     const {vars, asVar, toVar} = vh;
 
     let frontOffset = -1, backOffset = -1;
-    let smRule: StructureMapGroupRule;
+    let SM_RULE: StructureMapGroupRule;
 
     for (let i = 0; i < 1001; i++) {
       if (frontOffset >= sourceTopology.length - 1 && backOffset >= targetTopology.length - 1) {
@@ -227,7 +226,35 @@ export class FmlStructureComposer {
       };
 
 
-      // handle "create('Resource')"
+      // src, handle "Array" transformation
+      if (isDefined(srcCtx.listOption)) {
+        const transformConditionParam = (c: string): string => {
+          if (isNil(c)) {
+            return;
+          }
+          Object.keys(fmlGroup.objects)
+            .sort((a, b) => b.length - a.length)
+            .forEach(n => {
+              if (c.includes(n) && vars[n]) {
+                c = c.replaceAll(n, vars[n]);
+              }
+            });
+          return c;
+        };
+
+        // mapping between our types and FHIR ones
+        const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
+          first: 'first',
+          last: 'last'
+        };
+
+        const source = _rule.source.at(-1);
+        source.condition = transformConditionParam(srcCtx.condition);
+        source.listMode = listMapping[srcCtx.listOption];
+      }
+
+
+      // tgt, handle "create('Resource')"
       if (['object'].includes(tgtCtx.mode)) {
         // todo: configurable URL
         const objResourceType = tgtCtx.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
@@ -244,14 +271,14 @@ export class FmlStructureComposer {
       }
 
 
-      if (smRule) {
+      if (SM_RULE) {
         // append _rule to "previous" SM rule
-        smRule.rule.push(_rule);
-        smRule = _rule;
+        SM_RULE.rule.push(_rule);
+        SM_RULE = _rule;
       } else {
         // set _rule as the group's main SM rule
         smGroup.rule.push(_rule);
-        smRule = _rule;
+        SM_RULE = _rule;
       }
 
 
@@ -277,7 +304,7 @@ export class FmlStructureComposer {
           .filter(isDefined);
 
         if (ruleSmRules.length) {
-          smRule.rule.push(nestRules(ruleSmRules).mainOptimized);
+          SM_RULE.rule.push(nestRules(ruleSmRules).mainOptimized);
         }
 
 
@@ -291,7 +318,7 @@ export class FmlStructureComposer {
               return;
             }
 
-            smRule.rule.push({
+            SM_RULE.rule.push({
               name: `dset_${SEQUENCE.next()}`,
               source: [{
                 context: asVar(src.sourceObject),
@@ -302,9 +329,7 @@ export class FmlStructureComposer {
                 context: asVar(tgtCtx.name),
                 element: tgtField.name,
                 transform: 'copy',
-                parameter: [
-                  {valueId: asVar(`${src.sourceObject}.${src.field}`)}
-                ]
+                parameter: [{valueId: asVar(`${src.sourceObject}.${src.field}`)}]
               }],
               rule: [],
               dependent: []
@@ -360,7 +385,7 @@ export class FmlStructureComposer {
 
 
     let ctx: FMLStructureObject;
-    let smRule: StructureMapGroupRule;
+    let SM_RULE: StructureMapGroupRule;
 
     topologicalOrder.forEach(name => {
       const obj = fmlGroup.objects[name];
@@ -376,8 +401,8 @@ export class FmlStructureComposer {
           * Create a new rule. In ideal world, it would be the first step (in reality it may not).
           * Sources are appended later.
           */
-          if (isNil(smRule)) {
-            smRule = {
+          if (isNil(SM_RULE)) {
+            SM_RULE = {
               name: `rule_${SEQUENCE.next()}`,
               source: [],
               target: [...newObjects],
@@ -386,7 +411,7 @@ export class FmlStructureComposer {
             };
 
             // creates the new rule inside of group
-            smGroup.rule.push(smRule);
+            smGroup.rule.push(SM_RULE);
           }
 
 
@@ -423,7 +448,7 @@ export class FmlStructureComposer {
 
               if (isDefined(tgtObj.listOption)) {
                 // rule CANNOT have multiple sources, we MUST nest them
-                if (smRule.source.length) {
+                if (SM_RULE.source.length) {
                   const _newSmRule = {
                     name: `rule_${SEQUENCE.next()}`,
                     source: [],
@@ -431,14 +456,12 @@ export class FmlStructureComposer {
                     rule: [],
                     dependent: []
                   };
-                  smRule.rule.push(_newSmRule);
-                  smRule = _newSmRule;
+                  SM_RULE.rule.push(_newSmRule);
+                  SM_RULE = _newSmRule;
                 }
 
                 // mapping between our types and FHIR ones
-                const listMapping: {
-                  [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode']
-                } = {
+                const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
                   first: 'first',
                   last: 'last'
                 };
@@ -456,7 +479,7 @@ export class FmlStructureComposer {
                   return c;
                 };
 
-                smRule.source.push({
+                SM_RULE.source.push({
                   context: asVar(baseName),
                   element: n.name,
                   variable:
@@ -471,7 +494,7 @@ export class FmlStructureComposer {
 
             if (n.name !== $THIS) {
               // default: extract object's field via. evaluate
-              smRule.target.push({
+              SM_RULE.target.push({
                 transform: 'evaluate',
                 variable:
                   vars[`${obj.name}.${n.name}`] =
@@ -486,15 +509,15 @@ export class FmlStructureComposer {
 
 
           // if no sources were added, add root one
-          if (smRule.source.length === 0) {
-            smRule.source.push({
+          if (SM_RULE.source.length === 0) {
+            SM_RULE.source.push({
               context: normalize(obj.name)
             });
           }
         }
 
 
-        if (isNil(smRule)) {
+        if (isNil(SM_RULE)) {
           throw new Error("Rule is not initialized.");
         }
 
@@ -518,14 +541,14 @@ export class FmlStructureComposer {
               return;
             }
 
-            if (smRule.dependent.length > 0) {
+            if (SM_RULE.dependent.length > 0) {
               // dependant rule must be the last one, variable assignments are forbidden after
               console.warn("Ignoring variable assigment, because dependant rule is already set");
               return;
             }
 
 
-            smRule.target.push({
+            SM_RULE.target.push({
               context: asVar(obj.name),
               element: n.name,
               transform: 'copy',
@@ -543,10 +566,10 @@ export class FmlStructureComposer {
       if (isDefined(rule)) {
         const {target, dependent} = getRuleComposer(rule.action).generateEvaluate(fml, fmlGroup, rule, ctx, vh);
         if (isDefined(target)) {
-          smRule.target.push(target);
+          SM_RULE.target.push(target);
         }
         if (isDefined(dependent)) {
-          smRule.dependent.push(dependent);
+          SM_RULE.dependent.push(dependent);
         }
       }
     });
