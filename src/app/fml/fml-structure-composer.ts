@@ -179,8 +179,9 @@ export class FmlStructureComposer {
     const vh = variableHolder(Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode)));
     const {vars, asVar, toVar} = vh;
 
-    let frontOffset = -1, backOffset = -1;
     let SM_RULE: StructureMapGroupRule;
+    let frontOffset = -1, backOffset = -1;
+    const processedRules = [];
 
     for (let i = 0; i < 1001; i++) {
       if (frontOffset >= sourceTopology.length - 1 && backOffset >= targetTopology.length - 1) {
@@ -192,12 +193,12 @@ export class FmlStructureComposer {
 
       // todo: what would happen if multiple sources and targets were returned?
       //  current implementation relies on a single source and target, bad?
-      const srcObj = getSingle(fmlGroup.getSources(srcCtx.name), "Has multiple sources");
-      const tgtObj = getSingle(fmlGroup.getTargets(tgtCtx.name), "Has multiple targets");
+      const srcParentRef = getSingle(fmlGroup.getSources(srcCtx.name), "Has multiple sources");
+      const tgtParentRef = getSingle(fmlGroup.getTargets(tgtCtx.name), "Has multiple targets");
 
       const MAGIC_STR = '|$|';
-      const srcName = srcObj ? `${asVar(srcObj.sourceObject)}${MAGIC_STR}${srcObj.field}` : srcCtx.name;
-      const tgtName = tgtObj ? `${asVar(tgtObj.targetObject)}${MAGIC_STR}${tgtObj.field}` : tgtCtx.name;
+      const srcName = srcParentRef ? `${asVar(srcParentRef.sourceObject)}${MAGIC_STR}${srcParentRef.field}` : srcCtx.name;
+      const tgtName = tgtParentRef ? `${asVar(tgtParentRef.targetObject)}${MAGIC_STR}${tgtParentRef.field}` : tgtCtx.name;
 
       const srcInitialized = srcName in vars;
       const tgtInitialized = tgtName in vars;
@@ -298,34 +299,44 @@ export class FmlStructureComposer {
 
 
       fmlGroup.inputFields(tgtCtx).forEach(tgtField => {
-        const _inputRules = (obj: string, name?: string): FMLStructureRule[] => {
-          const cons = fmlGroup.getSources(obj, name).map(c => c.sourceObject);
-          const rules = fmlGroup.rules.filter(r => cons.includes(r.name));
-          return [
-            ...rules,
-            ...rules.flatMap(r => _inputRules(r.name))
-          ].filter(isDefined);
-        };
-
         // find rules that lead to this "target.field"
-        const ruleSmRules = _inputRules(tgtCtx.name, tgtField.name)
-          .reverse()
-          .map(fmlRule => {
-            return getRuleComposer(fmlRule.action).generateFml(
-              fml, fmlGroup, fmlRule,
-              srcCtx, tgtCtx, vh
-            );
-          })
-          .filter(isDefined);
+        ((): void => {
+          const _inputRules = (obj: string, name?: string): FMLStructureRule[] => {
+            const cons = fmlGroup.getSources(obj, name).map(c => c.sourceObject);
+            const rules = fmlGroup.rules.filter(r => cons.includes(r.name));
+            return [
+              ...rules,
+              ...rules.flatMap(r => _inputRules(r.name))
+            ].filter(isDefined);
+          };
 
-        if (ruleSmRules.length) {
-          SM_RULE.rule.push(nestRules(ruleSmRules).mainOptimized);
-        }
+          const fmlRules = _inputRules(tgtCtx.name, tgtField.name).reverse();
+          const smRules = fmlRules
+            .map(fmlRule => {
+              return getRuleComposer(fmlRule.action).generateFml(
+                fml, fmlGroup, fmlRule,
+                srcCtx, tgtCtx, vh
+              );
+            })
+            .filter(isDefined);
+
+          if (smRules.length) {
+            const mainRuleName = fmlRules[0];
+            // check if rule was already processed
+            if (processedRules.includes(mainRuleName.name)) {
+              return;
+            }
+
+            SM_RULE.rule.push(nestRules(smRules).mainOptimized);
+            processedRules.push(mainRuleName.name);
+          }
+        })();
 
 
         // direct connections between "srcCtx.*" and "tgtCtx.tgtField"
         fmlGroup.getSources(tgtCtx.name, tgtField.name)
           .filter(src => src.sourceObject in vars)
+          .filter(src => src.sourceObject === srcCtx.name)
           .filter(src => isDefined(src.field))
           .forEach(src /* srcCtx */ => {
             if (src.field === $THIS) {

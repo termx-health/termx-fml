@@ -42,6 +42,11 @@ export class FMLRulegroupRuleComposer extends FMLRuleComposer {
     const sources = fmlGroup.getSources(rule.name).map(s => s.sourceObject);
     const targets = fmlGroup.getTargets(rule.name).map(t => t.targetObject);
 
+    if (![...sources, ...targets].every(n => n in vh.vars)) {
+      // don't create rule if any of objects is not yet initialized
+      return;
+    }
+
     return {
       name: `rule_group_${SEQUENCE.next()}`,
       source: [{
