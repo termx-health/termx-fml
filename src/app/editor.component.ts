@@ -7,7 +7,7 @@ import {collect, group, isNil, unique} from '@kodality-web/core-util';
 import {FmlStructureParser} from './fml/fml-structure-parser';
 import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
-import {asResourceVariable, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
+import {asResourceVariable, renderPath, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
 import {RuleViewComponent} from './components/fml/rule-view.component';
 import {createCustomElement} from '@angular/elements';
@@ -21,6 +21,15 @@ interface RuleDescription {
   action: RuleAction,
   name: string,
   description?: string
+}
+
+interface RuleGroup {
+  groupName: string,
+
+  external: boolean,
+  mapName?: string,
+  sources?: string[],
+  targets?: string[]
 }
 
 const RULES: RuleDescription[] = [
@@ -78,16 +87,6 @@ const RULES: RuleDescription[] = [
   }
 ];
 
-
-interface RuleGroup {
-  groupName: string,
-
-  external: boolean,
-  mapName?: string,
-  sources?: string[],
-  targets?: string[]
-}
-
 @Component({
   selector: 'app-editor',
   templateUrl: 'editor.component.html'
@@ -117,7 +116,8 @@ export class EditorComponent implements OnInit, OnChanges {
   // component
   protected ruleDescriptions: RuleDescription[] = RULES;
   protected ruleGroups: RuleGroup[] = [];
-  protected isAnimated = true;
+  public isAnimated = true;
+  public isPathHighlighted = false;
 
   @ViewChild(StructureMapSetupComponent)
   private setup: StructureMapSetupComponent;
@@ -167,7 +167,7 @@ export class EditorComponent implements OnInit, OnChanges {
   public ngOnInit(): void {
     window.addEventListener('fmlStructureObjectFieldSelect', (evt: CustomEvent) => {
       // Freaking event kung fu! Seems like wild hack, but works!
-      // Imitates the object view component behaviour.
+      // Imitates the object view component behaviour from the individual editor object container element.
       const {name, field} = evt.detail;
       this.objectViewComponent.onFieldClick(this.fmlGroup.objects[name], field);
     });
@@ -216,7 +216,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Public API */
+  // Public API
 
   public export(): StructureMap {
     this.editor._rerenderNodes();
@@ -257,6 +257,11 @@ export class EditorComponent implements OnInit, OnChanges {
     this.isAnimated = animated;
   }
 
+  public setPathHighlight(highlighted: boolean): void {
+    this.isPathHighlighted = highlighted;
+    this.highlightPath(this.nodeSelected?.id, true);
+  }
+
   public initFmlFromGroup(bundle: Bundle<StructureDefinition>, group: FMLStructureGroup): FMLStructure {
     const fml = new FMLStructure();
     fml.bundle = bundle;
@@ -270,7 +275,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Editor bar */
+  // Editor bar
 
   protected selectGroup(name: string): void {
     if (this.fml.getGroup(name)) {
@@ -332,46 +337,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Concept Map */
-
-  protected conceptMapEdit(cm = new FMLStructureConceptMap()): void {
-    this.conceptMap = structuredClone(cm);
-    this.conceptMap['_origin'] = cm;
-    this.conceptMap.mappings ??= [];
-    this.conceptMapModal.open();
-  }
-
-  protected conceptMapRemove(idx: number): void {
-    this.fml.conceptMaps.splice(idx, 1);
-  }
-
-  protected conceptMapReset(): void {
-    if (this.conceptMap) {
-      this.conceptMap.source = undefined;
-      this.conceptMap.target = undefined;
-      this.conceptMap.mappings = [];
-    }
-  }
-
-  protected conceptMapCancel(): void {
-    this.conceptMapModal.close();
-    this.conceptMap = undefined;
-  }
-
-  protected conceptMapApply(): void {
-    const idx = this.fml.conceptMaps.indexOf(this.conceptMap['_origin']);
-    if (idx !== -1) {
-      this.fml.conceptMaps.splice(idx, 1, this.conceptMap);
-    } else {
-      this.fml.conceptMaps.push(this.conceptMap);
-    }
-
-    this.conceptMapModal.close();
-    this.conceptMap = undefined;
-  }
-
-
-  /* Editor */
+  // Editor
 
   private initEditor(fml: FMLStructure, groupName = this.fml.mainGroupName): void {
     this.editor?.element.remove();
@@ -386,8 +352,14 @@ export class EditorComponent implements OnInit, OnChanges {
     const editor = this.editor = new FMLEditor(fml, groupName, element);
     editor.start();
 
-    editor.on('nodeSelected', id => this.nodeSelected = editor.getNodeFromId(id));
-    editor.on('nodeUnselected', () => this.nodeSelected = undefined);
+    editor.on('nodeSelected', id => {
+      this.nodeSelected = editor.getNodeFromId(id);
+      this.highlightPath(id);
+    });
+    editor.on('nodeUnselected', () => {
+      this.nodeSelected = undefined;
+      this.highlightPath();
+    });
     editor.on('nodeMoved', () => {
       const selectedNodeId = this.nodeSelected?.id;
       if (selectedNodeId) {
@@ -481,8 +453,13 @@ export class EditorComponent implements OnInit, OnChanges {
     });
   }
 
-
-  /* Structure tree */
+  private highlightPath(nodeId?: number, force = false): void {
+    if (this.isPathHighlighted) {
+      renderPath(this.editor, nodeId);
+    } else if (force) {
+      renderPath(this.editor);
+    }
+  }
 
   protected onFmlNotationChange(isSelected: boolean): void {
     this.fmlGroup.notation = isSelected ? 'fml' : 'evaluate';
@@ -490,6 +467,9 @@ export class EditorComponent implements OnInit, OnChanges {
       this.fmlGroup.shareContext = false;
     }
   }
+
+
+  // Structure tree
 
   protected onStructureItemSelect(parentObj: FMLStructureObject, field: string, type?: string): void {
     const mode: FMLStructureEntityMode = ['source', 'element'].includes(parentObj.mode) ? 'element' : 'object';
@@ -550,7 +530,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Drag & drop */
+  // Drag & drop
 
   protected onDragStart(
     ev: DragEvent,
@@ -608,7 +588,46 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Edit */
+  // Concept Map
+
+  protected conceptMapEdit(cm = new FMLStructureConceptMap()): void {
+    this.conceptMap = structuredClone(cm);
+    this.conceptMap['_origin'] = cm;
+    this.conceptMap.mappings ??= [];
+    this.conceptMapModal.open();
+  }
+
+  protected conceptMapRemove(idx: number): void {
+    this.fml.conceptMaps.splice(idx, 1);
+  }
+
+  protected conceptMapReset(): void {
+    if (this.conceptMap) {
+      this.conceptMap.source = undefined;
+      this.conceptMap.target = undefined;
+      this.conceptMap.mappings = [];
+    }
+  }
+
+  protected conceptMapCancel(): void {
+    this.conceptMapModal.close();
+    this.conceptMap = undefined;
+  }
+
+  protected conceptMapApply(): void {
+    const idx = this.fml.conceptMaps.indexOf(this.conceptMap['_origin']);
+    if (idx !== -1) {
+      this.fml.conceptMaps.splice(idx, 1, this.conceptMap);
+    } else {
+      this.fml.conceptMaps.push(this.conceptMap);
+    }
+
+    this.conceptMapModal.close();
+    this.conceptMap = undefined;
+  }
+
+
+  // Edit
 
   protected applyRule(rule: FMLStructureRule): void {
     if ('rule' in this.nodeSelected.data) {
@@ -625,7 +644,7 @@ export class EditorComponent implements OnInit, OnChanges {
   }
 
 
-  /* Utils */
+  // Utils
 
   protected availableRuleGroups = (groups: RuleGroup[], mainGroup: string, currentGroup: string): RuleGroup[] => {
     return groups.filter(({groupName}) => ![mainGroup, currentGroup].includes(groupName));

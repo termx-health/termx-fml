@@ -21,7 +21,6 @@ export class AppComponent {
   protected fml: {text: string, json: StructureMap};
   protected isIframe = isIframe();
   protected isDev = isDev();
-  protected isAnimated = true;
 
   @ViewChild('changeModal')
   public changeModal: MuiModalContainerComponent;
@@ -160,7 +159,8 @@ export class AppComponent {
     this.changeModal.close();
   }
 
-  // Validate
+
+  // Right side
 
   protected validate(): void {
     const sm = this.export();
@@ -168,10 +168,12 @@ export class AppComponent {
     this.router.navigate(['validate']);
   }
 
-  /* Right side */
-
   protected setAnimation(animated: boolean): void {
     this.editor.setAnimation(animated);
+  }
+
+  protected setPathHighlight(highlighted: boolean): void {
+    this.editor.setPathHighlight(highlighted);
   }
 
   protected zoomIn(): void {
@@ -219,7 +221,7 @@ export class AppComponent {
   }
 
 
-  /* Utils */
+  // Utils
 
   private export(): StructureMap {
     try {

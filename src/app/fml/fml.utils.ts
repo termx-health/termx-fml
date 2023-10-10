@@ -133,6 +133,67 @@ export function renderExpand(editor: FMLEditor, name: string): void {
   editor.updateConnectionNodes(`node-${node.id}`);
 }
 
+export function renderPath(editor: FMLEditor, id?: number): void {
+  const nodes = Array.from(document.getElementsByClassName('drawflow-node')) as HTMLElement[];
+  const connections = Array.from(document.getElementsByClassName('connection')) as HTMLElement[];
+
+  const hide = (el: HTMLElement) => {
+    el.style.filter = 'opacity(0.6) grayscale(1)';
+  };
+  const display = (el: HTMLElement) => {
+    el.style.filter = '';
+  };
+
+
+  const displaySources = (name: string): void => {
+    const {el, nodeId} = editor._getNodeElementByName(name);
+    display(el);
+
+    editor._fmlGroup.getSources(name).forEach(s => {
+      const connCls = `connection node_in_node-${nodeId} node_out_node-${editor._getNodeByName(s.sourceObject).id} `;
+      const inputConns = Array.from(document.getElementsByClassName(connCls)) as HTMLElement[];
+
+      inputConns.forEach(e => {
+        display(e);
+
+        const outNodeId = Array.from(e.classList).find(n => n.startsWith('node_out_node-')).slice('node_out_node-'.length);
+        const outNode = editor.getNodeFromId(outNodeId);
+        displaySources(outNode.name);
+      });
+    });
+  };
+
+
+  const displayTargets = (name: string): void => {
+    const {el, nodeId} = editor._getNodeElementByName(name);
+    display(el);
+
+    editor._fmlGroup.getTargets(name).forEach(s => {
+      const connCls = `connection node_in_node-${editor._getNodeByName(s.targetObject).id} node_out_node-${nodeId} `;
+      const outputConns = Array.from(document.getElementsByClassName(connCls)) as HTMLElement[];
+
+      outputConns.forEach(e => {
+        display(e);
+      });
+    });
+  };
+
+
+  if (isNil(id)) {
+    [...nodes, ...connections].forEach(el => display(el));
+    return;
+  }
+
+  try {
+    [...nodes, ...connections].forEach(el => hide(el));
+    displaySources(editor.getNodeFromId(id).name);
+    displayTargets(editor.getNodeFromId(id).name);
+  } catch (e) {
+    console.error("Couldn't highlight node path, reverting", e);
+    [...nodes, ...connections].forEach(el => display(el));
+  }
+}
+
 export function getPortNumber(str: string): number {
   return Number(str.split("_")[1]);
 }

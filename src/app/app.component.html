@@ -28,8 +28,8 @@
           </div>
         </m-button>
         <a *m-dropdown-item
-          class="m-items-middle"
-          (mClick)="configureActiveGroup()"
+            class="m-items-middle"
+            (mClick)="configureActiveGroup()"
         >
           <m-icon mCode="setting"/>
           Configure group
@@ -90,7 +90,11 @@
 
       <m-divider mVertical/>
       Animation
-      <nz-switch [(ngModel)]="isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
+      <nz-switch [ngModel]="editor?.isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
+
+      <m-divider mVertical/>
+      Highlight Path
+      <nz-switch [ngModel]="editor?.isPathHighlighted" (ngModelChange)="setPathHighlight($event)" nzSize="small"></nz-switch>
 
       <ng-container *ngIf="isIframe">
         <m-divider mVertical/>
@@ -101,13 +105,13 @@
 </div>
 
 <app-editor
-  *ngIf="ctx.structureMap$ | async as sm"
-  style="height: calc(100dvh - 2.5rem)"
-  [iframe]="isIframe"
-  [bundle]="ctx.bundle$ | async"
-  [structureMap]="sm"
-  [externalMaps]="ctx.externalStructureMaps$ | async"
-  [mapName]="sm.name"
+    *ngIf="ctx.structureMap$ | async as sm"
+    style="height: calc(100dvh - 2.5rem)"
+    [iframe]="isIframe"
+    [bundle]="ctx.bundle$ | async"
+    [structureMap]="sm"
+    [externalMaps]="ctx.externalStructureMaps$ | async"
+    [mapName]="sm.name"
 ></app-editor>
 
 
@@ -166,6 +170,3 @@
 
 <!-- Setup wizard -->
 <app-structure-map-setup #wizard [bundle]="ctx.bundle$ | async" (created)="initFromGroup($event.fmlGroup)"/>
-
-
-<app-update-version/>

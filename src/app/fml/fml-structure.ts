@@ -211,23 +211,25 @@ export class FMLStructureGroup {
   };
 
 
-  public getSources = (target: string, field?: string): {sourceObject: string, field?: string}[] => {
+  public getSources = (target: string, field?: string): {sourceObject: string, field?: string, fieldIdx?: number}[] => {
     return this.connections
       .filter(c => c.targetObject === target)
       .filter(c => isNil(field) || field === this.objects[c.targetObject].fields[c.targetFieldIdx]?.name)
       .map(c => ({
         sourceObject: c.sourceObject,
-        field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name
+        field: this.objects[c.sourceObject]?.fields[c.sourceFieldIdx]?.name,
+        fieldIdx: c.sourceFieldIdx
       }));
   };
 
-  public getTargets = (source: string, field?: string): {targetObject: string, field?: string}[] => {
+  public getTargets = (source: string, field?: string): {targetObject: string, field?: string, fieldIdx?: number}[] => {
     return this.connections
       .filter(c => c.sourceObject === source)
       .filter(c => isNil(field) || field === this.objects[c.sourceObject].fields[c.sourceFieldIdx]?.name)
       .map(c => ({
         targetObject: c.targetObject,
-        field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name
+        field: this.objects[c.targetObject]?.fields[c.targetFieldIdx]?.name,
+        fieldIdx: c.targetFieldIdx
       }));
   };
 
