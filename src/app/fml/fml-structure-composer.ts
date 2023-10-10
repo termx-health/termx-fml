@@ -160,7 +160,10 @@ export class FmlStructureComposer {
 
   private static generateRuleFmlNotation(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
     const topology = FMLGraph.fromFML(fmlGroup).topologySort();
-    const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse().filter(n => fmlGroup.objects[n]);
+    const topologicalOrder = Object.keys(topology)
+      .sort(e => topology[e])
+      .reverse()
+      .filter(n => fmlGroup.objects[n]);
 
     // order of "source" objects from "left" (-->)
     const sourceTopology = topologicalOrder
@@ -196,12 +199,14 @@ export class FmlStructureComposer {
       const srcName = srcObj ? `${asVar(srcObj.sourceObject)}${MAGIC_STR}${srcObj.field}` : srcCtx.name;
       const tgtName = tgtObj ? `${asVar(tgtObj.targetObject)}${MAGIC_STR}${tgtObj.field}` : tgtCtx.name;
 
+      const srcInitialized = srcName in vars;
+      const tgtInitialized = tgtName in vars;
 
       // create sub-rule
       const _rule: StructureMapGroupRule = {
         name: `rule_${SEQUENCE.next()}`,
         source: [
-          srcName in vars ? {
+          srcInitialized ? {
             context: asVar(srcName),
           } : {
             context: srcName.split(MAGIC_STR)[0],
@@ -210,7 +215,7 @@ export class FmlStructureComposer {
           }
         ],
         target: [
-          tgtName in vars ? {
+          tgtInitialized ? {
             // reuse, e.g. ".. -> Y then {"
             transform: 'copy',
             parameter: [{valueId: asVar(tgtName)}],
@@ -228,46 +233,56 @@ export class FmlStructureComposer {
 
       // src, handle "Array" transformation
       if (isDefined(srcCtx.listOption)) {
-        const transformConditionParam = (c: string): string => {
-          if (isNil(c)) {
-            return;
-          }
-          Object.keys(fmlGroup.objects)
-            .sort((a, b) => b.length - a.length)
-            .forEach(n => {
-              if (c.includes(n) && vars[n]) {
-                c = c.replaceAll(n, vars[n]);
-              }
-            });
-          return c;
-        };
+        ((): void => {
+          const transformConditionParam = (c: string): string => {
+            if (isNil(c)) {
+              return;
+            }
+            Object.keys(fmlGroup.objects)
+              .sort((a, b) => b.length - a.length)
+              .forEach(n => {
+                if (c.includes(n) && vars[n]) {
+                  c = c.replaceAll(n, vars[n]);
+                }
+              });
+            return c;
+          };
 
-        // mapping between our types and FHIR ones
-        const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
-          first: 'first',
-          last: 'last'
-        };
+          // mapping between our types and FHIR ones
+          const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
+            first: 'first',
+            last: 'last'
+          };
 
-        const source = _rule.source.at(-1);
-        source.condition = transformConditionParam(srcCtx.condition);
-        source.listMode = listMapping[srcCtx.listOption];
+          const source = _rule.source.at(-1);
+          source.condition = transformConditionParam(srcCtx.condition);
+          source.listMode = listMapping[srcCtx.listOption];
+        })();
       }
 
 
       // tgt, handle "create('Resource')"
       if (['object'].includes(tgtCtx.mode)) {
-        // todo: configurable URL
-        const objResourceType = tgtCtx.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
-          ? tgtCtx.resource
-          : tgtCtx.url;
+        ((): void => {
+          if (tgtInitialized) {
+            // skip, tgt is already initialized somewhere before
+            return;
+          }
 
-        if (FMLStructureGroup.isBackboneElement(tgtCtx.resource)) {
-          // do nothing, everything is already set
-        } else {
+          if (FMLStructureGroup.isBackboneElement(tgtCtx.resource)) {
+            // do nothing, everything is already set
+            return;
+          }
+
+          // todo: configurable URL
+          const objResourceType = tgtCtx.url.startsWith('http://hl7.org/fhir/StructureDefinition/')
+            ? tgtCtx.resource
+            : tgtCtx.url;
+
           const target = _rule.target.at(-1);
           target.transform = 'create';
           target.parameter = [{valueString: objResourceType}];
-        }
+        })();
       }
 
 
@@ -310,7 +325,7 @@ export class FmlStructureComposer {
 
         // direct connections between "srcCtx.*" and "tgtCtx.tgtField"
         fmlGroup.getSources(tgtCtx.name, tgtField.name)
-          .filter(src => src.sourceObject === srcCtx.name)
+          .filter(src => src.sourceObject in vars)
           .filter(src => isDefined(src.field))
           .forEach(src /* srcCtx */ => {
             if (src.field === $THIS) {
