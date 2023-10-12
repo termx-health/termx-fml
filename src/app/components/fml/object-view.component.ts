@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
-import {Bundle, StructureDefinition} from 'fhir/r5';
+import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {isDefined, isNil, unique} from '@kodality-web/core-util';
 
 @Component({
@@ -43,6 +43,8 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
           *ngIf="treeView"
           [definition]="object | apply: findDefinition: fmlGroup"
           [definitionBase]="object.element.path"
+          [selectFn]="object | apply: isElementSelectable"
+          (selected)="onElementFieldClick(object, $event)"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -153,6 +155,10 @@ export class ObjectViewComponent {
     }
   }
 
+  protected onElementFieldClick(object: FMLStructureObject, field: string): void {
+    this.onFieldClick(object, FMLStructureGroup.getElementField(field, object.element.id));
+  }
+
 
   protected updateObject(): void {
     this.objectChange.emit(this.object);
@@ -188,6 +194,27 @@ export class ObjectViewComponent {
 
   /* Utils */
 
+  protected isResourceSelectable = (f: FMLStructureObjectField, object: FMLStructureObject): boolean => {
+    return object.mode !== 'produced' && (this.fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource'));
+  };
+
+  protected isBackboneElementField = (f: FMLStructureObjectField): boolean => {
+    return FMLStructureGroup.isBackboneElementField(f);
+  };
+
+  protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
+    return fields.filter(f => f.name.startsWith(base));
+  };
+
+  protected isElementSelectable = (object: FMLStructureObject) => (e: ElementDefinition): boolean => {
+    const isBackboneElement = (e.path.substring(object.element.id.length + 1).match(/\./g) ?? []).length === 0;
+    return isBackboneElement && this.isResourceSelectable({
+      name: FMLStructureGroup.getElementField(e.path, object.element.id),
+      types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
+    }, object);
+  };
+
+
   protected isArrayElement = (obj: FMLStructureObject): boolean => {
     if (obj.mode !== 'element') {
       return;
@@ -210,15 +237,5 @@ export class ObjectViewComponent {
       .flatMap(sn => [sn, ...this.ctxVariables(sn)])
       .filter(unique)
       .filter(n => this.fmlGroup.objects[n]);
-  };
-
-  protected isResourceSelectable = (f: FMLStructureObjectField, object: FMLStructureObject): boolean => {
-    return object.mode !== 'produced' && (this.fmlGroup.isFieldSelectable(f) || f.types?.includes('Resource'));
-  };
-
-  protected isBackboneElementField = FMLStructureGroup.isBackboneElementField;
-
-  protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
-    return fields.filter(f => f.name.startsWith(base));
   };
 }

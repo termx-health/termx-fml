@@ -8,13 +8,13 @@ import {substringAfterLast} from '../../fml/fml.utils';
   selector: 'app-structure-definition-tree',
   template: `
     <m-tree
-        class="fml-tree"
-        *ngIf="options.length"
-        [mData]="options"
-        [mExpandedKeys]="[definition?.name]"
-        [mOption]="option"
-        [mAnimate]="false"
-        (mClick)="nodeClicked($event)"
+      class="fml-tree"
+      *ngIf="options.length"
+      [mData]="options"
+      [mExpandedKeys]="[definition?.name]"
+      [mOption]="option"
+      [mAnimate]="false"
+      (mClick)="nodeClicked($event)"
     >
       <ng-template #option let-node let-data="data">
         <div class="m-justify-between">
@@ -46,6 +46,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
   @Input() definition: StructureDefinition;
   @Input() definitionBase: string;
 
+  @Input() highlightFn: (el: ElementDefinition) => boolean;
   @Input() selectFn: (el: ElementDefinition) => boolean;
   @Output() selected = new EventEmitter<string>();
 
@@ -99,6 +100,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
             types: e.type?.map(t => t.code),
             multiple: e.max !== '1',
             required: e.min === 1,
+            highlighted: this.highlightFn?.(e)
           },
           selectable: this.selectFn?.(e) ?? false
         });

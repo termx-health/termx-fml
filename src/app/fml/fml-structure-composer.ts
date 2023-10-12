@@ -9,7 +9,7 @@ import {
   StructureMapStructure
 } from 'fhir/r5';
 import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {getSingle, nestRules, normalize, SEQUENCE, substringBeforeLast, VARIABLE_SEP, variableHolder} from './fml.utils';
+import {getSingle, join, nestRules, normalize, SEQUENCE, substringBeforeLast, VARIABLE_SEP, variableHolder} from './fml.utils';
 import {FMLGraph} from './fml-graph';
 import {getRuleComposer} from './rule/composers/_composers';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
@@ -190,6 +190,10 @@ export class FmlStructureComposer {
 
       const srcCtx = sourceTopology[++frontOffset] ?? sourceTopology[--frontOffset];
       const tgtCtx = targetTopology[++backOffset] ?? targetTopology[--backOffset];
+      if (isNil(srcCtx) || isNil(tgtCtx)) {
+        console.warn("srcCtx or tgtCtx is missing, skipping");
+        continue;
+      }
 
       // todo: what would happen if multiple sources and targets were returned?
       //  current implementation relies on a single source and target, bad?
@@ -197,8 +201,8 @@ export class FmlStructureComposer {
       const tgtParentRef = getSingle(fmlGroup.getTargets(tgtCtx.name), "Has multiple targets");
 
       const MAGIC_STR = '|$|';
-      const srcName = srcParentRef ? `${asVar(srcParentRef.sourceObject)}${MAGIC_STR}${srcParentRef.field}` : srcCtx.name;
-      const tgtName = tgtParentRef ? `${asVar(tgtParentRef.targetObject)}${MAGIC_STR}${tgtParentRef.field}` : tgtCtx.name;
+      const srcName = srcParentRef ? join([asVar(srcParentRef.sourceObject), srcParentRef.field], MAGIC_STR) : srcCtx.name;
+      const tgtName = tgtParentRef ? join([asVar(tgtParentRef.targetObject), tgtParentRef.field], MAGIC_STR) : tgtCtx.name;
 
       const srcInitialized = srcName in vars;
       const tgtInitialized = tgtName in vars;
@@ -221,7 +225,7 @@ export class FmlStructureComposer {
             transform: 'copy',
             parameter: [{valueId: asVar(tgtName)}],
           } : {
-            // sub element select, e.g. "objekti.v2li as field"
+            // sub element select, e.g. "objekti.v2li as Y"
             context: tgtName.split(MAGIC_STR)[0],
             element: tgtName.split(MAGIC_STR)[1],
             variable: vars[tgtName] = toVar(tgtCtx.name)

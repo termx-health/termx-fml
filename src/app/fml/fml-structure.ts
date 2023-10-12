@@ -78,9 +78,9 @@ export interface FMLStructureObjectField {
   types: string[];
 
   // meta-data
-  multiple: boolean;
-  required: boolean;
-  backbonePart: boolean;
+  multiple?: boolean;
+  required?: boolean;
+  backbonePart?: boolean;
 }
 
 
@@ -282,7 +282,7 @@ export class FMLStructureGroup {
     o.name = path;
     o.mode = mode;
     o.rawFields = selfFields.map(e => ({
-      name: e.path.substring(selfDefinition.id.length + 1).split("[x]")[0],
+      name: FMLStructureGroup.getElementField(e.path, selfDefinition.id),
       // fixme: the contentReference logic is not very clear
       types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
       multiple: e.max !== '1',
@@ -344,9 +344,13 @@ export class FMLStructureGroup {
     return f.types?.some(t => FMLStructureGroup.isBackboneElement(t) || t.startsWith("#"));
   };
 
-  public static isBackboneElement(resourceType: string): boolean {
+  public static isBackboneElement = (resourceType: string): boolean => {
     return ['BackboneElement', 'Element'].includes(resourceType);
-  }
+  };
+
+  public static getElementField = (path: string, base = ''): string => {
+    return path.substring(base.length + 1).split("[x]")[0];
+  };
 }
 
 

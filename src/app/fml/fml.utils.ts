@@ -278,9 +278,14 @@ export const getAlphabet = (): string[] => {
   return alpha.map((x) => String.fromCharCode(x));
 };
 
-export const join = (...els: string[]): string => {
+export function join(els: string[], sep: string): string ;
+export function join(...els: string[]): string ;
+export function join(...els: any[]): string {
+  if (Array.isArray(els[0]) && typeof els[1] === 'string') {
+    return els[0].filter(isDefined).join(els[1]);
+  }
   return els.filter(isDefined).join('.');
-};
+}
 
 export const normalize = (txt: string): string => {
   if (isDefined(txt)) {

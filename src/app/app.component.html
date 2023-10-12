@@ -28,8 +28,8 @@
           </div>
         </m-button>
         <a *m-dropdown-item
-            class="m-items-middle"
-            (mClick)="configureActiveGroup()"
+          class="m-items-middle"
+          (mClick)="configureActiveGroup()"
         >
           <m-icon mCode="setting"/>
           Configure group
@@ -88,13 +88,15 @@
       <m-icon-button mIcon="zoom-out" m-tooltip mTitle="Zoom Out" (mClick)="zoomOut()"/>
       <m-icon-button mIcon="zoom-in" m-tooltip mTitle="Zoom In" (mClick)="zoomIn()"/>
 
-      <m-divider mVertical/>
-      Animation
-      <nz-switch [ngModel]="editor?.isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"></nz-switch>
+      <ng-container *ngIf="!!editor">
+        <m-divider mVertical/>
+        Animation
+        <nz-switch [ngModel]="editor.isAnimated" (ngModelChange)="setAnimation($event)" nzSize="small"/>
 
-      <m-divider mVertical/>
-      Highlight Path
-      <nz-switch [ngModel]="editor?.isPathHighlighted" (ngModelChange)="setPathHighlight($event)" nzSize="small"></nz-switch>
+        <m-divider mVertical/>
+        Highlight Path
+        <nz-switch [ngModel]="editor.isPathHighlighted" (ngModelChange)="setPathHighlight($event)" nzSize="small"/>
+      </ng-container>
 
       <ng-container *ngIf="isIframe">
         <m-divider mVertical/>
@@ -105,13 +107,13 @@
 </div>
 
 <app-editor
-    *ngIf="ctx.structureMap$ | async as sm"
-    style="height: calc(100dvh - 2.5rem)"
-    [iframe]="isIframe"
-    [bundle]="ctx.bundle$ | async"
-    [structureMap]="sm"
-    [externalMaps]="ctx.externalStructureMaps$ | async"
-    [mapName]="sm.name"
+  *ngIf="ctx.structureMap$ | async as sm"
+  style="height: calc(100dvh - 2.5rem)"
+  [iframe]="isIframe"
+  [bundle]="ctx.bundle$ | async"
+  [structureMap]="sm"
+  [externalMaps]="ctx.externalStructureMaps$ | async"
+  [mapName]="sm.name"
 ></app-editor>
 
 
