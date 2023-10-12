@@ -333,7 +333,7 @@ export class FMLEditor extends Drawflow {
 
 
     const setHTMLPosition = (name: string): {nodeId: number, x: number, y: number} => {
-      const {el, nodeId} = this._getNodeElementByName(name);
+      const {el} = this._getNodeElementByName(name);
       const nodeWithPosition = dagreGraph.node(name);
       const y = nodeWithPosition.y - el.offsetHeight / 2;
       const x = nodeWithPosition.x - el.offsetWidth / 2;

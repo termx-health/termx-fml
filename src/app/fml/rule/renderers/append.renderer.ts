@@ -50,6 +50,12 @@ export class FMLAppendRuleRenderer extends FMLRuleRenderer {
     node: FMLDrawflowRuleNode, nodePort: number,
     source: FMLDrawflowObjectNode, sourcePort: number
   ): void {
+    // decrement the port index of the connection that comes after the nodePort
+    editor._fmlGroup.connections
+      .filter(c => c.targetObject === node.name)
+      .filter(c => nodePort < c.targetFieldIdx + 1)
+      .forEach(c => c.targetFieldIdx--);
+
     if (editor._getNodeInputConnections(node.id, nodePort).length === 0) {
       super.onInputConnectionRemove(editor, node, nodePort, source, sourcePort);
       editor.removeNodeInput(node.id, `input_${nodePort}`);
