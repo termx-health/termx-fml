@@ -53,6 +53,7 @@ export abstract class FMLRuleParser {
     const conns = [];
 
     fhirRuleTarget.parameter ??= [];
+
     // find valueId parameters
     const valueIdParams = fhirRuleTarget.parameter
       .filter(p => isDefined(p.valueId))
@@ -102,12 +103,10 @@ export abstract class FMLRuleParser {
     if (isNil(sourceObject)) {
       return [];
     }
-    return [
-      fmlGroup.newFMLConnection(
-        sourceObject, fmlGroup.objects[sourceObject].fieldIndex(sourceField) ?? 0,
-        rule.name, 0
-      )
-    ];
+    return [fmlGroup.newFMLConnection(
+      sourceObject, Math.max(fmlGroup.objects[sourceObject].fieldIndex(sourceField), 0),
+      rule.name, 0
+    )];
   }
 
   public connectTarget(
@@ -123,12 +122,11 @@ export abstract class FMLRuleParser {
     if (isNil(targetObject)) {
       return [];
     }
-    return [
-      fmlGroup.newFMLConnection(
-        rule.name, 0,
-        targetObject, fmlGroup.objects[targetObject].fieldIndex(targetField) ?? 0,
-      )
-    ];
+
+    return [fmlGroup.newFMLConnection(
+      rule.name, 0,
+      targetObject, Math.max(fmlGroup.objects[targetObject].fieldIndex(targetField), 0),
+    )];
   }
 
   public parseConnection(

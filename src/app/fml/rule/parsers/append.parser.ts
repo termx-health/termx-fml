@@ -24,7 +24,14 @@ export class FMLAppendRuleParser extends FMLRuleParser {
       fhirRuleSource.element = substringAfterLast(variable, '.');
     }
 
+    // all connections
     const connections = this.connect(fmlGroup, rule, fhirRuleSource, fhirRuleTarget, variables);
+
+    // input connections -> set incremental field index
+    connections
+      .filter(c => c.targetObject === rule.name)
+      .forEach((c, idx) => c.targetFieldIdx = idx);
+
     return {rule, connections};
   }
 }

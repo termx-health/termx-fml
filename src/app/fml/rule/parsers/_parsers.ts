@@ -13,8 +13,9 @@ export const RULE_PARSERS: FMLRuleParser[] = [
   new FMLUuidRuleParser(),
 ];
 
+const _parser = (a: string): FMLRuleParser => RULE_PARSERS.find(rr => rr.action === a);
+
 
 export function getRuleParser(action: string): FMLRuleParser {
-  const _find = (a): FMLRuleParser => RULE_PARSERS.find(rr => rr.action === a);
-  return _find(action) ?? _find('default');
+  return _parser(action) ?? _parser('default');
 }

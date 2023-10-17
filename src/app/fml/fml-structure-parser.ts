@@ -104,7 +104,7 @@ export class FmlStructureParser {
             // NB: FHIR rule name is used here!
             variables[r.variable] = `${fhirRule.name}`;
           } else {
-            variables[r.variable] = `${variables[r.context]}.${r.element}`;
+            variables[r.variable] = join(variables[r.context], r.element);
           }
         });
 
