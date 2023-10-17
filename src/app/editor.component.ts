@@ -154,7 +154,7 @@ export class EditorComponent implements OnInit, OnChanges {
             fmlGroup.external = true;
             fmlGroup.externalMapUrl = fhirMap.url;
             fmlGroup.objects = group(fhirGroup.input ?? [], s => s.name, s => {
-              const id = FmlStructureParser.findResourceId(s.type, {bundle: this.bundle, fhirMap});
+              const {id} = FmlStructureParser.findResourceId(s.type, {bundle: this.bundle, fhirMap});
               return fmlGroup.newFMLObject(id, id, s.mode);
             });
             this.putFmlGroup(fmlGroup);

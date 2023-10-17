@@ -102,13 +102,13 @@ export class FMLEditor extends Drawflow {
 
     this.on('nodeRemoved', nodeId => {
       Object.values(this._fmlGroup.objects).forEach(o => {
-        if (o['_nodeId'] === Number(nodeId)) {
+        if (o._nodeId === Number(nodeId)) {
           delete this._fmlGroup.objects[o.name];
         }
       });
 
       this._fmlGroup.rules.forEach(r => {
-        if (r['_nodeId'] === Number(nodeId)) {
+        if (r._nodeId === Number(nodeId)) {
           remove(this._fmlGroup.rules, r);
         }
       });
@@ -213,13 +213,13 @@ export class FMLEditor extends Drawflow {
     this._rerenderNodes();
   }
 
+
   /* Creator */
 
   public _createObjectNode(obj: FMLStructureObject, options?: {y?: number, x?: number}): number {
     if (isDefined(this._getNodeId(obj.name))) {
       throw Error(`Object node with name "${obj.name}" is already created`);
     }
-
 
     const fieldCount = obj.fields.length;
     const inputs: { [k in Exclude<FMLStructureEntityMode, 'rule'>]: number } = {
@@ -237,7 +237,6 @@ export class FMLEditor extends Drawflow {
       produced: 1
     };
 
-
     const nodeId = this.addNode(
       obj.name,
       inputs[obj.mode], outputs[obj.mode],
@@ -248,7 +247,7 @@ export class FMLEditor extends Drawflow {
       false
     );
 
-    this._updateObject(nodeId, obj.name, o => o['_nodeId'] = nodeId);
+    this._updateObject(nodeId, obj.name, o => o._nodeId = nodeId);
     return nodeId;
   }
 
@@ -267,9 +266,9 @@ export class FMLEditor extends Drawflow {
       false
     );
 
-    this._updateRule(nodeId, rule.name, r => r['_nodeId'] = nodeId);
-
+    this._updateRule(nodeId, rule.name, r => r._nodeId = nodeId);
     getRuleRenderer(rule.action).init(this, rule);
+
     return nodeId;
   }
 
@@ -284,11 +283,7 @@ export class FMLEditor extends Drawflow {
     const iIdx = typeof targetField === 'string' ? this._fmlGroup.objects[target].fieldIndex(targetField) + 1 : targetField;
 
     try {
-      this.addConnection(
-        this._getNodeId(source), this._getNodeId(target),
-        `output_${oIdx}`,
-        `input_${iIdx}`,
-      );
+      this.addConnection(this._getNodeId(source), this._getNodeId(target), `output_${oIdx}`, `input_${iIdx}`);
     } catch (e) {
       console.error(`Connection "${source}:${sourceField}" -> "${target}:${targetField}" failed!`, e);
     }

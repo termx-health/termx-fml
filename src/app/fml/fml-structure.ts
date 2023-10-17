@@ -34,6 +34,8 @@ export class FMLStructureEntity {
   mode: FMLStructureEntityMode;
   position?: FMLPosition;
   expanded?: boolean = true;
+
+  _nodeId?: number;
 }
 
 export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'produced' | 'rule';

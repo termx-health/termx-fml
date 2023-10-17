@@ -1,9 +1,10 @@
-import {duplicate, group, isDefined, isNil, unique} from '@kodality-web/core-util';
+import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroup, StructureMapGroupRule} from 'fhir/r5';
 import {FMLRuleParserVariables} from './rule/parsers/parser';
-import {FMLStructure, FMLStructureGroup, FMLStructureObject} from './fml-structure';
+import {FMLStructure, FMLStructureGroup} from './fml-structure';
 import {getRuleParser} from './rule/parsers/_parsers';
 import {FMLStructureExportSimple, FMLStructureSimpleMapper} from './fml-structure-simple';
+import {join} from './fml.utils';
 
 
 export class FmlStructureParser {
@@ -59,7 +60,6 @@ export class FmlStructureParser {
 
     fhir.group.forEach(fhirGroup => {
       const fmlGroup = this.mapGroup(bundle, fhir, fhirGroup);
-      this.validate(fmlGroup, fhir);
       fml.setGroup(fmlGroup);
     });
 
@@ -70,13 +70,17 @@ export class FmlStructureParser {
     const fmlGroup = new FMLStructureGroup(fhirGroup.name, () => bundle);
     fmlGroup.objects = {};
 
-    // fixme: group can have multiple objects with same type, currently they get merged
     // groups
-    // [type] -> FMLStructureObject
     fmlGroup.objects = group(
       fhirGroup.input ?? [],
-      s => FmlStructureParser.findResourceId(s.type, {bundle, fhirMap}) ?? s.name,
-      (s, k) => fmlGroup.newFMLObject(k, k, s.mode)
+      s => {
+        const {match} = FmlStructureParser.findResourceId(s.type, {bundle, fhirMap});
+        return match ?? s.name;
+      },
+      (s, k) => {
+        const {id} = FmlStructureParser.findResourceId(s.type, {bundle, fhirMap})
+        return fmlGroup.newFMLObject(id, k, s.mode);
+      }
     );
 
     fhirGroup.rule ??= [];
@@ -140,65 +144,29 @@ export class FmlStructureParser {
     return fmlGroup;
   }
 
-  public static findResourceId = (k: string /* url, alias, type */, sources: {bundle: Bundle<StructureDefinition>, fhirMap?: StructureMap}): string => {
+  public static findResourceId = (k: string /* url, alias, type */, sources: {bundle: Bundle<StructureDefinition>, fhirMap?: StructureMap}): {
+    id: string,
+    matchType?: 'url' | 'alias' | 'type',
+    match?: string
+  } => {
     const {bundle, fhirMap} = sources;
     if (k === 'Any') {
-      return 'Element';
+      return {id: 'Element'};
     }
 
     // [url] -> Resource
     const map = group(bundle.entry, e => e.resource.url, e => e.resource);
     if (map[k]) {
-      return map[k]?.id;
+      return {id: map[k]?.id, matchType: 'url', match: k};
     }
-    const aliasSearch = fhirMap?.structure.find(s => s.alias === k)?.url;
+    const aliasSearch = fhirMap?.structure.find(s => s.alias === k);
     if (aliasSearch) {
-      return map[aliasSearch]?.id;
+      return {id: map[aliasSearch.url]?.id, matchType: 'alias', match: aliasSearch.alias};
     }
     const typeSearch = bundle.entry.find(e => e.resource.type === k);
     if (typeSearch) {
-      return typeSearch.resource?.id;
+      return {id: typeSearch.resource?.id, matchType: 'type', match: typeSearch.resource.type};
     }
-    throw new Error(`Couldn't find resource by "${k}"`);
+    throw new Error(`Couldn't find resource ID by "${k}"`);
   };
-
-  private static validate(struc: FMLStructureGroup, fhir: StructureMap): void {
-    const merged = {
-      ...struc.objects,
-      ...group(struc.rules, r => r.name)
-    };
-
-    struc.connections.forEach(c => {
-      if (isNil(merged[c.sourceObject])) {
-        console.warn(`Unknown SOURCE object "${c.sourceObject}"`);
-      } else if (
-        merged[c.sourceObject] instanceof FMLStructureObject &&
-        merged[c.sourceObject]['fields'].length < c.sourceFieldIdx
-      ) {
-        console.warn(`Unknown SOURCE FIELD of object "${c.sourceObject}"`);
-      }
-
-      if (isNil(merged[c.targetObject])) {
-        console.warn(`Unknown TARGET object "${c.targetObject}"`);
-      } else if (
-        merged[c.targetObject] instanceof FMLStructureObject &&
-        merged[c.targetObject]['fields'].length < c.targetFieldIdx
-      ) {
-        console.warn(`Unknown TARGET FIELD of object "${c.targetObject}"`);
-      }
-    });
-
-
-    fhir.group.forEach(fhirGroup => {
-      const _collectNames = (r: StructureMapGroupRule): string[] => {
-        return [r.name, ...(r.rule?.flatMap(sr => _collectNames(sr)) ?? [])];
-      };
-
-      const rules = fhirGroup.rule.flatMap(fhirRule => _collectNames(fhirRule));
-      const duplicates = rules.filter(duplicate);
-      if (duplicates.length) {
-        console.warn(`Structure Map's group ${fhirGroup.name} has duplicate rules`, duplicates.filter(unique));
-      }
-    });
-  }
 }
