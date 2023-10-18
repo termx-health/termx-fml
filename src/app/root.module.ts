@@ -24,6 +24,7 @@ import {EditorContext} from './context/editor.context';
 import {IframeContext} from './context/iframe.context';
 import {StandaloneContext} from './context/standalone.context';
 import {ValidationComponent} from './validate/validation.component';
+import {CdkMenu, CdkMenuBar, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
 
 
 @NgModule({
@@ -52,6 +53,11 @@ import {ValidationComponent} from './validate/validation.component';
 
     MarinaUiModule,
     CoreUtilModule,
+
+    CdkMenuBar,
+    CdkMenu,
+    CdkMenuItem,
+    CdkMenuTrigger,
   ],
   providers: [
     {

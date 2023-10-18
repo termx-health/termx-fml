@@ -8,46 +8,56 @@
         </svg>
       </ng-template>
 
-      <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">
-          <div class="m-items-middle">
-            <span>File</span>
-            <ng-container *ngTemplateOutlet="chevron"/>
-          </div>
-        </m-button>
-        <a *m-dropdown-item (mClick)="wizard.open()">New</a>
-        <a *m-dropdown-item (mClick)="importer.open()">Import</a>
-        <a *m-dropdown-item (mClick)="exportStructureMap()">Export</a>
-      </m-dropdown>
+      <ng-container>
+        <div cdkMenuBar class="m-items-middle">
+          <m-button class="file-menu-bar-item" cdkMenuItem [cdkMenuTriggerFor]="file" mDisplay="text" mSize="small">
+            <div class="m-items-middle">
+              File
+              <ng-container *ngTemplateOutlet="chevron"/>
+            </div>
+          </m-button>
 
-      <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">
-          <div class="m-items-middle">
-            <span>Edit</span>
-            <ng-container *ngTemplateOutlet="chevron"/>
-          </div>
-        </m-button>
-        <a *m-dropdown-item
-          class="m-items-middle"
-          (mClick)="configureActiveGroup()"
-        >
-          <m-icon mCode="setting"/>
-          Configure group
-        </a>
-      </m-dropdown>
+          <m-button class="file-menu-bar-item" cdkMenuItem [cdkMenuTriggerFor]="edit" mDisplay="text" mSize="small">
+            <div class="m-items-middle">
+              Edit
+              <ng-container *ngTemplateOutlet="chevron"/>
+            </div>
+          </m-button>
 
-      <m-dropdown>
-        <m-button *m-dropdown-container mDisplay="text" mSize="small">
-          <div class="m-items-middle">
-            <span>View</span>
-            <ng-container *ngTemplateOutlet="chevron"/>
+          <m-button class="file-menu-bar-item" cdkMenuItem [cdkMenuTriggerFor]="view" mDisplay="text" mSize="small">
+            <div class="m-items-middle">
+              View
+              <ng-container *ngTemplateOutlet="chevron"/>
+            </div>
+          </m-button>
+        </div>
+
+        <ng-template #file>
+          <div class="file-menu" cdkMenu>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="wizard.open()">New</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="importer.open()">Import</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="exportStructureMap()">Export</button>
           </div>
-        </m-button>
-        <a *m-dropdown-item (mClick)="autoLayout()">Auto-layout</a>
-        <a *m-dropdown-item (mClick)="topology()">Topology</a>
-        <a *m-dropdown-item (mClick)="collapseAll()">Collapse elements</a>
-        <a *m-dropdown-item (mClick)="expandAll()">Expand elements</a>
-      </m-dropdown>
+        </ng-template>
+        <ng-template #edit>
+          <div class="file-menu" cdkMenu>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="configureActiveGroup()">
+              <div class="m-items-middle">
+                <m-icon mCode="setting"/>
+                Configure group
+              </div>
+            </button>
+          </div>
+        </ng-template>
+        <ng-template #view>
+          <div class="file-menu" cdkMenu>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="autoLayout()">Auto-layout</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="topology()">Topology</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="collapseAll()">Collapse elements</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="expandAll()">Expand elements</button>
+          </div>
+        </ng-template>
+      </ng-container>
 
       <m-button mDisplay="text" *ngIf="isIframe || isDev" (mClick)="viewAsFML(fmlPreview)" mSize="small" [mLoading]="loader.state['render-fml']">
         Preview
