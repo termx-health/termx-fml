@@ -130,11 +130,11 @@ export class FmlStructureParser {
             connections.forEach(c => fmlGroup.putConnection(c));
           }
 
-          if (isNil(fhirRuleTarget.context)) {
+          if (isNil(fhirRuleTarget.context) && isDefined(rule)) {
             variables[fhirRuleTarget.variable] = `${rule.name}`;
           }
         } catch (e) {
-          console.error(e);
+          console.error(`Failed to parse rule ${fhirRule.name} ${join(fhirRuleSource.context, fhirRuleSource.element) || 'NIL'} -> ${join(fhirRuleTarget.context, fhirRuleTarget.element) || 'NIL'}`, e);
         }
       });
 

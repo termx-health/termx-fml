@@ -29,21 +29,25 @@ export class FMLCopyRuleParser extends FMLRuleParser {
     }
 
 
+    // validate connection amount
     if (connections.length > 2) {
       throw Error(`Too many connections for the ${this.action}:${rule.name} transformation!`);
     } else if (connections.length === 1) {
       console.warn(`${rule.name} has a single connection!`);
     }
 
-
-    let _rule;
+    // constant
     if (fhirRuleTarget.parameter.every(p => isNil(p.valueId))) {
-      _rule = rule;
-      _rule.action = 'constant';
-      return {rule: _rule, connections};
+      rule.action = 'constant';
+      return {rule, connections};
     }
 
     // creates direct link from source to target
+    if (isNil(fhirRuleSource.variable)) {
+      console.warn(`Copy rule '${ruleName}' source is missing variable field`);
+      return {};
+    }
+
     const [src, tgt] = connections;
     return {
       connections: [{
