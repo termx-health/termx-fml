@@ -67,7 +67,7 @@ export abstract class FMLRuleParser {
         // fml object
         const sourceField = variable.slice(source.length + (variable.includes(".") ? 1 : 0));
         const sourceFieldIdx = fmlGroup.objects[source].fieldIndex(sourceField);
-        conns.push(fmlGroup.newFMLConnection(source, sourceFieldIdx, rule.name, 0));
+        conns.push(fmlGroup.newFMLConnection(source, Math.max(sourceFieldIdx, 0), rule.name, 0));
       } else {
         // fml rule, using startsWith because variable has the StructureMap rule's raw name
         // fixme: use real rule name?
@@ -139,6 +139,6 @@ export abstract class FMLRuleParser {
     } else if (ctx.includes('.')) {
       return [substringBeforeLast(ctx, '.'), substringAfterLast(ctx, '.')];
     }
-    return [undefined, undefined];
+    return [ctx, undefined];
   }
 }

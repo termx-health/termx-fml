@@ -1,7 +1,7 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructureGroup} from '../../fml-structure';
-import {isDefined, remove} from '@kodality-web/core-util';
+import {isDefined, isNil, remove} from '@kodality-web/core-util';
 
 export class FMLCopyRuleParser extends FMLRuleParser {
   public action = 'copy';
@@ -16,30 +16,36 @@ export class FMLCopyRuleParser extends FMLRuleParser {
     const rule = this.create(fmlGroup, ruleName, fhirRuleSource, fhirRuleTarget, variables);
     const connections = this.connect(fmlGroup, rule, fhirRuleSource, fhirRuleTarget, variables);
 
-    fhirRuleTarget.parameter.filter(p => isDefined(p.valueId)).forEach(p => {
-      rule.parameters = remove(rule.parameters, rule.parameters.find(r => r.value === p.valueId));
-    });
+    // remove 'var' parameters
+    fhirRuleTarget.parameter
+      .filter(p => isDefined(p.valueId))
+      .forEach(p => {
+        rule.parameters = remove(rule.parameters, rule.parameters.find(r => r.value === p.valueId));
+      });
 
+    // fixme: remove?
     if (rule.condition) {
       return {rule, connections};
     }
 
 
     if (connections.length > 2) {
-      throw Error(`Too many connections for the ${this.action} transformation!`);
+      throw Error(`Too many connections for the ${this.action}:${rule.name} transformation!`);
+    } else if (connections.length === 1) {
+      console.warn(`${rule.name} has a single connection!`);
     }
 
+
     let _rule;
-    if (connections.length === 1) {
-      connections.push(connections[0]);
+    if (fhirRuleTarget.parameter.every(p => isNil(p.valueId))) {
       _rule = rule;
       _rule.action = 'constant';
+      return {rule: _rule, connections};
     }
 
     // creates direct link from source to target
     const [src, tgt] = connections;
     return {
-      rule: _rule,
       connections: [{
         sourceObject: src.sourceObject,
         sourceFieldIdx: src.sourceFieldIdx,
