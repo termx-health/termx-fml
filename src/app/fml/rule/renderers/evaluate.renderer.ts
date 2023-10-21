@@ -8,13 +8,9 @@ export class FMLEvaluateRuleRenderer extends FMLRuleRenderer {
   public action = 'evaluate';
 
   public override template(editor: FMLEditor, rule: FMLStructureRule): string {
-    return `
-      ${super._renderTitle(editor, rule)}
-
-      <div class="hideable description">
-        ${rule.parameters.map(p => `<div>${this._renderParam(p)}</div>`).join('\n')}
-      </div>
-    `;
+    return `<h5 class="m-justify-between">
+      <span>evaluate${rule.parameters.length ? `<span class="hideable">(${rule.parameters.map(p => this._renderParam(p)).join(", ")})</span>` : ''}</span>
+      ${this._renderExpand(editor, rule)}
+    </h5>`;
   }
-
 }
