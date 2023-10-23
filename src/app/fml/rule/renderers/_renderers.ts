@@ -9,6 +9,7 @@ import {FMLTruncateRuleRenderer} from './truncate.renderer';
 import {FMLRulegroupRuleRenderer} from './rulegroup.renderer';
 import {FMLUuidRuleRenderer} from './uuid.renderer';
 import {FMLTranslateRuleRenderer} from './translate.renderer';
+import {FMLCastRuleRenderer} from './cast.renderer';
 
 export const RULE_RENDERERS = [
   new FMLAppendRuleRenderer(),
@@ -21,6 +22,7 @@ export const RULE_RENDERERS = [
   new FMLTranslateRuleRenderer(),
   new FMLTruncateRuleRenderer(),
   new FMLUuidRuleRenderer(),
+  new FMLCastRuleRenderer(),
 ];
 
 export function getRuleRenderer(action: string): FMLRuleRenderer {
