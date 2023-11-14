@@ -1,7 +1,8 @@
 import {FMLEditor} from './fml-editor';
-import {FMLStructureObject} from './fml-structure';
+import {FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {group, isDefined, isNil} from '@kodality-web/core-util';
 import {StructureMapGroupRule, StructureMapGroupRuleSource} from 'fhir/r5';
+import {FMLGraph} from './fml-graph';
 
 /* StructureMap */
 
@@ -338,4 +339,26 @@ export const tokenize = (str: string, tokens: string[]): {type: 'const' | 'var',
   });
 
   return temp.map(el => typeof el === "string" ? {type: 'const', value: el} : el);
+};
+
+
+/* Topology */
+
+export const topologicalSort = (fmlGroup: FMLStructureGroup): {[p: string]: number} => {
+  const topology = FMLGraph.fromFML(fmlGroup).topologySort();
+  const inputs = Object.values(fmlGroup.objects ?? {}).filter(o => ['source', 'target'].includes(o.mode));
+
+  // set 'max' order to source objects
+  inputs
+    .filter(i => i.mode === 'source')
+    .filter(i => topology[i?.name])
+    .forEach((i, idx) => topology[i.name] = 1000 - idx);
+
+  // set 'min' order to target objects
+  inputs
+    .filter(i => i.mode === 'target')
+    .filter(i => topology[i?.name])
+    .forEach((i, idx) => topology[i.name] = -1000 + idx);
+
+  return topology;
 };

@@ -12,14 +12,14 @@ import {group as utilGroup, isDefined, isNil, remove, unique} from '@kodality-we
 export const $THIS = "$this";
 
 
-/* Element's position inside of editor */
+// Element's position inside of editor
 export interface FMLPosition {
   x: number,
   y: number
 }
 
 
-/* Base class for the object and rules */
+// Base class for the object and rules
 export class FMLStructureEntity {
   /** Unique name within FML structure */
   name: string;
@@ -41,7 +41,7 @@ export class FMLStructureEntity {
 export type FMLStructureEntityMode = 'source' | 'element' | 'target' | 'object' | 'produced' | 'rule';
 
 
-/* Object */
+// Object
 
 export class FMLStructureObject extends FMLStructureEntity {
   element: ElementDefinition;
@@ -86,7 +86,7 @@ export interface FMLStructureObjectField {
 }
 
 
-/* Rule */
+// Rule
 
 export class FMLStructureRule extends FMLStructureEntity {
   action: string;
@@ -105,7 +105,7 @@ export interface FMLStructureRuleParameter {
 }
 
 
-/* Connection */
+// Connection
 
 export class FMLStructureConnection {
   sourceObject: string;
@@ -115,7 +115,7 @@ export class FMLStructureConnection {
 }
 
 
-/* Concept Map */
+// Concept Map
 
 export class FMLStructureConceptMap {
   mode: 'internal' | 'external';
@@ -133,7 +133,7 @@ export class FMLStructureConceptMapMapping {
 }
 
 
-/* Structure group */
+// Structure group
 
 export type FMLStructureGroupNotation = 'fml' | 'evaluate';
 
@@ -142,7 +142,7 @@ export class FMLStructureGroup {
   rules: FMLStructureRule[] = [];
   _connections: FMLStructureConnection[] = [];
 
-  /* true = generate single rule */
+  // true = generate single rule
   shareContext = false;
   notation: FMLStructureGroupNotation = 'fml';
   external = false;
@@ -160,13 +160,21 @@ export class FMLStructureGroup {
   }
 
 
+  /**
+   * Input objects according to StructureMap specification.
+   */
+  public inputs(): readonly FMLStructureObject[] {
+    return Object.values(this.objects).filter(o => ['source', 'target'].includes(o.mode));
+  }
+
+
   public get connections(): readonly FMLStructureConnection[] {
     // getter to prevent direct array modification
     return this._connections;
   }
 
 
-  /* Connections */
+  // Connections
 
   public putConnection(conn: FMLStructureConnection): void {
     const exists = this.connections.some(c =>
@@ -186,7 +194,7 @@ export class FMLStructureGroup {
   }
 
 
-  /* Rules */
+  // Rules
 
   public putRule(rule: FMLStructureRule): void {
     const exists = this.rules.some(r => r.name === rule.name);
@@ -196,7 +204,7 @@ export class FMLStructureGroup {
   }
 
 
-  /**/
+  //
 
   public inputFields = (obj: FMLStructureObject): FMLStructureObjectField[] => {
     return this.connections
@@ -236,7 +244,7 @@ export class FMLStructureGroup {
   };
 
 
-  /* Builders */
+  // Builders
 
   public newFMLObject(resourceType: string, path: string, mode: FMLStructureEntityMode): FMLStructureObject {
     if (isNil(resourceType)) {
@@ -313,7 +321,7 @@ export class FMLStructureGroup {
   }
 
 
-  /* Utils */
+  // Utils
 
   /**
    * Tries to find the structure definition.
@@ -356,7 +364,7 @@ export class FMLStructureGroup {
 }
 
 
-/* Structure */
+// Structure
 
 export class FMLStructure {
   bundle: Bundle<StructureDefinition>;
@@ -405,34 +413,32 @@ export class FMLStructure {
     const _rules = utilGroup(_fmlGroup.rules, r => r.name);
     const _objects = _fmlGroup.objects;
 
+    const _copyResources = (fmlGroup: FMLStructureGroup, obj: string): void => {
+      if (_objects[obj]) {
+        fmlGroup.objects[obj] = _objects[obj];
+      } else if (_rules[obj] && !fmlGroup.rules.some(r => r.name === obj)) {
+        fmlGroup.putRule(_rules[obj]);
+      }
+    };
+
+
     return _fmlGroup.connections
+      // .. -> [con] -> 'target' object
       .filter(c => c.targetObject === target)
+      // .. -> [con] -> 'target' field
       .filter(c => field === _objects[c.targetObject].fields[c.targetFieldIdx]?.name)
+      // for every connection that leads to 'target.field'
       .map(c => {
-        // for each connection create sub fml
+        // create sub fml
         const fmlGroup = new FMLStructureGroup(_fmlGroup.name, () => this.bundle);
-        // fixme: very tedious to copy every new field
-        fmlGroup.shareContext = _fmlGroup.shareContext;
-        fmlGroup.notation = _fmlGroup.notation;
-        fmlGroup.external = _fmlGroup.external;
-        fmlGroup.externalMapUrl = _fmlGroup.externalMapUrl;
-
-        const _copyResources = (obj): void => {
-          if (_objects[obj]) {
-            fmlGroup.objects[obj] = _objects[obj];
-          } else if (_rules[obj] && !fmlGroup.rules.some(r => r.name === obj)) {
-            fmlGroup.putRule(_rules[obj]);
-          }
-        };
-
 
         // copy direct resource & connection from the target.field
-        _copyResources(c.targetObject);
+        _copyResources(fmlGroup, c.targetObject);
         fmlGroup.putConnection(c);
 
         // traverse to source direction, copy every connection
         const traverse = (objName: string): void => {
-          _copyResources(objName);
+          _copyResources(fmlGroup, objName);
           return _fmlGroup.connections.filter(c => c.targetObject === objName).forEach(e => {
             fmlGroup.putConnection(e);
             traverse(e.sourceObject);
@@ -441,11 +447,37 @@ export class FMLStructure {
         traverse(c.sourceObject);
 
 
+        // fixme: very tedious to copy every new field
+        fmlGroup.shareContext = _fmlGroup.shareContext;
+        fmlGroup.notation = _fmlGroup.notation;
+        fmlGroup.external = _fmlGroup.external;
+        fmlGroup.externalMapUrl = _fmlGroup.externalMapUrl;
+
+
+        // sub-FML instance
         const fml = new FMLStructure();
         fml.bundle = this.bundle; // structuredClone(this.bundle); // fixme: performance issue, too much data!
         fml.conceptMaps = structuredClone(this.conceptMaps);
         fml.mainGroupName = this.mainGroupName;
         fml.setGroup(fmlGroup);
+
+
+        {
+          fmlGroup.rules
+            .filter(r => r.action === 'rulegroup')
+            .map(r => r.parameters.find(p => p.type === 'const')?.value)
+            .filter(isDefined)
+            .forEach(groupName => {
+              const dependantGroup = this.getGroup(groupName);
+
+              const fmlGroup = new FMLStructureGroup(dependantGroup.name, () => this.bundle);
+              fmlGroup.objects = structuredClone(dependantGroup.objects)
+
+              fml.setGroup(fmlGroup);
+            })
+        }
+
+
         return fml;
       });
   }

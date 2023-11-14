@@ -14,16 +14,10 @@ export class FMLRulegroupRuleComposer extends FMLRuleComposer {
   ): FMLRuleComposerEvaluateReturnType {
     const {asVar} = vh;
 
-    const sources = fmlGroup.getSources(rule.name).map(s => s.sourceObject);
-    const targets = fmlGroup.getTargets(rule.name).map(t => t.targetObject);
-
     return {
       dependent: {
         name: rule.parameters.find(p => p.type === 'const')?.value,
-        parameter: [
-          ...sources.map(n => ({valueId: asVar(n, true)})),
-          ...targets.map(n => ({valueId: asVar(n, true)}))
-        ]
+        parameter: rule.parameters.filter(p => p.type === 'var').map(p => ({valueId: asVar(p.value, true)}))
       }
     };
   }
@@ -39,10 +33,8 @@ export class FMLRulegroupRuleComposer extends FMLRuleComposer {
   ): FMLRuleComposerFmlReturnType {
     const {asVar} = vh;
 
-    const sources = fmlGroup.getSources(rule.name).map(s => s.sourceObject);
-    const targets = fmlGroup.getTargets(rule.name).map(t => t.targetObject);
 
-    if (![...sources, ...targets].every(n => n in vh.vars)) {
+    if (!rule.parameters.filter(p => p.type === 'var').every(n => n.value in vh.vars)) {
       // don't create rule if any of objects is not yet initialized
       return;
     }
@@ -56,10 +48,7 @@ export class FMLRulegroupRuleComposer extends FMLRuleComposer {
       rule: [],
       dependent: [{
         name: rule.parameters.find(p => p.type === 'const')?.value,
-        parameter: [
-          ...sources.map(n => ({valueId: asVar(n, true)})),
-          ...targets.map(n => ({valueId: asVar(n, true)}))
-        ]
+        parameter: rule.parameters.filter(p => p.type === 'var').map(p => ({valueId: asVar(p.value, true)}))
       }]
     };
   }
