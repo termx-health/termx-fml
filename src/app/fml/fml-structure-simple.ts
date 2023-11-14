@@ -19,7 +19,7 @@ export interface FMLStructureSimple {
 export interface FMLStructureExportSimple {
   groups: {[groupName: string]: FMLStructureSimple};
   conceptMaps: FMLStructureConceptMap[];
-  version: '1.4';
+  version: '1.5';
 }
 
 export class FMLStructureSimpleMapper {
@@ -67,7 +67,7 @@ export class FMLStructureSimpleMapper {
         };
       }),
       conceptMaps: fml.conceptMaps,
-      version: '1.4'
+      version: '1.5'
     };
   }
 }

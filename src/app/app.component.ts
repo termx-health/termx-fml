@@ -4,12 +4,11 @@ import {StructureMap} from 'fhir/r5';
 import {group, isNil, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {FmlStructureComposer} from './fml/fml-structure-composer';
-import {FMLGraph} from './fml/fml-graph';
 import {saveAs} from 'file-saver';
 import {EditorComponent} from './editor.component';
 import {EditorContext, ExportFormat} from './context/editor.context';
 import {toSvg} from 'html-to-image';
-import {formatFML, fromPx, tokenize} from './fml/fml.utils';
+import {formatFML, fromPx, tokenize, topologicalSort} from './fml/fml.utils';
 import {isDev, isIframe} from './global';
 import {Router} from '@angular/router';
 
@@ -197,7 +196,11 @@ export class AppComponent {
   }
 
   protected topology(): void {
-    const sorted = FMLGraph.fromFML(this.editor.fmlGroup).topologySort();
+    const sorted = topologicalSort(this.editor.fmlGroup);
+    const inputs = Object.values(this.editor.fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode));
+    inputs.filter(i => i.mode === 'source').forEach((i, idx) => sorted[i.name] = 1000 + idx);
+    inputs.filter(i => i.mode === 'target').forEach((i, idx) => sorted[i.name] = -1000 + idx);
+
     const order = Object.keys(sorted).sort(e => sorted[e]).reverse();
 
     const nodeEls = Array.from(document.getElementsByClassName('node-meta'));

@@ -50,6 +50,35 @@ export class FmlStructureParser {
         parsed['version'] = '1.3';
       }
 
+      if (parsed['version'] === '1.3') {
+        console.warn("v1.4");
+        parsed['version'] = '1.4';
+      }
+
+      if (parsed['version'] === '1.4') {
+        console.warn("v1.5: remove '$this' suffix from 'rulegroup' rule's parameters");
+        const groups = (parsed as FMLStructureExportSimple).groups;
+        Object.values(groups).forEach(g => {
+          g.rules
+            .filter(r => r.action === 'rulegroup')
+            .map(rg => {
+              rg.parameters ??= [];
+              rg.parameters.forEach(p => {
+                if (p.value?.endsWith('.$this')) {
+                  p.value = p.value.split('.$this')[0];
+                }
+              });
+              g.connections
+                .filter(c => c.sourceObject === rg.name)
+                .forEach(con => rg.parameters.push({value: con.targetObject, type: 'var'}))
+            });
+        });
+
+        parsed['version'] = '1.5';
+      }
+
+      console.log(`Version ${parsed['version']}`);
+
       return FMLStructureSimpleMapper.toFML(bundle, parsed);
     }
 
@@ -78,7 +107,7 @@ export class FmlStructureParser {
         return match ?? s.name;
       },
       (s, k) => {
-        const {id} = FmlStructureParser.findResourceId(s.type, {bundle, fhirMap})
+        const {id} = FmlStructureParser.findResourceId(s.type, {bundle, fhirMap});
         return fmlGroup.newFMLObject(id, k, s.mode);
       }
     );
@@ -134,7 +163,9 @@ export class FmlStructureParser {
             variables[fhirRuleTarget.variable] = `${rule.name}`;
           }
         } catch (e) {
-          console.error(`Failed to parse rule ${fhirRule.name} ${join(fhirRuleSource.context, fhirRuleSource.element) || 'NIL'} -> ${join(fhirRuleTarget.context, fhirRuleTarget.element) || 'NIL'}`, e);
+          console.error(
+            `Failed to parse rule ${fhirRule.name} ${join(fhirRuleSource.context, fhirRuleSource.element) || 'NIL'} -> ${join(fhirRuleTarget.context,
+              fhirRuleTarget.element) || 'NIL'}`, e);
         }
       });
 

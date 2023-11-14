@@ -73,6 +73,9 @@ import {group, isDefined} from '@kodality-web/core-util';
             <td>{{con.sourceFieldIdx}}</td>
             <td>{{con.targetObject}}</td>
             <td>{{con.targetFieldIdx}}</td>
+            <td *ngIf="_dev">
+              <m-icon-button mIcon="delete" (mClick)="deleteConnection(con)"></m-icon-button>
+            </td>
           </tr>
 
           <tr *ngIf="!fml.connections?.length">
@@ -89,6 +92,12 @@ export class FmlViewComponent {
   @Input() fmlGroup: FMLStructureGroup;
   protected _dev = isDevMode();
 
+
+  protected deleteConnection(con: FMLStructureConnection): void {
+    if (this._dev) {
+      this.fmlGroup.removeConnection(con.sourceObject, con.sourceFieldIdx, con.targetObject, con.targetFieldIdx)
+    }
+  }
 
   protected get simpleFML(): {
     objects: {[name: string]: FMLStructureObject},

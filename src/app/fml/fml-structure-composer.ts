@@ -4,13 +4,13 @@ import {
   StructureMapGroup,
   StructureMapGroupInput,
   StructureMapGroupRule,
+  StructureMapGroupRuleDependent,
   StructureMapGroupRuleSource,
   StructureMapGroupRuleTarget,
   StructureMapStructure
 } from 'fhir/r5';
 import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {getSingle, join, nestRules, normalize, SEQUENCE, substringBeforeLast, VARIABLE_SEP, variableHolder} from './fml.utils';
-import {FMLGraph} from './fml-graph';
+import {getSingle, join, nestRules, normalize, SEQUENCE, substringBeforeLast, topologicalSort, VARIABLE_SEP, variableHolder} from './fml.utils';
 import {getRuleComposer} from './rule/composers/_composers';
 import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
@@ -98,16 +98,14 @@ export class FmlStructureComposer {
     };
 
     // group inputs
-    smGroup.input = Object.values(fmlGroup.objects)
-      .filter(o => ['source', 'target'].includes(o.mode))
-      .map(o => {
-        const smInput = sm.structure.find(s => s.url === o.url);
-        return ({
-          name: normalize(o.name),
-          type: o.element.id.includes('.') ? 'Any' : smInput?.alias ?? o.name,
-          mode: o.mode as StructureMapGroupInput['mode'],
-        });
+    smGroup.input = fmlGroup.inputs().map(o => {
+      const smInput = sm.structure.find(s => s.url === o.url);
+      return ({
+        name: normalize(o.name),
+        type: o.element.id.includes('.') ? 'Any' : smInput?.alias ?? o.name,
+        mode: o.mode as StructureMapGroupInput['mode'],
       });
+    });
 
 
     // group rules
@@ -159,7 +157,7 @@ export class FmlStructureComposer {
   }
 
   private static generateRuleFmlNotation(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
-    const topology = FMLGraph.fromFML(fmlGroup).topologySort();
+    const topology = topologicalSort(fmlGroup);
     const topologicalOrder = Object.keys(topology)
       .sort(e => topology[e])
       .reverse()
@@ -370,7 +368,7 @@ export class FmlStructureComposer {
   }
 
   private static generateRuleEvaluateNotation(fml: FMLStructure, fmlGroup: FMLStructureGroup, smGroup: StructureMapGroup): void {
-    const topology = FMLGraph.fromFML(fmlGroup).topologySort();
+    const topology = topologicalSort(fmlGroup);
     const topologicalOrder = Object.keys(topology).sort(e => topology[e]).reverse();
 
     const inputObjects = Object.values(fmlGroup.objects).filter(o => ['source', 'target'].includes(o.mode));
@@ -605,7 +603,11 @@ export class FmlStructureComposer {
     });
   }
 
+
   private static optimize(sm: StructureMap): void {
+    // I wish this step will be redundant in the future.
+    // P.S. Needed to get rid of VARIABLE_SEP in the variable names (rule name gets normalized during composition using VariableHolder).
+
     sm.group?.forEach(g => {
       const varMap = {};
       const traverseRules = (rules: StructureMapGroupRule[]): void => {
@@ -619,21 +621,39 @@ export class FmlStructureComposer {
       };
 
       const optimizeRules = (rules: StructureMapGroupRule[]): void => {
-        for (const r of rules) {
+        for (const r of rules ?? []) {
           r.target?.forEach(t => {
             // normalize variable names
             // 1. declared in target
             // 2. used by other targets
-            t.variable = varMap[t.variable] ?? t.variable;
-            t.parameter?.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId);
+            this.attempt(() => {
+              t.variable = varMap[t.variable] ?? t.variable;
+              t.parameter?.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId);
+            });
           });
 
           optimizeRules(r.rule);
+          optimizeDependant(r.dependent);
+        }
+      };
+
+      const optimizeDependant = (dependents: StructureMapGroupRuleDependent[]): void => {
+        for (const t of dependents ?? []) {
+          // normalize variable names
+          this.attempt(() => t.parameter?.forEach(p => p.valueId = varMap[p.valueId] ?? p.valueId));
         }
       };
 
       traverseRules(g.rule);
       optimizeRules(g.rule);
     });
+  }
+
+  private static attempt(fun: () => void): void {
+    try {
+      fun();
+    } catch (e) {
+      console.error(e);
+    }
   }
 }

@@ -1,5 +1,6 @@
 import {$THIS, FMLStructureRule, FMLStructureRuleParameter} from '../../fml-structure';
-import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
+import {FMLDrawflowNode, FMLDrawflowObjectNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
+import {tokenize} from '../../fml.utils';
 
 export abstract class FMLRuleRenderer {
   protected renderExpandToggle = false;
@@ -41,11 +42,20 @@ export abstract class FMLRuleRenderer {
     `;
   }
 
+  protected _renderCondition = (editor: FMLEditor, rule: FMLStructureRule): string => {
+    if (rule.condition) {
+      const tokens = Object.keys(editor._fmlGroup.objects);
+      const els = tokenize(rule.condition, tokens).map(el => el.type === 'var' ? `<kbd>${el.value}</kbd>` : el.value);
+      return `<span>where ${els.join('')}</span>`;
+    }
+    return '';
+  };
+
   protected _renderTitle(editor: FMLEditor, rule: FMLStructureRule): string {
     return `
       <h5>
         <div class="m-justify-between">${rule.action} ${this.renderExpandToggle ? this._renderExpand(editor, rule) : ''}</div>
-        ${rule.condition ? `<div>where <code>${rule.condition}</code></div>` : ''}
+        ${this._renderCondition(editor, rule)}
       </h5>
     `;
   }
@@ -92,9 +102,7 @@ export abstract class FMLRuleRenderer {
 
     editor._updateRule(node.id, node.name, rule => {
       if (editor._initialized) {
-        const paramName = editor._isObj(source)
-          ? [source.name, source.data.obj.fields[sourcePort - 1]?.name].filter(n => n !== $THIS).join('.')
-          : source.name;
+        const paramName = this.getParamName(editor, source, sourcePort);
         rule.parameters ??= [];
         rule.parameters.push({type: 'var', value: paramName});
       }
@@ -125,9 +133,7 @@ export abstract class FMLRuleRenderer {
     editor._fmlGroup.removeConnection(source.name, sourcePort - 1, node.name, nodePort - 1);
 
     // removes parameter if exists
-    const paramName = editor._isObj(source)
-      ? [source.name, source.data.obj.fields[sourcePort - 1]?.name].filter(n => n !== $THIS).join('.')
-      : source.name;
+    const paramName = this.getParamName(editor, source, sourcePort);
     const paramIdx = node.data.rule.parameters.findIndex(p => p.value === paramName);
     if (paramIdx !== -1) {
       editor._updateRule(node.id, node.name, rule => {
@@ -144,5 +150,11 @@ export abstract class FMLRuleRenderer {
     targetPort: number
   ): void {
     editor._fmlGroup.removeConnection(node.name, nodePort - 1, target.name, targetPort - 1);
+  }
+
+  protected getParamName(editor: FMLEditor, node: FMLDrawflowNode | FMLDrawflowObjectNode, nodePort: number): any {
+    return editor._isObj(node)
+      ? [node.name, node.data.obj.fields[nodePort - 1]?.name].filter(n => n !== $THIS).join('.')
+      : node.name;
   }
 }
