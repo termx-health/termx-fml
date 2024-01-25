@@ -52,7 +52,7 @@ release tag:
   script:
     - export APP_VERSION="$CI_COMMIT_REF_NAME"
     - export BUILD_TIME=$(date +%s)
-    - docker buildx build --platform linux/amd64,linux/arm64 -t docker.kodality.com/termx-web:$APP_VERSION --build-arg BUILD_TIME=$BUILD_TIME --push .
+    - docker buildx build --platform linux/amd64,linux/arm64 -t docker.kodality.com/termx-fml-editor:$APP_VERSION --build-arg BUILD_TIME=$BUILD_TIME --push .
   only:
     - /^\d*\.\d*\.\d*$/
   except:
