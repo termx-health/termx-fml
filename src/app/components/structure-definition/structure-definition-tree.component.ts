@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
+import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureGroup} from '../../fml/fml-structure';
-import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 import {substringAfterLast} from '../../fml/fml.utils';
 
 @Component({
@@ -82,14 +82,14 @@ export class StructureDefinitionTreeComponent implements OnChanges {
     };
 
     const elements = sm.snapshot.element
-      .filter(e => e.path.startsWith(base) && e.path !== base);
+      .filter(e => e.path.startsWith(`${base}.`));
 
     const backboneElementPaths = elements
       .filter(isBackboneElement)
       .map(f => f.path);
 
     return elements
-      .filter(e => !backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p))
+      .filter(e => !backboneElementPaths.some(p => e.path.startsWith(`${p}.`)))
       .map(e => {
         return ({
           key: e.path,

@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
-import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {isDefined, isNil, unique} from '@kodality-web/core-util';
+import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
+import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
 
 @Component({
   selector: 'app-object-view',
@@ -40,11 +40,11 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
         </h5>
 
         <app-structure-definition-tree
-          *ngIf="treeView"
-          [definition]="object | apply: findDefinition: fmlGroup"
-          [definitionBase]="object.element.path"
-          [selectFn]="object | apply: isElementSelectable"
-          (selected)="onElementFieldClick(object, $event)"
+            *ngIf="treeView"
+            [definition]="object | apply: findDefinition: fmlGroup"
+            [definitionBase]="object.element.path"
+            [selectFn]="object | apply: isElementSelectable"
+            (selected)="onElementFieldClick(object, $event)"
         ></app-structure-definition-tree>
 
         <m-table *ngIf="!treeView" mSize="small">
@@ -59,10 +59,10 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
                 </div>
                 <ng-template #name>
                   <span
-                    [mPopover]="f | apply: isBackboneElementField"
-                    [mTitle]="backboneRawFields"
-                    [mTitleContext]="{base: f.name}"
-                    mPosition="left"
+                      [mPopover]="f | apply: isBackboneElementField"
+                      [mTitle]="backboneRawFields"
+                      [mTitleContext]="{base: f.name}"
+                      mPosition="leftTop"
                   >
                     {{f.name}}
                   </span>
@@ -75,12 +75,10 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
         </m-table>
 
         <ng-template #backboneRawFields let-base="base">
-          <div *ngFor="let f of object.rawFields | apply: backboneFields: base">
-            <div class="m-items-top m-justify-between">
-              {{f.name}}
-              <span class="m-subtitle">{{f.required ? '1' : '0'}}{{f.multiple ? '..*' : '..1'}}</span>
-            </div>
-          </div>
+          <app-structure-definition-tree
+              [definition]="object | apply: findDefinition: fmlGroup"
+              [definitionBase]="object.element.path + '.' + base"
+          ></app-structure-definition-tree>
         </ng-template>
       </div>
 
@@ -107,10 +105,10 @@ import {isDefined, isNil, unique} from '@kodality-web/core-util';
           <div *m-modal-content>
             <m-form-item mName="sources" required>
               <app-structure-definition-select
-                name="sources"
-                [(ngModel)]="resourceModal.resource"
-                [bundle]="fmlGroup.bundle() | apply: bundle: resourceModal.types"
-                required
+                  name="sources"
+                  [(ngModel)]="resourceModal.resource"
+                  [bundle]="fmlGroup.bundle() | apply: bundle: resourceModal.types"
+                  required
               />
             </m-form-item>
           </div>
@@ -138,7 +136,7 @@ export class ObjectViewComponent {
     type?: string,
   }>();
 
-  protected treeView = sessionStorage.getItem('object-view-as-tree') === 'true';
+  protected treeView = (sessionStorage.getItem('object-view-as-tree') ?? 'true') === 'true';
   protected resourceModal: {visible: boolean, field?: string, resource?: StructureDefinition, types?: string[]} = {
     visible: false
   };
@@ -200,10 +198,6 @@ export class ObjectViewComponent {
 
   protected isBackboneElementField = (f: FMLStructureObjectField): boolean => {
     return FMLStructureGroup.isBackboneElementField(f);
-  };
-
-  protected backboneFields = (fields: FMLStructureObjectField[], base: string): FMLStructureObjectField[] => {
-    return fields.filter(f => f.name.startsWith(base));
   };
 
   protected isElementSelectable = (object: FMLStructureObject) => (e: ElementDefinition): boolean => {

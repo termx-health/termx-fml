@@ -1,5 +1,5 @@
-import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {group as utilGroup, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
+import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 
 /*
 * DISCLAIMER!
@@ -264,7 +264,7 @@ export class FMLStructureGroup {
 
     let elements = structureDefinition.snapshot.element;
     if (inlineDefinition) {
-      elements = elements.filter(el => el.path.startsWith(path));
+      elements = elements.filter(el => el.path === path || el.path.startsWith(`${path}.`));
     }
 
     const selfDefinition = elements[0];
@@ -297,7 +297,7 @@ export class FMLStructureGroup {
       types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
       multiple: e.max !== '1',
       required: e.min === 1,
-      backbonePart: backboneElementPaths.some(p => e.path.startsWith(p) && e.path !== p)
+      backbonePart: backboneElementPaths.some(p => e.path.startsWith(`${p}.`))
     }));
 
     o.rawFields.unshift({
