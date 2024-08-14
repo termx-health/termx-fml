@@ -10,9 +10,9 @@ import {
   StructureMapStructure
 } from 'fhir/r5';
 import {$THIS, FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
+import {FMLStructureSimpleMapper} from './fml-structure-simple';
 import {getSingle, join, nestRules, normalize, SEQUENCE, substringBeforeLast, topologicalSort, VARIABLE_SEP, variableHolder} from './fml.utils';
 import {getRuleComposer} from './rule/composers/_composers';
-import {FMLStructureSimpleMapper} from './fml-structure-simple';
 
 
 interface FmlStructureComposeOptions {
@@ -181,6 +181,8 @@ export class FmlStructureComposer {
     let frontOffset = -1, backOffset = -1;
     const processedRules = [];
 
+    // fixme: primitive rule nesting
+    //  should use more clever algorithm to determine when to create sub-rules
     for (let i = 0; i < 1001; i++) {
       if (frontOffset >= sourceTopology.length - 1 && backOffset >= targetTopology.length - 1) {
         break;
@@ -237,22 +239,24 @@ export class FmlStructureComposer {
       // src, handle "Array" transformation
       if (isDefined(srcCtx.listOption)) {
         ((): void => {
-          const transformConditionParam = (c: string): string => {
-            if (isNil(c)) {
+          const transformConditionParam = (cndt: string): string => {
+            // replaces variables in condition with newly created var names
+            if (isNil(cndt)) {
               return;
             }
             Object.keys(fmlGroup.objects)
               .sort((a, b) => b.length - a.length)
               .forEach(n => {
-                if (c.includes(n) && vars[n]) {
-                  c = c.replaceAll(n, vars[n]);
+                if (cndt.includes(n) && vars[n]) {
+                  cndt = cndt.replaceAll(n, vars[n]);
                 }
               });
-            return c;
+            return cndt;
           };
 
           // mapping between our types and FHIR ones
           const listMapping: { [k in FMLStructureObject['listOption']]?: StructureMapGroupRuleSource['listMode'] } = {
+            every: undefined,
             first: 'first',
             last: 'last'
           };
@@ -300,6 +304,7 @@ export class FmlStructureComposer {
       }
 
 
+      // creates rules between connections
       fmlGroup.inputFields(tgtCtx).forEach(tgtField => {
         // find rules that lead to this "target.field"
         ((): void => {
@@ -312,12 +317,16 @@ export class FmlStructureComposer {
             ].filter(isDefined);
           };
 
+          // find FML editor rules
           const fmlRules = _inputRules(tgtCtx.name, tgtField.name).reverse();
+          // transform to StructureMap rules
           const smRules = fmlRules
             .map(fmlRule => {
               return getRuleComposer(fmlRule.action).generateFml(
                 fml, fmlGroup, fmlRule,
-                srcCtx, tgtCtx, vh
+                srcCtx,
+                tgtCtx,
+                vh
               );
             })
             .filter(isDefined);
@@ -341,16 +350,17 @@ export class FmlStructureComposer {
           .filter(src => src.sourceObject === srcCtx.name)
           .filter(src => isDefined(src.field))
           .forEach(src /* srcCtx */ => {
-            if (src.field === $THIS) {
-              console.warn(`Ignoring "${$THIS}" variable assignment "${src.sourceObject}.${src.field}" -> "${tgtCtx.name}.${tgtField.name}"`);
-              return;
+            if (tgtField.name === $THIS) {
+              console.error(`"${$THIS}" variable assignment is forbidden "${src.sourceObject}.${src.field}" -> "${tgtCtx.name}.${tgtField.name}"`);
+            } else if (src.field === $THIS) {
+              console.warn(`"${$THIS}" variable assignment "${src.sourceObject}.${src.field}" -> "${tgtCtx.name}.${tgtField.name}"`);
             }
 
             SM_RULE.rule.push({
               name: `dset_${SEQUENCE.next()}`,
               source: [{
                 context: asVar(src.sourceObject),
-                element: src.field,
+                element: src.field !== $THIS ? src.field : undefined,
                 variable: toVar(`${src.sourceObject}.${src.field}`)
               }],
               target: [{
