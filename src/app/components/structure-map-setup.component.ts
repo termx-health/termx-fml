@@ -1,8 +1,8 @@
 import {ChangeDetectorRef, Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
 import {asResourceVariable} from '../fml/fml.utils';
-import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
 
 interface ModalData {
   name: string;
@@ -41,7 +41,7 @@ interface ModalData {
                       [bundle]="bundle"
                       multiple
                       required
-                  />
+                  ></app-structure-definition-select>
                 </m-form-item>
                 <ng-container *ngTemplateOutlet="tree; context: {defs: data.sources, mappings: data.sourceMappings, mode: 'source'}"></ng-container>
               </div>
@@ -64,17 +64,28 @@ interface ModalData {
               <m-card mDisplay="bordered" *ngIf="defs?.length">
                 <ng-container *ngFor="let def of defs">
                   <m-form-item [mLabel]="def.url" *ngIf="{edit: false} as d">
-                    <div *ngIf="!d.edit">
+                    <div *ngIf="!d.edit" style="word-break: break-all">
                       <m-icon class="m-tree-toggle" style="display: inline-block" mCode="edit" (click)="d.edit = true"/>
-                      <span class="m-tree-node__option">{{mappings[def.url]}}</span>
+                      <span class="m-tree-node__option">
+                        {{mappings[def.url]}}
+                      </span>
                     </div>
 
                     <app-structure-definition-tree
                         *ngIf="d.edit"
                         [definition]="def"
+                        [definitionBase]="mappings[def.url]"
                         [selectFn]="selectableBackbone"
                         (selected)="mappings[def.url] = $event; d.edit = false"
                     ></app-structure-definition-tree>
+
+                    <a
+                        style="font-size: 0.9rem"
+                        *ngIf="mappings[def.url] !== def.snapshot.element[0].id"
+                        (mClick)="mappings[def.url] = def.snapshot.element[0].id; d.edit = false"
+                    >
+                      Reset
+                    </a>
                   </m-form-item>
                 </ng-container>
               </m-card>
@@ -82,15 +93,12 @@ interface ModalData {
 
 
             <m-form-item mName="produced" mLabel="Produced">
-              <app-structure-definition-select name="produced" [(ngModel)]="data.produced" [bundle]="bundle" multiple/>
-              <m-alert
-                  class="m-alert--vertical"
-                  style="margin-top: 0.5rem"
-                  mType="info"
-                  mTitle="Produced API may change!"
-                  mDescription="Use produced objects at your own responsibility"
-                  mShowIcon
-              />
+              <app-structure-definition-select 
+                  name="produced" 
+                  [(ngModel)]="data.produced" 
+                  [bundle]="bundle" 
+                  multiple
+              ></app-structure-definition-select>
             </m-form-item>
           </div>
 
@@ -132,23 +140,28 @@ export class StructureMapSetupComponent {
       map.target ??= [];
       map.produced ??= [];
 
+      // general
+      this.modalData.data.name = fmlGroup.name;
+      this.modalData.data._fmlGroup = fmlGroup;
+
+      // sources
       this.modalData.data.sourceMappings = group(map.source, o => o.url, o => o.element.id);
       this.modalData.data.sources = map.source
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
+      // targets
       this.modalData.data.targetMappings = group(map.target, o => o.url, o => o.element.id);
       this.modalData.data.targets = map.target
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
+      // produced
       this.modalData.data.produced = map.produced
         .map(o => this.bundle.entry.find(e => e.resource.url === o.url))
         .map(e => e.resource);
 
-      this.modalData.data.name = fmlGroup.name;
-      this.modalData.data._fmlGroup = fmlGroup;
-
+      console.log(this.modalData.data.sources[0].snapshot.element[0].id)
       this.cdr.detectChanges();
     }
   }
