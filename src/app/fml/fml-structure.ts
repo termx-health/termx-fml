@@ -1,5 +1,6 @@
 import {group as utilGroup, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
+import {selfElements, isBackboneElementDefinition} from './fml.utils';
 
 /*
 * DISCLAIMER!
@@ -80,6 +81,7 @@ export interface FMLStructureObjectField {
   types: string[];
 
   // meta-data
+  sliceName?: string;
   multiple?: boolean;
   required?: boolean;
   backbonePart?: boolean;
@@ -262,14 +264,10 @@ export class FMLStructureGroup {
       throw Error(`Snapshot is missing in the StructureDefinition "${resourceType}"!`);
     }
 
-    let elements = structureDefinition.snapshot.element;
-    if (inlineDefinition) {
-      elements = elements.filter(el => el.path === path || el.path.startsWith(`${path}.`));
-    }
-
-    const selfDefinition = elements[0];
+    const elements = structureDefinition.snapshot.element;
+    const {self: selfDefinition, children: selfFields} = selfElements(elements, path, inlineDefinition);
     const selfResourceType = selfDefinition.type?.[0].code ?? selfDefinition.id;
-    const selfFields = elements.slice(1);
+    // find referenced type and merge options?
 
     // double check whether inline definition assumption was correct
     if (inlineDefinition && !FMLStructureGroup.isBackboneElement(selfResourceType)) {
@@ -282,7 +280,7 @@ export class FMLStructureGroup {
     }
 
     const backboneElementPaths = selfFields
-      .filter(f => f.type?.some(t => FMLStructureGroup.isBackboneElement(t.code)))
+      .filter(isBackboneElementDefinition)
       .map(f => f.path);
 
     const o = new FMLStructureObject();
@@ -295,6 +293,7 @@ export class FMLStructureGroup {
       name: FMLStructureGroup.getElementField(e.path, selfDefinition.id),
       // fixme: the contentReference logic is not very clear
       types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),
+      sliceName: e.sliceName,
       multiple: e.max !== '1',
       required: e.min === 1,
       backbonePart: backboneElementPaths.some(p => e.path.startsWith(`${p}.`))
@@ -355,6 +354,7 @@ export class FMLStructureGroup {
   };
 
   public static isBackboneElement = (resourceType: string): boolean => {
+    // return ['BackboneElement', 'Element'].includes(resourceType) || resourceType.startsWith("http");
     return ['BackboneElement', 'Element'].includes(resourceType);
   };
 

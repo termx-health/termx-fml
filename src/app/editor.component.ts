@@ -1,18 +1,18 @@
 import {Component, EnvironmentInjector, Input, OnChanges, OnInit, SimpleChanges, ViewChild} from '@angular/core';
-import {FMLStructure, FMLStructureConceptMap, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
-import {FMLEditor} from './fml/fml-editor';
+import {createCustomElement} from '@angular/elements';
+import {collect, group, isNil, unique} from '@kodality-web/core-util';
+import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
-import {collect, group, isNil, unique} from '@kodality-web/core-util';
-import {FmlStructureParser} from './fml/fml-structure-parser';
-import {MuiIconComponent, MuiModalContainerComponent} from '@kodality-web/marina-ui';
-import {FmlStructureComposer} from './fml/fml-structure-composer';
-import {asResourceVariable, renderPath, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 import Mousetrap from 'mousetrap';
-import {RuleViewComponent} from './components/fml/rule-view.component';
-import {createCustomElement} from '@angular/elements';
 import {ObjectViewComponent} from './components/fml/object-view.component';
+import {RuleViewComponent} from './components/fml/rule-view.component';
 import {StructureMapSetupComponent} from './components/structure-map-setup.component';
+import {FMLEditor} from './fml/fml-editor';
+import {FMLStructure, FMLStructureConceptMap, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml/fml-structure';
+import {FmlStructureComposer} from './fml/fml-structure-composer';
+import {FmlStructureParser} from './fml/fml-structure-parser';
+import {asResourceVariable, renderPath, SEQUENCE, substringAfterLast, substringBeforeLast, VARIABLE_SEP} from './fml/fml.utils';
 
 
 type RuleAction = 'constant' | 'uuid' | 'copy' | 'evaluate' | 'truncate' | 'cast' | 'append' | 'translate' | 'reference' | 'pointer' | 'cc';
@@ -133,7 +133,7 @@ export class EditorComponent implements OnInit, OnChanges {
   private objectViewComponent: ObjectViewComponent;
 
 
-  constructor(injector: EnvironmentInjector) {
+  constructor(injector: EnvironmentInjector, private notificationSerivce: MuiNotificationService) {
     if (!customElements.get('ce-icon')) {
       customElements.define('ce-icon', createCustomElement(MuiIconComponent, {injector}));
     }
@@ -272,6 +272,10 @@ export class EditorComponent implements OnInit, OnChanges {
 
   public configureActiveGroup(): void {
     this.setup.open(this.fmlGroup);
+  }
+
+  public refreshResourceDefinitions(): void {
+    this.refreshResources();
   }
 
 
@@ -466,6 +470,76 @@ export class EditorComponent implements OnInit, OnChanges {
     if (isSelected) {
       this.fmlGroup.shareContext = false;
     }
+  }
+
+  private refreshResources(): void {
+    for (const k of Object.keys(this.fmlGroup.objects)) {
+      const obj = this.fmlGroup.objects[k];
+
+      // Create new object and copy meta-data from the original
+      const newObj = this.fmlGroup.newFMLObject(obj.element.id, obj.element.id, obj.mode);
+      newObj.name = obj.name;
+      newObj.expanded = obj.expanded;
+      newObj.position = obj.position;
+
+      const targetConnections = this.fmlGroup.connections.filter(c => c.targetObject === k);
+      const newTargetConnections = targetConnections
+        .map(con => {
+          const targetFieldName = obj.fields[con.targetFieldIdx]?.name;
+          const newTargetFieldIdx = newObj.fieldIndex(targetFieldName);
+          return this.fmlGroup.newFMLConnection(
+            con.sourceObject, con.sourceFieldIdx,
+            newObj.name, newTargetFieldIdx,
+          );
+        })
+        .filter(c => c.targetFieldIdx !== -1);
+
+      const sourceConnections = this.fmlGroup.connections.filter(c => c.sourceObject === k);
+      const newSourceConnections = sourceConnections
+        .map(con => {
+          const sourceFieldName = obj.fields[con.sourceFieldIdx]?.name;
+          const newSourceFieldIdx = newObj.fieldIndex(sourceFieldName);
+          return this.fmlGroup.newFMLConnection(
+            newObj.name, newSourceFieldIdx,
+            con.targetObject, con.targetFieldIdx,
+          );
+        })
+        .filter(c => c.sourceFieldIdx !== -1);
+
+      if (
+        targetConnections.length !== newTargetConnections.length ||
+        sourceConnections.length !== newSourceConnections.length
+      ) {
+        this.notificationSerivce.warning(`Failed to refresh ${obj.name}`, 'Some fields are missing in the new version of the resource.');
+        continue;
+      }
+
+
+      // Object Magic
+      // destroy
+      const nodeId = this.editor._getNodeId(k);
+      this.editor.removeNodeId(`node-${nodeId}`);
+
+      // create
+      this.fmlGroup.objects[newObj.name] = newObj;
+      this.editor._createObjectNode(newObj, {x: newObj.position.x, y: newObj.position.y});
+
+
+      // Connection Magic
+      // destroy
+      [...targetConnections, ...sourceConnections].forEach(con => {
+        this.fmlGroup.removeConnection(con.sourceObject, con.sourceFieldIdx, con.targetObject, con.targetFieldIdx);
+      });
+
+      // create
+      [...newTargetConnections, ...newSourceConnections].forEach(c => {
+        this.fmlGroup.putConnection(c);
+        this.editor._createConnection(c.sourceObject, c.sourceFieldIdx + 1, c.targetObject, c.targetFieldIdx + 1);
+      });
+    }
+
+    this.editor._rerenderNodes();
+    this.notificationSerivce.success("Resource structure updated.", "Please validate the parameters and connections.");
   }
 
 

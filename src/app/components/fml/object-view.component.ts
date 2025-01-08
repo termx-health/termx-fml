@@ -2,6 +2,7 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {isDefined, isNil, unique} from '@kodality-web/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
+import {countChars} from '../../fml/fml.utils';
 
 @Component({
   selector: 'app-object-view',
@@ -201,7 +202,7 @@ export class ObjectViewComponent {
   };
 
   protected isElementSelectable = (object: FMLStructureObject) => (e: ElementDefinition): boolean => {
-    const isBackboneElement = (e.path.substring(object.element.id.length + 1).match(/\./g) ?? []).length === 0;
+    const isBackboneElement = countChars(e.path.substring(object.element.id.length + 1), '.') === 0;
     return isBackboneElement && this.isResourceSelectable({
       name: FMLStructureGroup.getElementField(e.path, object.element.id),
       types: e.type?.map(t => t.code) ?? [e.contentReference].filter(Boolean),

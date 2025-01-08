@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, isDevMode, Output, ViewChild} from '@angular/core';
-import {FMLStructureGroup, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
-import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
 import {unique} from '@kodality-web/core-util';
+import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
+import {FMLStructureGroup, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 
 @Component({
   selector: 'app-rule-view',
@@ -121,7 +121,17 @@ import {unique} from '@kodality-web/core-util';
         <m-button mDisplay="primary" (mClick)="editApply(conditionModal)">Apply</m-button>
       </div>
     </m-modal>
-  `
+  `,
+  styles: [`
+    li {
+      list-style-position: outside;
+      margin-left: 1em;
+    }
+
+    kbd {
+      text-wrap: unset;
+    }
+  `]
 })
 export class RuleViewComponent {
   @Input() fmlGroup: FMLStructureGroup;

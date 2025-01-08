@@ -10,7 +10,7 @@
     </div>
 
 
-    <div style="width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: 0.5rem">
+    <div style="width: 100%; display: grid; grid-template-columns: 1fr; gap: 0.5rem">
       <div  *ngFor="let res of rules" class="m-rounded" style="padding: 1rem; background: var(--color-background-component)">
         <b class="m-items-middle m-justify-between">
           <span>{{res.name}}</span>
@@ -21,7 +21,7 @@
           {{res.description}}
         </div>
         <div style="color: var(--color-text-secondary);" *ngIf="res.status === 'error' && res.details">
-          {{res.details}}
+          <span [innerHTML]="res.details"></span>
         </div>
       </div>
     </div>

@@ -34,27 +34,41 @@
 
         <ng-template #file>
           <div class="file-menu" cdkMenu>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="wizard.open()">New</button>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="importer.open()">Import</button>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="exportStructureMap()">Export</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="wizard.open()">
+              New
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="importer.open()">
+              Import
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="exportStructureMap()">
+              Export
+            </button>
           </div>
         </ng-template>
         <ng-template #edit>
           <div class="file-menu" cdkMenu>
             <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="configureActiveGroup()">
-              <div class="m-items-middle">
-                <m-icon mCode="setting"/>
-                Configure group
-              </div>
+              Configure group
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="refreshResourceDefinitions()">
+              Refresh resources
             </button>
           </div>
         </ng-template>
         <ng-template #view>
           <div class="file-menu" cdkMenu>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="autoLayout()">Auto-layout</button>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="topology()">Topology</button>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="collapseAll()">Collapse elements</button>
-            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="expandAll()">Expand elements</button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="autoLayout()">
+              Auto-layout
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="topology()">
+              Topology
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="collapseAll()">
+              Collapse elements
+            </button>
+            <button class="file-menu-item" cdkMenuItem (cdkMenuItemTriggered)="expandAll()">
+              Expand elements
+            </button>
           </div>
         </ng-template>
       </ng-container>
@@ -117,13 +131,13 @@
 </div>
 
 <app-editor
-  *ngIf="ctx.structureMap$ | async as sm"
-  style="height: calc(100dvh - 2.5rem)"
-  [iframe]="isIframe"
-  [bundle]="ctx.bundle$ | async"
-  [structureMap]="sm"
-  [externalMaps]="ctx.externalStructureMaps$ | async"
-  [mapName]="sm.name"
+    *ngIf="ctx.structureMap$ | async as sm"
+    style="height: calc(100dvh - 2.5rem)"
+    [iframe]="isIframe"
+    [bundle]="ctx.bundle$ | async"
+    [structureMap]="sm"
+    [externalMaps]="ctx.externalStructureMaps$ | async"
+    [mapName]="sm.name"
 ></app-editor>
 
 

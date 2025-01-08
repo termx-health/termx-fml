@@ -1,31 +1,36 @@
 import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
 import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {FMLStructureGroup} from '../../fml/fml-structure';
-import {substringAfterLast} from '../../fml/fml.utils';
+import {substringAfterLast, selfElements, isBackboneElementDefinition} from '../../fml/fml.utils';
 
 @Component({
   selector: 'app-structure-definition-tree',
   template: `
     <m-tree
-      class="fml-tree"
-      *ngIf="options.length"
-      [mData]="options"
-      [mExpandedKeys]="[definition?.name]"
-      [mOption]="option"
-      [mAnimate]="false"
-      (mClick)="nodeClicked($event)"
+        class="fml-tree"
+        *ngIf="options.length"
+        [mData]="options"
+        [mExpandedKeys]="[definition?.id]"
+        [mOption]="option"
+        [mAnimate]="false"
+        (mClick)="nodeClicked($event)"
     >
       <ng-template #option let-node let-data="data">
         <div class="m-justify-between">
-          <div [class.m-items-middle]="data?.types?.length === 1" style="row-gap: 0; flex-wrap: wrap;">
-            <div>
-              {{node.title}}
+          <div>
+            <div [class.m-items-middle]="data?.types?.length === 1" style="row-gap: 0; flex-wrap: wrap;">
+              <div>
+                {{node.title}}
+              </div>
+              <div *ngIf="data?.types?.length" class="description" style="word-break: break-all">
+                <ng-container *ngFor="let type of data.types | map: shortenType; let isLast = last">
+                  <span [mTooltip]="type.isShorted" [mTitle]="type.source" mPosition="left">{{type.short}}{{isLast ? '' : ', '}}</span>
+                </ng-container>
+              </div>
             </div>
-            <div *ngIf="data?.types?.length" class="description" style="word-break: break-all">
-              <ng-container *ngFor="let type of data.types | map: shortenType; let isLast = last">
-                <span [mTooltip]="type.isShorted" [mTitle]="type.source" mPosition="left">{{type.short}}{{isLast ? '' : ', '}}</span>
-              </ng-container>
+
+            <div *ngIf="data?.sliceName" class="description" style="word-break: break-all; color: var(--color-green-7)">
+              {{data.sliceName}}
             </div>
           </div>
 
@@ -77,15 +82,10 @@ export class StructureDefinitionTreeComponent implements OnChanges {
   };
 
   private _composeTree = (sm: StructureDefinition, base: string): MuiTreeNodeOptions[] => {
-    const isBackboneElement = (f: ElementDefinition): boolean => {
-      return f.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
-    };
-
-    const elements = sm.snapshot.element
-      .filter(e => e.path.startsWith(`${base}.`));
+    const {children: elements} = selfElements(sm.snapshot.element, base, true);
 
     const backboneElementPaths = elements
-      .filter(isBackboneElement)
+      .filter(isBackboneElementDefinition)
       .map(f => f.path);
 
     return elements
@@ -98,6 +98,7 @@ export class StructureDefinitionTreeComponent implements OnChanges {
           data: {
             path: e.path,
             types: e.type?.map(t => t.code),
+            sliceName: e.sliceName,
             multiple: e.max !== '1',
             required: e.min === 1,
             highlighted: this.highlightFn?.(e)

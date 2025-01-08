@@ -2,7 +2,7 @@ import {ChangeDetectorRef, Component, EventEmitter, inject, Input, Output} from 
 import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
-import {asResourceVariable} from '../fml/fml.utils';
+import {asResourceVariable, isBackboneElementDefinition} from '../fml/fml.utils';
 
 interface ModalData {
   name: string;
@@ -208,6 +208,6 @@ export class StructureMapSetupComponent {
   }
 
   protected selectableBackbone = (e: ElementDefinition): boolean => {
-    return e.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
+    return isBackboneElementDefinition(e);
   };
 }

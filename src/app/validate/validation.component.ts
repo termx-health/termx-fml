@@ -1,16 +1,16 @@
+import {Location} from '@angular/common';
 import {Component, inject, OnInit} from '@angular/core';
-import {EditorContext} from '../context/editor.context';
-import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule} from 'fhir/r5';
 import {duplicate, group, isNil} from '@kodality-web/core-util';
+import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule} from 'fhir/r5';
 import {combineLatest} from 'rxjs';
+import {EditorContext} from '../context/editor.context';
 import {$THIS, FMLStructure} from '../fml/fml-structure';
 import {FmlStructureParser} from '../fml/fml-structure-parser';
-import {Location} from '@angular/common';
 
 
 /*
  * THIS IS EXPERIMENTAL COMPONENT!
- * FOLLOWING CODE IS NOT USED FOR ANY VALIDATION ELSEWHERE.
+ * FOLLOWING CODE IS NOT USED FOR ANY VALIDATION ANYWHERE.
  * IT MAY BE DELETED AT ANY TIME.
  */
 
@@ -122,7 +122,7 @@ const RULES: ((map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLS
           if (s.name === $THIS || t.name === $THIS) {
             return;
           }
-          mismatchTypeConnections.push(`${con.sourceObject}.${s.name} != ${con.targetObject}.${t.name}`);
+          mismatchTypeConnections.push(`<li>${con.sourceObject}.${s.name} != ${con.targetObject}.${t.name}</li>`);
         }
       });
     });
@@ -132,7 +132,7 @@ const RULES: ((map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLS
       ...(mismatchTypeConnections.length ? {
         status: 'error',
         description: 'Has mismatched types',
-        details: mismatchTypeConnections.join(', ')
+        details: mismatchTypeConnections.join('')
       } : {
         status: 'success',
         description: 'Types are matched',

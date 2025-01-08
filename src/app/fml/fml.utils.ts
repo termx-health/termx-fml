@@ -1,8 +1,8 @@
-import {FMLEditor} from './fml-editor';
-import {FMLStructureGroup, FMLStructureObject} from './fml-structure';
 import {group, isDefined, isNil} from '@kodality-web/core-util';
-import {StructureMapGroupRule, StructureMapGroupRuleSource} from 'fhir/r5';
+import {StructureMapGroupRule, StructureMapGroupRuleSource, ElementDefinition} from 'fhir/r5';
+import {FMLEditor} from './fml-editor';
 import {FMLGraph} from './fml-graph';
+import {FMLStructureGroup, FMLStructureObject} from './fml-structure';
 
 /* StructureMap */
 
@@ -249,6 +249,22 @@ export function formatFML(fml: string): string {
     }).join("\n");*/
 }
 
+export const selfElements = (elements: ElementDefinition[], path: string, inline: boolean): {self: ElementDefinition, children: ElementDefinition[]} => {
+  if (inline) {
+    elements = elements.filter(el => el.path === path || el.path.startsWith(`${path}.`));
+  }
+
+  const dotBaseLine = countChars(path, '.') + 1;
+  return {
+    self: elements[0],
+    children: elements.slice(1).filter(el => countChars(el.path, '.') <= dotBaseLine),
+  };
+};
+
+export const isBackboneElementDefinition = (f: ElementDefinition): boolean => {
+  return f.type?.some(t => FMLStructureGroup.isBackboneElement(t.code));
+};
+
 
 /* Sequence */
 
@@ -296,6 +312,9 @@ export const normalize = (txt: string): string => {
   }
 };
 
+export const countChars = (str: string, char: string): number => {
+  return (str.match(new RegExp(`\\${char}`, 'g')) || []).length;
+};
 
 /* Style */
 

@@ -1,16 +1,16 @@
 import {Component, ViewChild} from '@angular/core';
-import {FMLStructureGroup} from './fml/fml-structure';
-import {StructureMap} from 'fhir/r5';
+import {Router} from '@angular/router';
 import {group, isNil, LoadingManager} from '@kodality-web/core-util';
 import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
-import {FmlStructureComposer} from './fml/fml-structure-composer';
+import {StructureMap} from 'fhir/r5';
 import {saveAs} from 'file-saver';
-import {EditorComponent} from './editor.component';
-import {EditorContext, ExportFormat} from './context/editor.context';
 import {toSvg} from 'html-to-image';
+import {EditorContext, ExportFormat} from './context/editor.context';
+import {EditorComponent} from './editor.component';
+import {FMLStructureGroup} from './fml/fml-structure';
+import {FmlStructureComposer} from './fml/fml-structure-composer';
 import {formatFML, fromPx, tokenize, topologicalSort} from './fml/fml.utils';
 import {isDev, isIframe} from './global';
-import {Router} from '@angular/router';
 
 
 @Component({
@@ -219,6 +219,10 @@ export class AppComponent {
     this.editor.configureActiveGroup();
   }
 
+  protected refreshResourceDefinitions(): void {
+    this.editor.refreshResourceDefinitions();
+  }
+
   protected exit(): void {
     this.ctx.exit();
   }
@@ -228,7 +232,12 @@ export class AppComponent {
 
   private export(): StructureMap {
     try {
-      return this.editor.export();
+      const structureMap = this.editor.export();
+      structureMap.group.forEach(g => {
+        // remove extra level, that is added unintentionally during SM composing
+        g.rule = g.rule.flatMap(r => r.rule);
+      });
+      return structureMap;
     } catch (e) {
       this.notificationService.error('Export failed', e);
       console.error(e);
