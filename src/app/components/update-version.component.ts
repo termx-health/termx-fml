@@ -1,9 +1,10 @@
 import {Component, isDevMode, OnInit} from '@angular/core';
 import {interval} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
-import {MuiNotificationService} from '@kodality-web/marina-ui';
+import {MuiNotificationService} from '@termx-health/ui';
 
 @Component({
+  standalone: false,
   selector: 'app-update-version',
   template: ``
 })

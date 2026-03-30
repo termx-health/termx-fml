@@ -1,7 +1,7 @@
 import {Component, ViewChild} from '@angular/core';
 import {Router} from '@angular/router';
-import {group, isNil, LoadingManager} from '@kodality-web/core-util';
-import {MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
+import {group, isNil, LoadingManager} from '@termx-health/core-util';
+import {MuiModalContainerComponent, MuiNotificationService} from '@termx-health/ui';
 import {StructureMap} from 'fhir/r5';
 import {saveAs} from 'file-saver';
 import {toSvg} from 'html-to-image';
@@ -14,6 +14,7 @@ import {isDev, isIframe} from './global';
 
 
 @Component({
+  standalone: false,
   templateUrl: 'app.component.html'
 })
 export class AppComponent {

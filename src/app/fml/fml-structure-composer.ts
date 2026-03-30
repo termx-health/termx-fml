@@ -1,4 +1,4 @@
-import {copyDeep, isDefined, isNil, unique} from '@kodality-web/core-util';
+import {copyDeep, isDefined, isNil, unique} from '@termx-health/core-util';
 import {
   StructureMap,
   StructureMapGroup,

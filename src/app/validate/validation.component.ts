@@ -1,6 +1,6 @@
 import {Location} from '@angular/common';
 import {Component, inject, OnInit} from '@angular/core';
-import {duplicate, group, isNil} from '@kodality-web/core-util';
+import {duplicate, group, isNil} from '@termx-health/core-util';
 import {Bundle, StructureDefinition, StructureMap, StructureMapGroupRule} from 'fhir/r5';
 import {combineLatest} from 'rxjs';
 import {EditorContext} from '../context/editor.context';
@@ -142,6 +142,7 @@ const RULES: ((map: StructureMap, bundle: Bundle<StructureDefinition>, fml: FMLS
 ];
 
 @Component({
+  standalone: false,
   templateUrl: 'validation.component.html',
   styles: [`
     .wrapper {

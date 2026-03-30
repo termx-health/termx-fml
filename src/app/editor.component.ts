@@ -1,7 +1,7 @@
 import {Component, EnvironmentInjector, Input, OnChanges, OnInit, SimpleChanges, ViewChild} from '@angular/core';
 import {createCustomElement} from '@angular/elements';
-import {collect, group, isNil, unique} from '@kodality-web/core-util';
-import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@kodality-web/marina-ui';
+import {collect, group, isNil, unique} from '@termx-health/core-util';
+import {MuiIconComponent, MuiModalContainerComponent, MuiNotificationService} from '@termx-health/ui';
 import {DrawflowNode} from 'drawflow';
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import Mousetrap from 'mousetrap';
@@ -88,6 +88,7 @@ const RULES: RuleDescription[] = [
 ];
 
 @Component({
+  standalone: false,
   selector: 'app-editor',
   templateUrl: 'editor.component.html'
 })

@@ -1,7 +1,7 @@
 import {Bundle, StructureDefinition, StructureMap} from 'fhir/r5';
 import {forkJoin, map, mergeMap, Observable, of} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
-import {HttpCacheService, isDefined, unique, uniqueBy} from '@kodality-web/core-util';
+import {HttpCacheService, isDefined, unique, uniqueBy} from '@termx-health/core-util';
 import {EditorContext} from './editor.context';
 import {substringAfterLast} from '../fml/fml.utils';
 import {Injectable} from '@angular/core';

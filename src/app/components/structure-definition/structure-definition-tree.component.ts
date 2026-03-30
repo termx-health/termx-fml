@@ -1,9 +1,10 @@
 import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
-import {MuiTreeNode, MuiTreeNodeOptions} from '@kodality-web/marina-ui';
+import {MuiTreeNode, MuiTreeNodeOptions} from '@termx-health/ui';
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {substringAfterLast, selfElements, isBackboneElementDefinition} from '../../fml/fml.utils';
 
 @Component({
+  standalone: false,
   selector: 'app-structure-definition-tree',
   template: `
     <m-tree
@@ -23,7 +24,7 @@ import {substringAfterLast, selfElements, isBackboneElementDefinition} from '../
                 {{node.title}}
               </div>
               <div *ngIf="data?.types?.length" class="description" style="word-break: break-all">
-                <ng-container *ngFor="let type of data.types | map: shortenType; let isLast = last">
+                <ng-container *ngFor="let type of $any(data.types | map: shortenType); let isLast = last">
                   <span [mTooltip]="type.isShorted" [mTitle]="type.source" mPosition="left">{{type.short}}{{isLast ? '' : ', '}}</span>
                 </ng-container>
               </div>

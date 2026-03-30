@@ -1,7 +1,7 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructureGroup} from '../../fml-structure';
-import {isDefined, isNil, remove} from '@kodality-web/core-util';
+import {isDefined, isNil, remove} from '@termx-health/core-util';
 
 export class FMLCopyRuleParser extends FMLRuleParser {
   public action = 'copy';

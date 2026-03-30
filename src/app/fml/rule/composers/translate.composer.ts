@@ -1,6 +1,6 @@
 import {FMLStructure, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLRuleComposer, FMLRuleComposerEvaluateReturnType, FMLRuleComposerFmlReturnType} from './composer';
-import {isDefined} from '@kodality-web/core-util';
+import {isDefined} from '@termx-health/core-util';
 import {join, requireSingle, SEQUENCE, VariableHolder} from '../../fml.utils';
 
 export class FMLTranslateRuleComposer extends FMLRuleComposer {

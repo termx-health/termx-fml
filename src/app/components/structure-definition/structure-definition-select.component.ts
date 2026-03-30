@@ -1,10 +1,11 @@
 import {Component, forwardRef, Input} from '@angular/core';
 import {Bundle, StructureDefinition} from 'fhir/r5';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {BooleanInput} from '@kodality-web/core-util';
+import {BooleanInput} from '@termx-health/core-util';
 import {substringAfterLast, substringBeforeLast} from '../../fml/fml.utils';
 
 @Component({
+  standalone: false,
   selector: 'app-structure-definition-select',
   template: `
     <m-select name="targets" [(ngModel)]="val" (ngModelChange)="fireOnChange()" [multiple]="multiple" compareWith="url">

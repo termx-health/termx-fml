@@ -1,4 +1,4 @@
-import {group, isDefined, isNil} from '@kodality-web/core-util';
+import {group, isDefined, isNil} from '@termx-health/core-util';
 import {StructureMapGroupRule, StructureMapGroupRuleSource, ElementDefinition} from 'fhir/r5';
 import {FMLEditor} from './fml-editor';
 import {FMLGraph} from './fml-graph';

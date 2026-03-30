@@ -1,6 +1,6 @@
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
-import {isDefined, isNil} from '@kodality-web/core-util';
+import {isDefined, isNil} from '@termx-health/core-util';
 import {asResourceVariable, substringAfterLast, substringBeforeLast} from '../../fml.utils';
 
 

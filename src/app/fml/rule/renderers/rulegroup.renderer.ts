@@ -1,7 +1,7 @@
 import {FMLRuleRenderer} from './renderer';
 import {FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from '../../fml-structure';
 import {FMLDrawflowNode, FMLDrawflowRuleNode, FMLEditor} from '../../fml-editor';
-import {collect, isNil} from '@kodality-web/core-util';
+import {collect, isNil} from '@termx-health/core-util';
 import {DrawflowNode} from 'drawflow';
 
 export class FMLRulegroupRuleRenderer extends FMLRuleRenderer {

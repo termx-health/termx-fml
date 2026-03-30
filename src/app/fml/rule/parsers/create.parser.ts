@@ -1,7 +1,7 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
 import {FMLStructureGroup} from '../../fml-structure';
-import {isDefined} from '@kodality-web/core-util';
+import {isDefined} from '@termx-health/core-util';
 
 export class FMLCreateRuleParser extends FMLRuleParser {
   public action = 'create';

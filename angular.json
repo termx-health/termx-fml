@@ -18,11 +18,11 @@
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "allowedCommonJsDependencies": [
-              "drawflow",
               "dagre",
-              "angular2-text-mask",
+              "drawflow",
               "file-saver",
-              "mousetrap"
+              "mousetrap",
+              "text-mask-core"
             ],
             "outputPath": "dist/fml",
             "index": "src/index.html",
@@ -37,7 +37,7 @@
               "src/assets",
               {
                 "glob": "**/*",
-                "input": "./node_modules/@kodality-web/marina-ui/src/icons",
+                "input": "./node_modules/@termx-health/ui/src/icons",
                 "output": "/assets/"
               }
             ],
@@ -84,10 +84,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "fml:build:production"
+              "buildTarget": "fml:build:production"
             },
             "development": {
-              "browserTarget": "fml:build:development"
+              "buildTarget": "fml:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -95,7 +95,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "fml:build"
+            "buildTarget": "fml:build"
           }
         },
         "test": {

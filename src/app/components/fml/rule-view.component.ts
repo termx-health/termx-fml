@@ -1,9 +1,10 @@
 import {Component, EventEmitter, Input, isDevMode, Output, ViewChild} from '@angular/core';
-import {unique} from '@kodality-web/core-util';
-import {MuiModalContainerComponent} from '@kodality-web/marina-ui';
+import {unique} from '@termx-health/core-util';
+import {MuiModalContainerComponent} from '@termx-health/ui';
 import {FMLStructureGroup, FMLStructureRule, FMLStructureRuleParameter} from '../../fml/fml-structure';
 
 @Component({
+  standalone: false,
   selector: 'app-rule-view',
   template: `
     <ng-container *ngIf="rule">

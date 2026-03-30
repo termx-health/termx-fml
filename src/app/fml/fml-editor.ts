@@ -1,6 +1,6 @@
 import Drawflow, {DrawflowConnectionDetail, DrawflowNode} from 'drawflow';
 import {FMLPosition, FMLStructure, FMLStructureEntityMode, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
-import {isDefined, isNil, remove} from '@kodality-web/core-util';
+import {isDefined, isNil, remove} from '@termx-health/core-util';
 import dagre from "dagre";
 import {asResourceVariable, fromPx, getPortNumber, renderExpand} from './fml.utils';
 import {getRuleRenderer} from './rule/renderers/_renderers';

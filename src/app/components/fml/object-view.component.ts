@@ -1,10 +1,11 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {isDefined, isNil, unique} from '@kodality-web/core-util';
+import {isDefined, isNil, unique} from '@termx-health/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureGroup, FMLStructureObject, FMLStructureObjectField} from '../../fml/fml-structure';
 import {countChars} from '../../fml/fml.utils';
 
 @Component({
+  standalone: false,
   selector: 'app-object-view',
   template: `
     <ng-container *ngIf="object">

@@ -1,4 +1,4 @@
-import {group as utilGroup, isDefined, isNil, remove, unique} from '@kodality-web/core-util';
+import {group as utilGroup, isDefined, isNil, remove, unique} from '@termx-health/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {selfElements, isBackboneElementDefinition} from './fml.utils';
 

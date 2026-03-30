@@ -1,5 +1,5 @@
 import {ElementDefinition, StructureDefinition} from 'fhir/r5';
-import {group} from '@kodality-web/core-util';
+import {group} from '@termx-health/core-util';
 
 function traverseAndFlatten(currentNode: object, target: object, flattenedKey?: string): void {
   for (const key in currentNode) {

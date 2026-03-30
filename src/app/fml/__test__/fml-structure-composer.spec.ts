@@ -1,5 +1,5 @@
 import {Bundle, StructureDefinition} from 'fhir/r5';
-import {group} from '@kodality-web/core-util';
+import {group} from '@termx-health/core-util';
 import {FMLStructure, FMLStructureGroup, FMLStructureRule} from '../fml-structure';
 import {FmlStructureComposer} from '../fml-structure-composer';
 import {asStructureDefinition} from './test.util';

@@ -1,4 +1,4 @@
-import {group} from '@kodality-web/core-util';
+import {group} from '@termx-health/core-util';
 import {Bundle, StructureDefinition} from 'fhir/r5';
 import {FMLStructure, FMLStructureConceptMap, FMLStructureConnection, FMLStructureGroup, FMLStructureObject, FMLStructureRule} from './fml-structure';
 import {plainToInstance} from 'class-transformer';

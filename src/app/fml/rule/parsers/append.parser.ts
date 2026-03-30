@@ -1,6 +1,6 @@
 import {FMLRuleParser, FMLRuleParserResult, FMLRuleParserVariables} from './parser';
 import {StructureMapGroupRuleSource, StructureMapGroupRuleTarget} from 'fhir/r5';
-import {isDefined} from '@kodality-web/core-util';
+import {isDefined} from '@termx-health/core-util';
 import {FMLStructureGroup} from '../../fml-structure';
 import {substringAfterLast, substringBeforeLast} from '../../fml.utils';
 

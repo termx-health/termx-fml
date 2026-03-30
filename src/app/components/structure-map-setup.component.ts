@@ -1,5 +1,5 @@
 import {ChangeDetectorRef, Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {collect, group, isDefined, isNil} from '@kodality-web/core-util';
+import {collect, group, isDefined, isNil} from '@termx-health/core-util';
 import {Bundle, ElementDefinition, StructureDefinition} from 'fhir/r5';
 import {FMLStructureEntityMode, FMLStructureGroup} from '../fml/fml-structure';
 import {asResourceVariable, isBackboneElementDefinition} from '../fml/fml.utils';
@@ -17,6 +17,7 @@ interface ModalData {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-structure-map-setup',
   template: `
     <!-- Setup wizard -->
