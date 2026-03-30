@@ -40,7 +40,6 @@ jobs:
         with:
           node-version: 22
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@termx-health'
 
       - name: Resolve dependencies
         run: npm install
